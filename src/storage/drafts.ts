@@ -2,11 +2,14 @@ import { db } from './db';
 import { emptyDraft, createId, type TourDraft } from '@/schema';
 
 export async function listDrafts(): Promise<TourDraft[]> {
-  return db.drafts.orderBy('updatedAt').reverse().toArray();
+  return (await db.drafts.orderBy('updatedAt').reverse().toArray()).map(
+    normalizeDraft,
+  );
 }
 
 export async function getDraft(draftId: string): Promise<TourDraft | undefined> {
-  return db.drafts.get(draftId);
+  const draft = await db.drafts.get(draftId);
+  return draft ? normalizeDraft(draft) : undefined;
 }
 
 export async function createDraft(): Promise<TourDraft> {
@@ -16,7 +19,7 @@ export async function createDraft(): Promise<TourDraft> {
 }
 
 export async function saveDraft(draft: TourDraft): Promise<void> {
-  await db.drafts.put({ ...draft, updatedAt: Date.now() });
+  await db.drafts.put(normalizeDraft({ ...draft, updatedAt: Date.now() }));
 }
 
 export async function duplicateDraft(draftId: string): Promise<TourDraft | undefined> {
@@ -25,14 +28,14 @@ export async function duplicateDraft(draftId: string): Promise<TourDraft | undef
   const newId = createId('tour');
   const now = Date.now();
   const copy: TourDraft = {
-    ...original,
+    ...normalizeDraft(original),
     draftId: newId,
     createdAt: now,
     updatedAt: now,
     tour: {
       ...original.tour,
       id: newId,
-      riddlesPath: `${newId}/${newId}.json`,
+      riddlesPath: `${newId}/riddles.json`,
       en: { ...original.tour.en, title: `${original.tour.en.title} (copy)` },
       de: { ...original.tour.de, title: `${original.tour.de.title} (Kopie)` },
       it: { ...original.tour.it, title: `${original.tour.it.title} (copia)` },
@@ -47,4 +50,11 @@ export async function deleteDraft(draftId: string): Promise<void> {
     await db.drafts.delete(draftId);
     await db.blobs.where('draftId').equals(draftId).delete();
   });
+}
+
+function normalizeDraft(draft: TourDraft): TourDraft {
+  return {
+    ...draft,
+    recordedRoute: draft.recordedRoute ?? [],
+  };
 }

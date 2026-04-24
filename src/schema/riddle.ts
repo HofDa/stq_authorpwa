@@ -26,6 +26,11 @@ export const RiddleEntrySchema = z.object({
   position_lng: z.number(),
   polylineString: z.string(),
   imagePath: z.string(),
+  /**
+   * Authoring-only pointer at a Dexie-stored station photo blob. Stripped
+   * on export (see `TourEntrySchema.coverBlobId`).
+   */
+  imageBlobId: z.string().optional(),
   iconPath: z.string(),
   markerIconPath: z.string(),
   riddleType: RiddleTypeSchema.default('text'),

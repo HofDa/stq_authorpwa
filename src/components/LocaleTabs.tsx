@@ -10,7 +10,7 @@ export function LocaleTabs({ active, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Locale"
-      className="flex gap-1 rounded-sm border border-border bg-white p-1"
+      className="flex gap-1 rounded-[20px] border border-border bg-white/90 p-1 shadow-sm"
     >
       {LOCALES.map((locale) => {
         const isActive = locale === active;
@@ -21,10 +21,10 @@ export function LocaleTabs({ active, onChange }: Props) {
             aria-selected={isActive}
             onClick={() => onChange(locale)}
             className={[
-              'flex-1 rounded-sm px-3 py-1.5 text-labelLg transition',
+              'flex-1 rounded-[16px] px-3 py-2 text-labelLg transition',
               isActive
-                ? 'bg-primary text-white'
-                : 'text-text hover:bg-primary/10',
+                ? 'bg-primary text-white shadow-[0_6px_16px_rgba(144,74,72,0.22)]'
+                : 'text-text hover:bg-primary/6',
             ].join(' ')}
           >
             {LOCALE_LABELS[locale]}

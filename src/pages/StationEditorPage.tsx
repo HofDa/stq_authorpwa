@@ -1,21 +1,18 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDraft } from '@/hooks/useDraft';
 import { LocaleTabs } from '@/components/LocaleTabs';
-import { ContentBlockEditor } from '@/components/ContentBlockEditor';
 import { PhoneFramePreview } from '@/components/preview/PhoneFramePreview';
-import { StationDrawerPreview } from '@/components/preview/StationDrawerPreview';
-import type {
-  Locale,
-  RiddleEntry,
-  RiddleLocaleContent,
-  TourDraft,
-} from '@/schema';
+import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
+import { OpenClawAssistantPanel } from '@/components/assistant/OpenClawAssistantPanel';
+import type { Locale, RiddleEntry } from '@/schema';
 
 export function StationEditorPage() {
   const { draftId, stationId } = useParams();
+  const navigate = useNavigate();
   const { draft, update } = useDraft(draftId);
   const [locale, setLocale] = useState<Locale>('en');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   if (!draft) {
     return <p className="text-bodySm text-disabled">Loading draft…</p>;
@@ -32,18 +29,20 @@ export function StationEditorPage() {
       </div>
     );
   }
+  const stationIndex = draft.stations.findIndex((s) => s.id === station.id);
+  const prevStation = stationIndex > 0 ? draft.stations[stationIndex - 1] : null;
+  const nextStation =
+    stationIndex >= 0 && stationIndex < draft.stations.length - 1
+      ? draft.stations[stationIndex + 1]
+      : null;
 
   function patchStation(patch: Partial<RiddleEntry>) {
-    update((prev) => applyStationPatch(prev, station!.id, (s) => ({ ...s, ...patch })));
-  }
-
-  function patchLocale(patch: Partial<RiddleLocaleContent>) {
-    update((prev) =>
-      applyStationPatch(prev, station!.id, (s) => ({
-        ...s,
-        [locale]: { ...s[locale], ...patch },
-      })),
-    );
+    update((prev) => ({
+      ...prev,
+      stations: prev.stations.map((s) =>
+        s.id === station!.id ? { ...s, ...patch } : s,
+      ),
+    }));
   }
 
   async function fillGps() {
@@ -62,21 +61,69 @@ export function StationEditorPage() {
     );
   }
 
-  const localeContent = station[locale];
-
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
+      <header className="card flex flex-col gap-3">
         <Link to={`/tours/${draftId}`} className="text-bodySm text-disabled">
           ← Tour editor
         </Link>
-        <h1 className="text-h4">
-          Station {station.number}: {localeContent.location || 'Untitled'}
-        </h1>
+        <div>
+          <p className="text-labelSm uppercase tracking-[0.18em] text-primary/75">
+            Station Authoring
+          </p>
+          <h1 className="text-h4">
+            Station {station.number}: {station[locale].location || 'Untitled'}
+          </h1>
+          <p className="mt-1 text-bodySm text-disabled">
+            {stationIndex + 1} of {draft.stations.length}. Fine-tune the place,
+            route stop, and riddle content in the same mobile rhythm as the native app.
+          </p>
+        </div>
       </header>
 
-      <section className="card flex flex-col gap-4">
-        <h2 className="text-h5">Station metadata</h2>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          className="btn-ghost justify-start"
+          disabled={!prevStation}
+          onClick={() => {
+            if (!prevStation) return;
+            navigate(`/tours/${draftId}/stations/${prevStation.id}`);
+          }}
+        >
+          ← Previous
+        </button>
+        <button
+          className="btn-ghost justify-end"
+          disabled={!nextStation}
+          onClick={() => {
+            if (!nextStation) return;
+            navigate(`/tours/${draftId}/stations/${nextStation.id}`);
+          }}
+        >
+          Next →
+        </button>
+      </div>
+
+      <LocaleTabs active={locale} onChange={setLocale} />
+
+      <PhoneFramePreview>
+        <InlineStationDrawer
+          draft={draft}
+          station={station}
+          locale={locale}
+          onChange={update}
+        />
+      </PhoneFramePreview>
+
+      <OpenClawAssistantPanel draft={draft} locale={locale} station={station} />
+
+      <section className="card flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-h6">Location</h2>
+          <button className="btn-ghost text-labelSm" onClick={fillGps}>
+            Use current GPS
+          </button>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1">
             <span className="text-labelSm">Latitude</span>
@@ -102,162 +149,69 @@ export function StationEditorPage() {
               }
             />
           </label>
-          <div className="col-span-2">
-            <button className="btn-ghost" onClick={fillGps}>
-              📍 Use current GPS location
-            </button>
-          </div>
-          <label className="flex flex-col gap-1">
-            <span className="text-labelSm">Image path</span>
-            <input
-              className="input-field"
-              value={station.imagePath}
-              onChange={(e) => patchStation({ imagePath: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-labelSm">Icon path</span>
-            <input
-              className="input-field"
-              value={station.iconPath}
-              onChange={(e) => patchStation({ iconPath: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-labelSm">Marker icon path</span>
-            <input
-              className="input-field"
-              value={station.markerIconPath}
-              onChange={(e) => patchStation({ markerIconPath: e.target.value })}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-labelSm">Riddle type</span>
-            <select
-              className="input-field"
-              value={station.riddleType}
-              onChange={(e) =>
-                patchStation({ riddleType: e.target.value as 'text' })
-              }
-            >
-              <option value="text">text</option>
-            </select>
-          </label>
-          <label className="col-span-2 flex flex-col gap-1">
-            <span className="text-labelSm">
-              Solution (shared across locales)
-            </span>
-            <input
-              className="input-field"
-              value={station.solution ?? ''}
-              onChange={(e) => patchStation({ solution: e.target.value })}
-            />
-          </label>
         </div>
       </section>
 
-      <section className="card flex flex-col gap-4">
-        <h2 className="text-h5">Localized content</h2>
-        <LocaleTabs active={locale} onChange={setLocale} />
-
-        <label className="flex flex-col gap-1">
-          <span className="text-labelSm">Location name</span>
-          <input
-            className="input-field"
-            value={localeContent.location}
-            onChange={(e) => patchLocale({ location: e.target.value })}
-          />
-        </label>
-
-        <ContentBlockEditor
-          label="First section (intro story)"
-          blocks={localeContent.firstSection}
-          onChange={(blocks) => patchLocale({ firstSection: blocks })}
-        />
-        <ContentBlockEditor
-          label="History section"
-          blocks={localeContent.historySection}
-          onChange={(blocks) => patchLocale({ historySection: blocks })}
-        />
-        <ContentBlockEditor
-          label="Riddle section"
-          blocks={localeContent.riddleSection}
-          onChange={(blocks) => patchLocale({ riddleSection: blocks })}
-        />
-        <ContentBlockEditor
-          label="Success section"
-          blocks={localeContent.successSection}
-          onChange={(blocks) => patchLocale({ successSection: blocks })}
-        />
-
-        <HintsEditor
-          hints={localeContent.hints}
-          onChange={(hints) => patchLocale({ hints })}
-        />
-      </section>
-
-      <section className="card flex flex-col gap-3">
-        <h2 className="text-h5">Preview</h2>
-        <PhoneFramePreview>
-          <StationDrawerPreview station={station} locale={locale} />
-        </PhoneFramePreview>
-      </section>
-    </div>
-  );
-}
-
-function applyStationPatch(
-  draft: TourDraft,
-  stationId: string,
-  recipe: (s: RiddleEntry) => RiddleEntry,
-): TourDraft {
-  return {
-    ...draft,
-    stations: draft.stations.map((s) => (s.id === stationId ? recipe(s) : s)),
-  };
-}
-
-function HintsEditor({
-  hints,
-  onChange,
-}: {
-  hints: string[];
-  onChange: (next: string[]) => void;
-}) {
-  function updateAt(index: number, value: string) {
-    const next = hints.slice();
-    next[index] = value;
-    onChange(next);
-  }
-  return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-labelLg">Hints (up to 3)</legend>
-      {hints.map((hint, i) => (
-        <div key={i} className="flex gap-2">
-          <input
-            className="input-field"
-            placeholder={`Hint ${i + 1}`}
-            value={hint}
-            onChange={(e) => updateAt(i, e.target.value)}
-          />
-          <button
-            type="button"
-            className="btn-ghost text-labelSm text-error"
-            onClick={() => onChange(hints.filter((_, idx) => idx !== i))}
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-      {hints.length < 3 && (
+      <section className="card flex flex-col gap-2">
         <button
-          type="button"
-          className="btn-ghost self-start text-labelSm"
-          onClick={() => onChange([...hints, ''])}
+          className="btn-ghost self-start"
+          onClick={() => setShowAdvanced((v) => !v)}
         >
-          + Add hint
+          {showAdvanced ? '▼' : '▶'} Advanced metadata
         </button>
-      )}
-    </fieldset>
+        {showAdvanced && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-labelSm">Icon path</span>
+              <input
+                className="input-field"
+                value={station.iconPath}
+                onChange={(e) => patchStation({ iconPath: e.target.value })}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-labelSm">Marker icon path</span>
+              <input
+                className="input-field"
+                value={station.markerIconPath}
+                onChange={(e) =>
+                  patchStation({ markerIconPath: e.target.value })
+                }
+              />
+            </label>
+          </div>
+        )}
+      </section>
+
+      <div
+        className="sticky bottom-2 z-10 grid grid-cols-3 gap-2 rounded-md
+                   border border-border bg-background/95 p-2 shadow-sm
+                   backdrop-blur"
+      >
+        <button
+          className="btn-ghost"
+          disabled={!prevStation}
+          onClick={() => {
+            if (!prevStation) return;
+            navigate(`/tours/${draftId}/stations/${prevStation.id}`);
+          }}
+        >
+          ← Prev
+        </button>
+        <button className="btn-primary" onClick={fillGps}>
+          GPS
+        </button>
+        <button
+          className="btn-ghost"
+          disabled={!nextStation}
+          onClick={() => {
+            if (!nextStation) return;
+            navigate(`/tours/${draftId}/stations/${nextStation.id}`);
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    </div>
   );
 }

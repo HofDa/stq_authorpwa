@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { TourEntrySchema } from './tour';
 import { RiddleEntrySchema } from './riddle';
+import { RecordedRoutePointSchema } from './route';
 
 /**
  * A `TourDraft` is the full authoring state for one tour:
@@ -17,6 +18,7 @@ export const TourDraftSchema = z.object({
   updatedAt: z.number(),
   tour: TourEntrySchema,
   stations: z.array(RiddleEntrySchema),
+  recordedRoute: z.array(RecordedRoutePointSchema).default([]),
 });
 
 export type TourDraft = z.infer<typeof TourDraftSchema>;

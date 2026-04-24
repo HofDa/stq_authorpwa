@@ -39,21 +39,31 @@ export function StationListPanel({ draftId, stations, onChange }: Props) {
   return (
     <section className="card flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-h5">Stations</h2>
+        <div>
+          <p className="text-labelSm uppercase tracking-[0.18em] text-primary/75">
+            Author Route
+          </p>
+          <h2 className="text-h5">Stations</h2>
+        </div>
         <button className="btn-primary" onClick={addStation}>
           + Add station
         </button>
       </div>
       {stations.length === 0 ? (
-        <p className="text-bodySm text-disabled">No stations yet.</p>
+        <div className="rounded-[20px] border border-dashed border-border bg-background px-4 py-6 text-center">
+          <p className="text-h6">No stations yet.</p>
+          <p className="mt-1 text-bodySm text-disabled">
+            Add the first stop, then walk the route and capture it on the live map.
+          </p>
+        </div>
       ) : (
         <ul className="flex flex-col gap-2">
           {stations.map((station, index) => (
             <li
               key={station.id}
-              className="flex items-center gap-3 rounded-sm border border-border bg-white p-3"
+              className="flex items-center gap-3 rounded-[20px] border border-border bg-background/70 p-3"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-labelLg text-white">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-labelLg text-white shadow-[0_8px_18px_rgba(144,74,72,0.22)]">
                 {station.number}
               </span>
               <div className="min-w-0 flex-1">
@@ -63,28 +73,34 @@ export function StationListPanel({ draftId, stations, onChange }: Props) {
                 >
                   {station.en.location || station.de.location || station.it.location || 'Untitled station'}
                 </Link>
-                <p className="text-bodySm text-disabled">
-                  text · {station.position_lat.toFixed(5)},{' '}
-                  {station.position_lng.toFixed(5)}
-                </p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-border bg-white px-2.5 py-1 text-labelSm text-disabled">
+                    text
+                  </span>
+                  <span className="rounded-full border border-border bg-white px-2.5 py-1 text-labelSm text-disabled">
+                    {isZeroCoordinate(station)
+                      ? 'GPS pending'
+                      : `${station.position_lat.toFixed(5)}, ${station.position_lng.toFixed(5)}`}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-1">
                 <button
-                  className="btn-ghost text-labelSm"
+                  className="btn-ghost min-h-[40px] px-3 text-labelSm"
                   onClick={() => move(station.id, -1)}
                   disabled={index === 0}
                 >
                   ↑
                 </button>
                 <button
-                  className="btn-ghost text-labelSm"
+                  className="btn-ghost min-h-[40px] px-3 text-labelSm"
                   onClick={() => move(station.id, 1)}
                   disabled={index === stations.length - 1}
                 >
                   ↓
                 </button>
                 <button
-                  className="btn-ghost text-labelSm text-error"
+                  className="btn-ghost min-h-[40px] px-3 text-labelSm text-error"
                   onClick={() => removeStation(station.id)}
                 >
                   ✕
@@ -96,4 +112,8 @@ export function StationListPanel({ draftId, stations, onChange }: Props) {
       )}
     </section>
   );
+}
+
+function isZeroCoordinate(station: RiddleEntry) {
+  return station.position_lat === 0 && station.position_lng === 0;
 }

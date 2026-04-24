@@ -13,28 +13,115 @@
     @apply bg-background text-text font-ui;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background:
+      radial-gradient(circle at top left, rgba(144, 74, 72, 0.14), transparent 24%),
+      radial-gradient(circle at top right, rgba(216, 193, 192, 0.5), transparent 22%),
+      linear-gradient(180deg, #fffaf9 0%, #fff8f7 100%);
+  }
+
+  .leaflet-container {
+    font: inherit;
   }
 }
 
 @layer components {
   .input-field {
-    @apply w-full rounded-sm border border-border bg-white px-3 py-2
+    @apply w-full rounded-[16px] border border-border bg-white px-4 py-3
            text-body placeholder:text-disabled focus:outline-none
-           focus:ring-2 focus:ring-primary/40;
+           focus:ring-2 focus:ring-primary/30;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-sm bg-primary
-           px-4 py-2 text-labelLg text-white shadow-sm
-           hover:brightness-110 active:translate-y-px disabled:opacity-60;
+    @apply inline-flex min-h-[46px] items-center justify-center rounded-[16px]
+           border border-primary bg-primary px-4 py-2 text-labelLg text-white
+           shadow-[0_8px_18px_rgba(144,74,72,0.22)]
+           transition hover:brightness-105 active:translate-y-px
+           disabled:opacity-60;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-sm
-           px-3 py-2 text-labelLg text-primary hover:bg-primary/10;
+    @apply inline-flex min-h-[46px] items-center justify-center rounded-[16px]
+           border border-border bg-white px-4 py-2 text-labelLg text-primary
+           transition hover:bg-primary/5;
   }
 
   .card {
-    @apply rounded-md border border-border bg-white p-4 shadow-sm;
+    @apply rounded-[24px] border border-border bg-white p-4
+           shadow-[0_10px_24px_rgba(35,25,25,0.08)];
   }
+}
+
+.stq-app-shell {
+  position: relative;
+  min-height: 100%;
+}
+
+.stq-app-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 247, 0.25), rgba(255, 248, 247, 0)),
+    radial-gradient(circle at 15% 10%, rgba(144, 74, 72, 0.08), transparent 30%);
+}
+
+.stq-app-bar {
+  background: rgba(255, 248, 247, 0.92);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 24px rgba(35, 25, 25, 0.08);
+}
+
+.stq-home-hero {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(144, 74, 72, 0.08)),
+    linear-gradient(180deg, rgba(255, 248, 247, 1), rgba(255, 248, 247, 1));
+}
+
+.stq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgb(216 193 192);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 0.6rem 0.85rem;
+  font: 600 14px "Open Sans", system-ui, sans-serif;
+}
+
+.stq-draft-cover {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), transparent 30%),
+    linear-gradient(135deg, rgba(144, 74, 72, 0.95), rgba(188, 133, 131, 0.92));
+}
+
+.stq-map-shell .leaflet-container {
+  background:
+    radial-gradient(circle at top left, rgba(144, 74, 72, 0.12), transparent 32%),
+    linear-gradient(180deg, #fffdfc 0%, #fdf4f2 100%);
+}
+
+.stq-station-marker {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+}
+
+.stq-station-marker__bubble {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 2px solid rgb(255 248 247);
+  background: rgb(144 74 72);
+  color: rgb(255 248 247);
+  font: 600 13px "Open Sans", system-ui, sans-serif;
+  box-shadow: 0 8px 16px rgba(35, 25, 25, 0.18);
+}
+
+.stq-station-marker--selected .stq-station-marker__bubble {
+  background: rgb(33 150 243);
+  transform: scale(1.08);
 }

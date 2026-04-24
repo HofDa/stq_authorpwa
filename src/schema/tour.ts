@@ -19,6 +19,12 @@ export const TourEntrySchema = z.object({
   id: z.string(),
   number: z.number().int().nonnegative(),
   imagePath: z.string(),
+  /**
+   * Authoring-only pointer at a Dexie-stored cover photo blob. On export
+   * the blob is written to `<slug>/images/<id>.webp` and `imagePath` is
+   * rewritten to that path; this field is dropped from the JSON.
+   */
+  coverBlobId: z.string().optional(),
   riddlesPath: z.string(),
   distance: z.string(),
   unlocked: z.boolean(),

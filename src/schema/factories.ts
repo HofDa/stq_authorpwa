@@ -46,7 +46,7 @@ export function emptyTour(id: string): TourEntry {
     id,
     number: 0,
     imagePath: '',
-    riddlesPath: `${id}/${id}.json`,
+    riddlesPath: `${id}/riddles.json`,
     distance: '',
     unlocked: true,
     ...localeMap(emptyTourLocale),
@@ -79,5 +79,6 @@ export function emptyDraft(): TourDraft {
     updatedAt: now,
     tour: emptyTour(slug),
     stations: [],
+    recordedRoute: [],
   };
 }

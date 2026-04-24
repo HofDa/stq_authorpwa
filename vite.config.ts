@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -7,6 +8,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    setupFiles: ['src/test/setup.ts'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -17,6 +23,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      devOptions: {
+        enabled: false,
+      },
       manifest: {
         name: 'SouthTyrolQuests Author',
         short_name: 'STQ Author',
@@ -42,6 +51,6 @@ export default defineConfig({
   ],
   server: {
     host: true,
-    port: 5173,
+    port: 5174,
   },
 });

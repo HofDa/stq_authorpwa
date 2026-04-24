@@ -25,7 +25,7 @@ npm run preview    # preview built output
 npm run typecheck  # tsc --noEmit
 ```
 
-## Current status (Phase 1 skeleton)
+## Current status (Phase 1 working baseline)
 
 Implemented:
 
@@ -33,12 +33,16 @@ Implemented:
 - Tour/Riddle schema + TS types (Zod)
 - Dexie draft storage
 - Tour list, metadata form (EN/DE/IT), station list + editor
-- Content block editor for `paragraph`, `heading`, `image` (placeholder), `line`
-- Phone-frame preview shell
+- Camera/file capture with WebP crop/resize pipeline
+- Content block editor for `paragraph`, `heading`, `image`, `line`
+- Phone-frame preview with inline authoring
+- GPS auto-fill for station coordinates
+- Live route-planning map with GPS tracking and station polyline generation
+- ZIP export per draft (`tours.json` + riddles JSON + local images)
 
 Deferred to follow-ups:
 
-- Camera capture + WebP resize pipeline
-- ZIP export
-- Drag-to-reorder for stations
-- GPS auto-fill button
+- Full drag-and-drop reorder for stations (arrow reorder exists)
+- Additional riddle types beyond `text`
+- Additional content block types (`paragraph_styled`, `audio`, `chat`)
+- Smarter route segmentation and optional road snapping / map matching
