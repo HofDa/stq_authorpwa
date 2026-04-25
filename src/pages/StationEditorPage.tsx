@@ -5,13 +5,14 @@ import { LocaleTabs } from '@/components/LocaleTabs';
 import { PhoneFramePreview } from '@/components/preview/PhoneFramePreview';
 import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
 import { OpenClawAssistantPanel } from '@/components/assistant/OpenClawAssistantPanel';
-import type { Locale, RiddleEntry } from '@/schema';
+import { StationVisualPicker } from '@/components/stations/StationVisualPicker';
+import { DEFAULT_LOCALE, type Locale, type RiddleEntry } from '@/schema';
 
 export function StationEditorPage() {
   const { draftId, stationId } = useParams();
   const navigate = useNavigate();
   const { draft, update } = useDraft(draftId);
-  const [locale, setLocale] = useState<Locale>('en');
+  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   if (!draft) {
@@ -153,30 +154,38 @@ export function StationEditorPage() {
       </section>
 
       <section className="card flex flex-col gap-2">
+        <div>
+          <p className="text-labelSm uppercase tracking-[0.18em] text-primary/75">
+            Map identity
+          </p>
+          <h2 className="mt-1 text-h6">Station icon and marker</h2>
+        </div>
+        <StationVisualPicker station={station} onChange={patchStation} />
+      </section>
+
+      <section className="card flex flex-col gap-2">
         <button
           className="btn-ghost self-start"
           onClick={() => setShowAdvanced((v) => !v)}
         >
-          {showAdvanced ? '▼' : '▶'} Advanced metadata
+          {showAdvanced ? '▼' : '▶'} Asset paths
         </button>
         {showAdvanced && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1">
               <span className="text-labelSm">Icon path</span>
               <input
-                className="input-field"
+                className="input-field font-mono text-bodySm"
                 value={station.iconPath}
-                onChange={(e) => patchStation({ iconPath: e.target.value })}
+                readOnly
               />
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-labelSm">Marker icon path</span>
               <input
-                className="input-field"
+                className="input-field font-mono text-bodySm"
                 value={station.markerIconPath}
-                onChange={(e) =>
-                  patchStation({ markerIconPath: e.target.value })
-                }
+                readOnly
               />
             </label>
           </div>

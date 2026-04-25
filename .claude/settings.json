@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//tmp/claude-design/author-pwa/project/**)",
+      "Read(//tmp/design_extract/contents/author-pwa/project/**)",
+      "Read(//home/davidhofer/.nvm/versions/node/**)",
+      "Read(//home/davidhofer/.volta/tools/image/**)",
+      "Bash(nvm --version)",
+      "Bash(command -v fnm)"
+    ]
+  }
+}

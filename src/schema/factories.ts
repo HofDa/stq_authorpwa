@@ -2,6 +2,11 @@ import type { TourDraft } from './draft';
 import type { TourEntry, TourLocaleContent } from './tour';
 import type { RiddleEntry, RiddleLocaleContent } from './riddle';
 import { LOCALES, type Locale } from './locales';
+import { emptyAcceptedAnswers } from './riddle';
+import {
+  applyStationVisualSelection,
+  DEFAULT_STATION_VISUAL,
+} from '@/stations/visuals';
 
 export function createId(prefix: string): string {
   const rand = Math.random().toString(36).slice(2, 8);
@@ -27,7 +32,6 @@ export function emptyRiddleLocale(): RiddleLocaleContent {
     riddleSection: [],
     successSection: [],
     hints: [],
-    solution: '',
   };
 }
 
@@ -61,11 +65,10 @@ export function emptyStation(id: string, number: number): RiddleEntry {
     position_lng: 0,
     polylineString: '',
     imagePath: '',
-    iconPath: '',
-    markerIconPath: '',
+    ...applyStationVisualSelection(id, DEFAULT_STATION_VISUAL),
     riddleType: 'text',
     solutionInputType: 'text',
-    solution: '',
+    acceptedAnswers: emptyAcceptedAnswers(),
     ...localeMap(emptyRiddleLocale),
   };
 }
@@ -80,5 +83,6 @@ export function emptyDraft(): TourDraft {
     tour: emptyTour(slug),
     stations: [],
     recordedRoute: [],
+    storyline: { markdown: '', updatedAt: 0, chat: [] },
   };
 }

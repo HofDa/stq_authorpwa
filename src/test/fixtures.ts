@@ -1,4 +1,5 @@
 import type {
+  AcceptedAnswersByLocale,
   ContentBlock,
   RiddleEntry,
   RiddleLocaleContent,
@@ -6,6 +7,10 @@ import type {
   TourEntry,
   TourLocaleContent,
 } from '@/schema';
+import {
+  applyStationVisualSelection,
+  DEFAULT_STATION_VISUAL,
+} from '@/stations/visuals';
 
 function tourLocale(title: string): TourLocaleContent {
   return {
@@ -30,7 +35,14 @@ function riddleLocale(hint: string): RiddleLocaleContent {
     riddleSection: [{ type: 'paragraph', text: 'Solve me' }],
     successSection: [{ type: 'paragraph', text: 'Well done' }],
     hints: ['Look up', 'Count the windows'],
-    solution: 'tower',
+  };
+}
+
+function acceptedAnswers(): AcceptedAnswersByLocale {
+  return {
+    en: ['tower'],
+    de: ['turm'],
+    it: ['torre'],
   };
 }
 
@@ -62,11 +74,10 @@ export function buildValidStation(
     polylineString: '',
     imagePath: '',
     imageBlobId: 'blob-station-hero',
-    iconPath: '',
-    markerIconPath: '',
+    ...applyStationVisualSelection(id, DEFAULT_STATION_VISUAL),
     riddleType: 'text',
     solutionInputType: 'text',
-    solution: 'tower',
+    acceptedAnswers: acceptedAnswers(),
     en: riddleLocale('en'),
     de: riddleLocale('de'),
     it: riddleLocale('it'),
@@ -81,6 +92,7 @@ export function buildValidDraft(): TourDraft {
     tour: buildValidTour(),
     stations: [buildValidStation('station-1', 1)],
     recordedRoute: [],
+    storyline: { markdown: '', updatedAt: 0, chat: [] },
   };
 }
 

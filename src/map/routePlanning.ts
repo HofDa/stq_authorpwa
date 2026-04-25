@@ -1,4 +1,5 @@
 import type { RecordedRoutePoint, RiddleEntry } from '@/schema';
+import { hasUsableStationCoordinate } from '@/utils/coordinates';
 
 const EARTH_RADIUS_METERS = 6_371_000;
 
@@ -57,6 +58,27 @@ export function deriveStationPathsFromRecordedRoute(
     return { optimizedRoute, stationPaths: [], warnings };
   }
 
+  const skippedStations = orderedStations.filter(
+    (station) => !hasUsableStationCoordinate(station),
+  );
+  if (skippedStations.length > 0) {
+    warnings.push(
+      `Skipped ${skippedStations.length} station${
+        skippedStations.length === 1 ? '' : 's'
+      } without usable coordinates: ${skippedStations
+        .map((station) => station.number)
+        .join(', ')}.`,
+    );
+  }
+
+  const usableStations = orderedStations.filter(hasUsableStationCoordinate);
+  if (usableStations.length === 0) {
+    warnings.push(
+      'Add GPS coordinates to at least one station before generating optimized station paths.',
+    );
+    return { optimizedRoute, stationPaths: [], warnings };
+  }
+
   if (optimizedRoute.length < 2) {
     warnings.push('Record more route points before generating optimized station paths.');
     return { optimizedRoute, stationPaths: [], warnings };
@@ -65,8 +87,8 @@ export function deriveStationPathsFromRecordedRoute(
   const stationPaths: DerivedStationPath[] = [];
   let searchStartIndex = 0;
 
-  for (let index = 0; index < orderedStations.length; index += 1) {
-    const station = orderedStations[index];
+  for (let index = 0; index < usableStations.length; index += 1) {
+    const station = usableStations[index];
     const nearestIndex = findNearestRouteIndexFrom(
       optimizedRoute,
       station.position_lat,

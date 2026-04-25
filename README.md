@@ -19,11 +19,22 @@ See [../southtyrolquests/docs/author_pwa_plan.md](../southtyrolquests/docs/autho
 
 ```bash
 npm install
-npm run dev        # local dev server at http://localhost:5173
+npm run dev        # local dev server at http://localhost:5174
 npm run build      # production build
 npm run preview    # preview built output
+npm run lint       # ESLint
 npm run typecheck  # tsc --noEmit
 ```
+
+## Map Provider
+
+Maps now default to MapLibre through the shared `AuthorMap` boundary.
+
+- `VITE_MAP_PROVIDER=maplibre` keeps the default provider explicit.
+- `VITE_MAP_PROVIDER=leaflet` enables the temporary Leaflet fallback.
+- `VITE_MAP_STYLE_URL=https://.../style.json` overrides the MapLibre style URL.
+
+If `VITE_MAP_STYLE_URL` is unset, the app falls back to a safe public raster OpenStreetMap style with no API key. For compatibility with the earlier spike, `VITE_MAPLIBRE_STYLE_URL` is still accepted as a fallback env var, but new setup should use `VITE_MAP_STYLE_URL`.
 
 ## Current status (Phase 1 working baseline)
 

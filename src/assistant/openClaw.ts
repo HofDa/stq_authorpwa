@@ -1,3 +1,4 @@
+import { getPrimaryAcceptedAnswer, hasAcceptedAnswer } from '@/schema';
 import type {
   ContentBlock,
   Locale,
@@ -65,6 +66,14 @@ export function buildOpenClawPrompt(
     );
   }
 
+  const storyline = scope.draft.storyline?.markdown?.trim() ?? '';
+  if (storyline) {
+    lines.push('');
+    lines.push(
+      'A tour-wide storyline draft exists. Treat it as the canonical reference for arc, hooks, twists, and tone — keep per-station suggestions consistent with it. The storyline is included in the snapshot below under `storyline`.',
+    );
+  }
+
   lines.push('');
   lines.push('Author request:');
   lines.push(question.trim() || defaultQuestionForFocus(scope.kind, focus));
@@ -100,21 +109,26 @@ export function buildContextSnapshot(scope: AssistantScope): string {
     },
   };
 
+  const storyline = scope.draft.storyline?.markdown?.trim() ?? '';
+  const baseWithStoryline = storyline
+    ? { ...base, storyline }
+    : base;
+
   if (scope.kind !== 'station' || !scope.station) {
-    return JSON.stringify(base, null, 2);
+    return JSON.stringify(baseWithStoryline, null, 2);
   }
 
   const station = scope.station;
   const content = station[scope.locale];
   return JSON.stringify(
     {
-      ...base,
+      ...baseWithStoryline,
       station: {
         id: station.id,
         number: station.number,
         title: content.location,
         riddleType: station.riddleType,
-        solution: station.solution ?? '',
+        solution: getPrimaryAcceptedAnswer(station.acceptedAnswers, scope.locale),
         hintCount: content.hints.length,
         position: {
           lat: station.position_lat,
@@ -251,7 +265,7 @@ function buildStationChecks(scope: AssistantScope): LocalAssistantCheck[] {
     });
   }
 
-  if (!station.solution?.trim()) {
+  if (!hasAcceptedAnswer(station.acceptedAnswers, scope.locale)) {
     checks.push({
       level: 'warning',
       title: 'Missing answer',

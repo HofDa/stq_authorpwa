@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ContentBlockSchema,
+  ExportRiddleEntrySchema,
   RiddleEntrySchema,
   RiddleLocaleSchema,
   TourDraftSchema,
@@ -99,6 +100,26 @@ describe('RiddleEntrySchema', () => {
       }),
     ).toThrow();
   });
+
+  it('migrates legacy global and localized solution fields into acceptedAnswers', () => {
+    const legacyStation = {
+      ...buildValidStation(),
+      acceptedAnswers: undefined,
+      solution: 'tower',
+      en: { ...buildValidStation().en },
+      de: { ...buildValidStation().de, solution: 'turm' },
+      it: { ...buildValidStation().it, solution: 'torre' },
+    };
+
+    const parsed = RiddleEntrySchema.parse(legacyStation);
+
+    expect(parsed.acceptedAnswers.en).toEqual(['tower']);
+    expect(parsed.acceptedAnswers.de).toEqual(['turm']);
+    expect(parsed.acceptedAnswers.it).toEqual(['torre']);
+    expect(parsed.en).not.toHaveProperty('solution');
+    expect(parsed.de).not.toHaveProperty('solution');
+    expect(parsed.it).not.toHaveProperty('solution');
+  });
 });
 
 describe('TourLocaleSchema / RiddleLocaleSchema round-trip', () => {
@@ -116,6 +137,18 @@ describe('TourLocaleSchema / RiddleLocaleSchema round-trip', () => {
       JSON.parse(JSON.stringify(locale)),
     );
     expect(roundTripped).toEqual(locale);
+  });
+
+  it('parses an exported riddle with localized solutions', () => {
+    expect(() =>
+      ExportRiddleEntrySchema.parse({
+        ...buildValidStation(),
+        acceptedAnswers: undefined,
+        en: { ...buildValidStation().en, solution: 'tower' },
+        de: { ...buildValidStation().de, solution: 'turm' },
+        it: { ...buildValidStation().it, solution: 'torre' },
+      }),
+    ).not.toThrow();
   });
 });
 

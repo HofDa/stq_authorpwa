@@ -1,10 +1,12 @@
 import JSZip from 'jszip';
 import type { ZodIssue } from 'zod';
 import {
-  LOCALES,
-  RiddleEntrySchema,
+  DEFAULT_LOCALE,
+  ExportRiddleEntrySchema,
   TourEntrySchema,
+  getPrimaryAcceptedAnswer,
   type ContentBlock,
+  type Locale,
   type RiddleEntry,
   type RiddleLocaleContent,
   type TourDraft,
@@ -12,34 +14,50 @@ import {
   type TourLocaleContent,
 } from '@/schema';
 import { db } from '@/storage/db';
+import {
+  buildExportStationAssetPaths,
+  normalizeStationVisualChoice,
+  renderStationVisualPngs,
+  shouldGenerateStationVisualAssets,
+} from '@/stations/visuals';
+import {
+  collectReferencedBlobIds,
+  validateDraftForPublishing,
+  type DraftPublishingValidationIssue,
+  type DraftPublishingValidationResult,
+} from './validateDraftForPublishing';
+import {
+  type ExportValidationError,
+} from './validateDraftForExport';
 
-export interface ExportValidationError {
-  path: string;
-  message: string;
-}
+export type { ExportValidationError } from './validateDraftForExport';
 
 export interface DraftExportReport {
   fileName: string;
   missingBlobIds: string[];
   validationErrors: ExportValidationError[];
+  validationWarnings: DraftPublishingValidationIssue[];
+  publishingValidation: DraftPublishingValidationResult;
 }
 
 export interface BuiltDraftExport {
   blob: Blob;
   missingBlobIds: string[];
   validationErrors: ExportValidationError[];
+  validationWarnings: DraftPublishingValidationIssue[];
+  publishingValidation: DraftPublishingValidationResult;
   tourJson: unknown;
   riddlesJson: unknown;
 }
 
 /**
- * Thrown when the serialized JSON fails Flutter-contract validation.
+ * Thrown when publish rules or serialized JSON validation block the ZIP.
  * Callers can catch this to show per-field errors before shipping the ZIP.
  */
 export class DraftExportValidationError extends Error {
   constructor(public readonly errors: ExportValidationError[]) {
     super(
-      `Draft export failed schema validation (${errors.length} issue${errors.length === 1 ? '' : 's'})`,
+      `Draft export failed validation (${errors.length} issue${errors.length === 1 ? '' : 's'})`,
     );
     this.name = 'DraftExportValidationError';
   }
@@ -47,37 +65,65 @@ export class DraftExportValidationError extends Error {
 
 export async function downloadDraftExportZip(
   draft: TourDraft,
+  options: ExportBuildOptions = {},
 ): Promise<DraftExportReport> {
-  const slug = draft.tour.id || draft.draftId;
-  const fileName = `${slug}.zip`;
-  const result = await buildDraftExportZip(draft);
+  const result = await buildDraftExportZip(draft, options);
   if (result.validationErrors.length > 0) {
     throw new DraftExportValidationError(result.validationErrors);
   }
+  const fileName = `${draft.tour.id}.zip`;
   downloadBlob(result.blob, fileName);
   return {
     fileName,
     missingBlobIds: result.missingBlobIds,
     validationErrors: result.validationErrors,
+    validationWarnings: result.validationWarnings,
+    publishingValidation: result.publishingValidation,
   };
 }
 
 export async function buildDraftExportZip(
   draft: TourDraft,
+  options: ExportBuildOptions = {},
 ): Promise<BuiltDraftExport> {
-  const slug = draft.tour.id || draft.draftId;
+  const locale = options.locale ?? DEFAULT_LOCALE;
   const referencedBlobIds = collectReferencedBlobIds(draft);
   const blobsById = await loadBlobs(referencedBlobIds);
   const missingBlobIds = referencedBlobIds.filter((id) => !blobsById.has(id));
+  const publishingValidation = validateDraftForPublishing(draft, {
+    locale,
+    blobsById,
+  });
+  if (publishingValidation.errors.length > 0) {
+    return buildEmptyExportResult(
+      missingBlobIds,
+      publishingValidation,
+      publishingIssuesToErrors(publishingValidation.errors),
+    );
+  }
+
+  const slug = draft.tour.id;
   const exportPathByBlobId = new Map<string, string>(
     referencedBlobIds
       .filter((id) => blobsById.has(id))
       .map((id) => [id, `${slug}/images/${id}.webp`]),
   );
+  const stationVisualAssets = await buildStationVisualAssets(draft.stations, slug);
+  const iconPathByStationId = new Map(
+    stationVisualAssets.map((asset) => [asset.stationId, asset.iconPath]),
+  );
+  const markerPathByStationId = new Map(
+    stationVisualAssets.map((asset) => [asset.stationId, asset.markerIconPath]),
+  );
 
   const tourEntry = serializeTourEntry(draft.tour, exportPathByBlobId);
   const stations = draft.stations.map((station) =>
-    serializeRiddleEntry(station, exportPathByBlobId),
+    serializeRiddleEntry(
+      station,
+      exportPathByBlobId,
+      iconPathByStationId,
+      markerPathByStationId,
+    ),
   );
 
   const validationErrors = validateSerialized(tourEntry, stations);
@@ -92,14 +138,49 @@ export async function buildDraftExportZip(
       zip.file(path, await stored.blob.arrayBuffer());
     }
   }
+  for (const asset of stationVisualAssets) {
+    zip.file(asset.iconPath, await asset.iconBlob.arrayBuffer());
+    zip.file(asset.markerIconPath, await asset.markerBlob.arrayBuffer());
+  }
 
   return {
     blob: await zip.generateAsync({ type: 'blob' }),
     missingBlobIds,
     validationErrors,
+    validationWarnings: publishingValidation.warnings,
+    publishingValidation,
     tourJson: [tourEntry],
     riddlesJson: stations,
   };
+}
+
+interface ExportBuildOptions {
+  locale?: Locale;
+}
+
+async function buildEmptyExportResult(
+  missingBlobIds: string[],
+  publishingValidation: DraftPublishingValidationResult,
+  validationErrors: ExportValidationError[],
+): Promise<BuiltDraftExport> {
+  return {
+    blob: await new JSZip().generateAsync({ type: 'blob' }),
+    missingBlobIds,
+    validationErrors,
+    validationWarnings: publishingValidation.warnings,
+    publishingValidation,
+    tourJson: [],
+    riddlesJson: [],
+  };
+}
+
+function publishingIssuesToErrors(
+  issues: DraftPublishingValidationIssue[],
+): ExportValidationError[] {
+  return issues.map(({ path, message }) => ({
+    path,
+    message: message.replace('publishing', 'export'),
+  }));
 }
 
 function validateSerialized(
@@ -112,7 +193,7 @@ function validateSerialized(
     errors.push(...issuesToErrors(tourResult.error.issues, ['tour']));
   }
   stations.forEach((station, index) => {
-    const result = RiddleEntrySchema.safeParse(station);
+    const result = ExportRiddleEntrySchema.safeParse(station);
     if (!result.success) {
       errors.push(
         ...issuesToErrors(result.error.issues, ['stations', String(index)]),
@@ -130,41 +211,6 @@ function issuesToErrors(
     path: [...prefix, ...issue.path.map(String)].join('.'),
     message: issue.message,
   }));
-}
-
-function collectReferencedBlobIds(draft: TourDraft): string[] {
-  const ids = new Set<string>();
-  if (draft.tour.coverBlobId) {
-    ids.add(draft.tour.coverBlobId);
-  }
-
-  for (const station of draft.stations) {
-    if (station.imageBlobId) {
-      ids.add(station.imageBlobId);
-    }
-    for (const locale of LOCALES) {
-      collectContentBlockBlobIds(station[locale].firstSection, ids);
-      collectContentBlockBlobIds(station[locale].historySection, ids);
-      collectContentBlockBlobIds(station[locale].riddleSection, ids);
-      collectContentBlockBlobIds(station[locale].successSection, ids);
-    }
-  }
-
-  for (const locale of LOCALES) {
-    collectContentBlockBlobIds(draft.tour[locale].description, ids);
-    collectContentBlockBlobIds(draft.tour[locale].introSection, ids);
-    collectContentBlockBlobIds(draft.tour[locale].outroSection, ids);
-  }
-
-  return Array.from(ids);
-}
-
-function collectContentBlockBlobIds(blocks: ContentBlock[], ids: Set<string>) {
-  for (const block of blocks) {
-    if (block.type === 'image' && block.localBlobId) {
-      ids.add(block.localBlobId);
-    }
-  }
 }
 
 async function loadBlobs(blobIds: string[]) {
@@ -211,26 +257,46 @@ function serializeTourLocale(
 function serializeRiddleEntry(
   station: RiddleEntry,
   exportPathByBlobId: Map<string, string>,
+  iconPathByStationId: Map<string, string>,
+  markerPathByStationId: Map<string, string>,
 ) {
   const imagePath = station.imageBlobId
     ? exportPathByBlobId.get(station.imageBlobId)
     : undefined;
-  const { imageBlobId, ...base } = station;
+  const generatedIconPath = iconPathByStationId.get(station.id);
+  const generatedMarkerPath = markerPathByStationId.get(station.id);
+  const { imageBlobId, iconKey, iconColorKey, acceptedAnswers, ...base } = station;
   return {
     ...base,
     imagePath: imagePath ?? station.imagePath,
-    en: serializeRiddleLocale(station.en, exportPathByBlobId),
-    de: serializeRiddleLocale(station.de, exportPathByBlobId),
-    it: serializeRiddleLocale(station.it, exportPathByBlobId),
+    iconPath: generatedIconPath ?? station.iconPath,
+    markerIconPath: generatedMarkerPath ?? station.markerIconPath,
+    en: serializeRiddleLocale(
+      station.en,
+      exportPathByBlobId,
+      getPrimaryAcceptedAnswer(acceptedAnswers, 'en'),
+    ),
+    de: serializeRiddleLocale(
+      station.de,
+      exportPathByBlobId,
+      getPrimaryAcceptedAnswer(acceptedAnswers, 'de'),
+    ),
+    it: serializeRiddleLocale(
+      station.it,
+      exportPathByBlobId,
+      getPrimaryAcceptedAnswer(acceptedAnswers, 'it'),
+    ),
   };
 }
 
 function serializeRiddleLocale(
   locale: RiddleLocaleContent,
   exportPathByBlobId: Map<string, string>,
+  solution: string,
 ) {
   return {
     ...locale,
+    solution,
     firstSection: serializeBlocks(locale.firstSection, exportPathByBlobId),
     historySection: serializeBlocks(locale.historySection, exportPathByBlobId),
     riddleSection: serializeBlocks(locale.riddleSection, exportPathByBlobId),
@@ -265,4 +331,45 @@ function downloadBlob(blob: Blob, fileName: string) {
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+interface StationVisualAsset {
+  stationId: string;
+  iconPath: string;
+  markerIconPath: string;
+  iconBlob: Blob;
+  markerBlob: Blob;
+}
+
+async function buildStationVisualAssets(
+  stations: RiddleEntry[],
+  slug: string,
+): Promise<StationVisualAsset[]> {
+  const assets = await Promise.all(
+    stations.map(async (station) => {
+      if (!shouldGenerateStationVisualAssets(station)) {
+        return null;
+      }
+
+      const { iconPath, markerIconPath } = buildExportStationAssetPaths(
+        slug,
+        station.id,
+      );
+      const { iconBlob, markerBlob } = await renderStationVisualPngs(
+        normalizeStationVisualChoice(station),
+      );
+
+      return {
+        stationId: station.id,
+        iconPath,
+        markerIconPath,
+        iconBlob,
+        markerBlob,
+      };
+    }),
+  );
+
+  return assets.filter(
+    (asset): asset is StationVisualAsset => asset !== null,
+  );
 }

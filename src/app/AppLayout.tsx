@@ -3,10 +3,29 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 export function AppLayout() {
   const { pathname } = useLocation();
   const isRoot = pathname === '/' || pathname === '/tours';
+  const isTourEditor = /^\/tours\/[^/]+\/?$/.test(pathname);
+  const isFieldMode = /^\/tours\/[^/]+\/field\/?$/.test(pathname);
+
+  // Field mode and the tour editor both render their own full-bleed chrome
+  // (Studio on desktop, FieldMode on mobile). Skip the app shell entirely so
+  // they fill the viewport.
+  if (isFieldMode || isTourEditor) {
+    return (
+      <div className="stq-app-shell">
+        <Outlet />
+      </div>
+    );
+  }
+
+  const wideShell = isRoot;
 
   return (
     <div className="stq-app-shell">
-      <div className="mx-auto flex min-h-screen max-w-5xl flex-col">
+      <div
+        className={`mx-auto flex min-h-screen flex-col ${
+          wideShell ? 'max-w-7xl' : 'max-w-5xl'
+        }`}
+      >
         <header className="stq-app-bar sticky top-0 z-20 border-b border-border px-4 py-3">
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
             <Link

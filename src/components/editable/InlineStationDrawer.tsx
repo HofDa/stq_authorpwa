@@ -1,5 +1,10 @@
 import { useState } from 'react';
+import {
+  formatAcceptedAnswersInput,
+  parseAcceptedAnswersInput,
+} from '@/schema';
 import type {
+  AcceptedAnswersByLocale,
   Locale,
   RiddleEntry,
   RiddleLocaleContent,
@@ -172,8 +177,15 @@ export function InlineStationDrawer({
 
       {tab === 'riddle' && (
         <RiddleAnswerSection
-          solution={station.solution ?? ''}
-          onSolution={(solution) => patchStation({ solution })}
+          acceptedAnswers={station.acceptedAnswers[locale]}
+          onAcceptedAnswers={(acceptedAnswers) =>
+            patchStation({
+              acceptedAnswers: {
+                ...station.acceptedAnswers,
+                [locale]: acceptedAnswers,
+              },
+            })
+          }
           hints={content.hints}
           onHints={(hints) => patchLocale({ hints })}
         />
@@ -183,13 +195,13 @@ export function InlineStationDrawer({
 }
 
 function RiddleAnswerSection({
-  solution,
-  onSolution,
+  acceptedAnswers,
+  onAcceptedAnswers,
   hints,
   onHints,
 }: {
-  solution: string;
-  onSolution: (next: string) => void;
+  acceptedAnswers: AcceptedAnswersByLocale[Locale];
+  onAcceptedAnswers: (next: string[]) => void;
   hints: string[];
   onHints: (next: string[]) => void;
 }) {
@@ -197,12 +209,12 @@ function RiddleAnswerSection({
     <div className="flex flex-col gap-3 border-t border-border bg-background
                     px-4 py-4">
       <label className="flex flex-col gap-1">
-        <span className="text-labelSm text-disabled">Correct answer</span>
+        <span className="text-labelSm text-disabled">Accepted answers</span>
         <input
           className="input-field"
-          value={solution}
-          onChange={(e) => onSolution(e.target.value)}
-          placeholder="The tourist's answer"
+          value={formatAcceptedAnswersInput(acceptedAnswers)}
+          onChange={(e) => onAcceptedAnswers(parseAcceptedAnswersInput(e.target.value))}
+          placeholder="Comma-separated valid answers"
         />
       </label>
       <fieldset className="flex flex-col gap-2">

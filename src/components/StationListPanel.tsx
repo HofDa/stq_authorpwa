@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { createId, emptyStation, type RiddleEntry } from '@/schema';
+import { StationIconPreview } from '@/components/stations/StationVisualPreview';
 
 interface Props {
   draftId: string;
@@ -63,9 +64,24 @@ export function StationListPanel({ draftId, stations, onChange }: Props) {
               key={station.id}
               className="flex items-center gap-3 rounded-[20px] border border-border bg-background/70 p-3"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-labelLg text-white shadow-[0_8px_18px_rgba(144,74,72,0.22)]">
-                {station.number}
-              </span>
+              <div className="relative h-12 w-12 shrink-0">
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-[16px]
+                             border border-border bg-white shadow-[0_8px_18px_rgba(35,25,25,0.08)]"
+                >
+                  <StationIconPreview
+                    station={station}
+                    style={{ width: 38, height: 38 }}
+                  />
+                </div>
+                <span
+                  className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center
+                             justify-center rounded-full border-2 border-background
+                             bg-primary text-[10px] font-bold text-white"
+                >
+                  {station.number}
+                </span>
+              </div>
               <div className="min-w-0 flex-1">
                 <Link
                   to={`/tours/${draftId}/stations/${station.id}`}
