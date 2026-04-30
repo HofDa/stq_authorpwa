@@ -1,29 +1,14 @@
-import { lazy, Suspense } from 'react';
 import {
   sanitizeAuthorMapProps,
   type AuthorMapProps,
 } from './mapTypes';
-import { MAP_PROVIDER } from './mapConfig';
-import { LeafletAuthorMap } from './LeafletAuthorMap';
+import { MapLibreAuthorMap } from './MapLibreAuthorMap';
 
-const LazyMapLibreAuthorMap = lazy(async () => {
-  const module = await import('./MapLibreAuthorMap');
-  return { default: module.MapLibreAuthorMap };
-});
-
+/**
+ * Single map renderer for the whole authoring app. We removed the
+ * Leaflet path — MapLibre handles every author-side map.
+ */
 export function AuthorMap(props: AuthorMapProps) {
   const sanitizedProps = sanitizeAuthorMapProps(props);
-
-  if (MAP_PROVIDER === 'maplibre') {
-    return (
-      <Suspense
-        fallback={
-          <div className={sanitizedProps.className} style={sanitizedProps.style} />
-        }
-      >
-        <LazyMapLibreAuthorMap {...sanitizedProps} />
-      </Suspense>
-    );
-  }
-  return <LeafletAuthorMap {...sanitizedProps} />;
+  return <MapLibreAuthorMap {...sanitizedProps} />;
 }

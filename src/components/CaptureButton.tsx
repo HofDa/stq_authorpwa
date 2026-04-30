@@ -1,12 +1,15 @@
 import { useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { storeImageBlob, type ImagePreset } from '@/media/imagePipeline';
 
 interface Props {
   draftId: string;
   preset: ImagePreset;
   onCaptured: (blobId: string) => void;
-  label?: string;
+  label?: ReactNode;
   className?: string;
+  ariaLabel?: string;
+  capture?: 'environment' | 'user' | false;
 }
 
 /**
@@ -19,6 +22,8 @@ export function CaptureButton({
   onCaptured,
   label = '📷 Retake',
   className,
+  ariaLabel,
+  capture = 'environment',
 }: Props) {
   const ref = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,6 +47,7 @@ export function CaptureButton({
         type="button"
         onClick={() => ref.current?.click()}
         disabled={busy}
+        aria-label={ariaLabel}
         className={
           className ??
           'rounded-full bg-black/60 px-3 py-1 text-labelSm text-white shadow'
@@ -53,7 +59,7 @@ export function CaptureButton({
         ref={ref}
         type="file"
         accept="image/*"
-        capture="environment"
+        capture={capture === false ? undefined : capture}
         className="hidden"
         onChange={handle}
       />

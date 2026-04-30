@@ -28,13 +28,14 @@ npm run typecheck  # tsc --noEmit
 
 ## Map Provider
 
-Maps now default to MapLibre through the shared `AuthorMap` boundary.
+Maps use MapLibre through the shared `AuthorMap` boundary. There is no fallback map provider.
 
-- `VITE_MAP_PROVIDER=maplibre` keeps the default provider explicit.
-- `VITE_MAP_PROVIDER=leaflet` enables the temporary Leaflet fallback.
 - `VITE_MAP_STYLE_URL=https://.../style.json` overrides the MapLibre style URL.
+- `VITE_MAPLIBRE_STYLE_URL` is still accepted as a legacy fallback env var, but new setup should use `VITE_MAP_STYLE_URL`.
 
-If `VITE_MAP_STYLE_URL` is unset, the app falls back to a safe public raster OpenStreetMap style with no API key. For compatibility with the earlier spike, `VITE_MAPLIBRE_STYLE_URL` is still accepted as a fallback env var, but new setup should use `VITE_MAP_STYLE_URL`.
+If `VITE_MAP_STYLE_URL` is unset, the app falls back to a safe public raster OpenStreetMap style with no API key.
+
+The bundled raster basemaps are online tile sources. The PWA shell can work offline, but map tiles are not offline-ready yet. When hardening map changes, manually test: basemap switching, marker cleanup, selected station panning, route rendering, current-position recentering, and panel resize.
 
 ## Current status (Phase 1 working baseline)
 

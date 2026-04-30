@@ -3,6 +3,7 @@ import type { TourEntry, TourLocaleContent } from './tour';
 import type { RiddleEntry, RiddleLocaleContent } from './riddle';
 import { LOCALES, type Locale } from './locales';
 import { emptyAcceptedAnswers } from './riddle';
+import { createDefaultTourMeta } from './tourMeta';
 import {
   applyStationVisualSelection,
   DEFAULT_STATION_VISUAL,
@@ -46,6 +47,7 @@ function localeMap<T>(factory: () => T): Record<Locale, T> {
 }
 
 export function emptyTour(id: string): TourEntry {
+  const meta = createDefaultTourMeta();
   return {
     id,
     number: 0,
@@ -54,6 +56,11 @@ export function emptyTour(id: string): TourEntry {
     distance: '',
     unlocked: true,
     ...localeMap(emptyTourLocale),
+    publicMeta: meta.publicMeta,
+    adminMeta: meta.adminMeta,
+    authoringMeta: meta.authoringMeta,
+    aiContext: meta.aiContext,
+    storyMeta: meta.storyMeta,
   };
 }
 

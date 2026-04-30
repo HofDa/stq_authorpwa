@@ -1,7 +1,9 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useEditorLanguage } from '@/i18n/editorLanguage';
 
 export function AppLayout() {
   const { pathname } = useLocation();
+  const { t } = useEditorLanguage();
   const isRoot = pathname === '/' || pathname === '/tours';
   const isTourEditor = /^\/tours\/[^/]+\/?$/.test(pathname);
   const isFieldMode = /^\/tours\/[^/]+\/field\/?$/.test(pathname);
@@ -47,11 +49,11 @@ export function AppLayout() {
 
             {isRoot ? (
               <div className="rounded-full border border-border bg-white px-3 py-2 text-labelSm text-primary shadow-sm">
-                Mobile-first
+                {t('app.mobileFirst')}
               </div>
             ) : (
               <Link to="/tours" className="btn-ghost text-labelLg">
-                ← Tours
+                ← {t('app.tours')}
               </Link>
             )}
           </div>

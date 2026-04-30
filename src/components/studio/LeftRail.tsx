@@ -8,7 +8,6 @@ interface Props {
   locale: Locale;
   onSelectPrev: () => void;
   onSelectNext: () => void;
-  onOpenFullEditor: (stationId: string) => void;
 }
 
 export function LeftRail({
@@ -17,7 +16,6 @@ export function LeftRail({
   locale,
   onSelectPrev,
   onSelectNext,
-  onOpenFullEditor,
 }: Props) {
   const tour = draft.tour;
   const tourStats = tourCompleteness(draft, locale);
@@ -187,66 +185,6 @@ export function LeftRail({
                 done={selectedStats.hasSuccessMessage}
                 action="Write"
               />
-            </div>
-            <div
-              style={{
-                marginTop: 'auto',
-                paddingTop: 12,
-                borderTop: '1px solid var(--stq-border-soft)',
-              }}
-            >
-              <button
-                className="studio-btn-ghost"
-                onClick={() => onOpenFullEditor(selected.id)}
-                style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
-              >
-                Open full station editor
-              </button>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 11,
-                  color: 'var(--stq-text-mute)',
-                  marginTop: 10,
-                }}
-              >
-                <Icon name="sparkles" size={12} color="var(--stq-primary)" />
-                <span
-                  style={{
-                    fontWeight: 700,
-                    color: 'var(--stq-primary)',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  OpenClaw assistant
-                </span>
-              </div>
-              <div
-                style={{
-                  marginTop: 8,
-                  padding: 10,
-                  borderRadius: 12,
-                  background:
-                    'linear-gradient(135deg, rgba(144,74,72,0.06), rgba(216,193,192,0.2))',
-                  border: '1px solid var(--stq-border-soft)',
-                  fontSize: 12,
-                  lineHeight: 1.45,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'Lato, Georgia, serif',
-                    fontStyle: 'italic',
-                    color: 'var(--stq-text)',
-                  }}
-                >
-                  Local checks run on every edit — the cloud assistant hands off once the
-                  real API is wired up.
-                </div>
-              </div>
             </div>
           </>
         ) : (

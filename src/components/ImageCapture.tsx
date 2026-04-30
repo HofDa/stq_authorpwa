@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { storeImageBlob, type ImagePreset } from '@/media/imagePipeline';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
 
@@ -10,6 +10,7 @@ interface Props {
   aspectClass?: string;
   label?: string;
   rounded?: 'md' | 'none';
+  captureSignal?: number;
 }
 
 /**
@@ -27,11 +28,16 @@ export function ImageCapture({
   aspectClass = 'aspect-[3/2]',
   label = 'Tap to take a photo',
   rounded = 'md',
+  captureSignal = 0,
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const url = useBlobUrl(blobId);
+
+  useEffect(() => {
+    if (captureSignal > 0 && !busy) inputRef.current?.click();
+  }, [busy, captureSignal]);
 
   async function onFileChosen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

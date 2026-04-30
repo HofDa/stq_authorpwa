@@ -8,6 +8,7 @@ import {
 import { EditableText } from './EditableText';
 import { ImageCapture } from '@/components/ImageCapture';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
+import { Icon } from '@/components/studio/Icon';
 
 interface Props {
   draftId: string;
@@ -88,8 +89,15 @@ function BlockRow({
   isFirst,
   isLast,
 }: RowProps) {
+  const [editSignal, setEditSignal] = useState(0);
+
   return (
-    <div className="group relative px-4 py-2">
+    <div className="stq-native-element group">
+      <FieldElementActions
+        editLabel={`Edit ${block.type} block`}
+        aiLabel={`Ask AI agent for ${block.type} block`}
+        onEdit={() => setEditSignal((value) => value + 1)}
+      />
       <RowControls
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
@@ -97,7 +105,12 @@ function BlockRow({
         isFirst={isFirst}
         isLast={isLast}
       />
-      <BlockContent block={block} draftId={draftId} onChange={onChange} />
+      <BlockContent
+        block={block}
+        draftId={draftId}
+        editSignal={editSignal}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -105,10 +118,12 @@ function BlockRow({
 function BlockContent({
   block,
   draftId,
+  editSignal,
   onChange,
 }: {
   block: ContentBlock;
   draftId: string;
+  editSignal: number;
   onChange: (next: ContentBlock) => void;
 }) {
   switch (block.type) {
@@ -120,6 +135,7 @@ function BlockContent({
           onChange={(text) => onChange({ ...block, text })}
           placeholder="Heading"
           className="font-ui text-h4 text-text"
+          editSignal={editSignal}
         />
       );
     case 'paragraph':
@@ -131,6 +147,7 @@ function BlockContent({
           onChange={(text) => onChange({ ...block, text })}
           placeholder="Paragraph text…"
           className="whitespace-pre-wrap font-body text-body text-text"
+          editSignal={editSignal}
         />
       );
     case 'line':
@@ -141,6 +158,7 @@ function BlockContent({
           onChange={(text) => onChange({ ...block, text })}
           placeholder="Line (emoji + short text)"
           className="font-ui text-body text-text"
+          editSignal={editSignal}
         />
       );
     case 'image':
@@ -148,6 +166,7 @@ function BlockContent({
         <ImageBlockEditor
           block={block}
           draftId={draftId}
+          editSignal={editSignal}
           onChange={onChange}
         />
       );
@@ -157,10 +176,12 @@ function BlockContent({
 function ImageBlockEditor({
   block,
   draftId,
+  editSignal,
   onChange,
 }: {
   block: Extract<ContentBlock, { type: 'image' }>;
   draftId: string;
+  editSignal: number;
   onChange: (next: ContentBlock) => void;
 }) {
   const url = useBlobUrl(block.localBlobId);
@@ -187,7 +208,41 @@ function ImageBlockEditor({
       }
       aspectClass="aspect-[4/3]"
       label="Tap to add a photo"
+      captureSignal={editSignal}
     />
+  );
+}
+
+function FieldElementActions({
+  editLabel,
+  aiLabel,
+  onEdit,
+}: {
+  editLabel: string;
+  aiLabel: string;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="stq-native-element-actions" aria-label="Element actions">
+      <button
+        type="button"
+        className="stq-native-action-btn"
+        onClick={onEdit}
+        aria-label={editLabel}
+        title={editLabel}
+      >
+        <Icon name="edit" size={14} />
+      </button>
+      <button
+        type="button"
+        className="stq-native-action-btn stq-native-action-btn--ai"
+        disabled
+        aria-label={aiLabel}
+        title="AI agent not connected yet"
+      >
+        <Icon name="sparkles" size={14} />
+      </button>
+    </div>
   );
 }
 
@@ -206,7 +261,7 @@ function RowControls({
 }) {
   return (
     <div
-      className="pointer-events-none absolute right-2 top-2 flex gap-1
+      className="pointer-events-none absolute right-3 top-12 z-10 flex gap-1
                  opacity-0 transition group-hover:pointer-events-auto
                  group-hover:opacity-100 group-focus-within:pointer-events-auto
                  group-focus-within:opacity-100"

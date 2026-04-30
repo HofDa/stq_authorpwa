@@ -8,6 +8,10 @@ import {
 } from '@/schema';
 import type { AuthorMapBasemapKey } from '@/components/map/mapTypes';
 import { DEFAULT_AUTHOR_MAP_BASEMAP } from '@/components/map/mapTypes';
+import {
+  getStationLocationLabel,
+  getTourLocationLabel,
+} from '@/utils/localizedContent';
 import type { FieldView } from './types';
 import { useFieldGps } from './useFieldGps';
 
@@ -123,12 +127,11 @@ export function useFieldModeState({
     basemap,
     setBasemap,
     gpsAccuracy: gps?.accuracy ?? null,
-    tourLabel: draft.tour[locale].location || 'Tour',
+    tourLabel: getTourLocationLabel(draft.tour, locale, 'Tour'),
     selectedLabel: selected
-      ? `Station ${selected.number}: ${selected[locale].location || 'Unnamed'}`
+      ? `Station ${selected.number}: ${getStationLocationLabel(selected, locale, 'Unnamed')}`
       : 'No station selected',
     isFirst: selectedIndex <= 0,
     isLast: selectedIndex < 0 || selectedIndex >= draft.stations.length - 1,
   };
 }
-

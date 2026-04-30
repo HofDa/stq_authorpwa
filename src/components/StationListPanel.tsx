@@ -1,6 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { createId, emptyStation, type RiddleEntry } from '@/schema';
+import {
+  createId,
+  DEFAULT_LOCALE,
+  emptyStation,
+  type RiddleEntry,
+} from '@/schema';
 import { StationIconPreview } from '@/components/stations/StationVisualPreview';
+import { getStationLocationLabel } from '@/utils/localizedContent';
+import { useConfirm } from '@/components/ui/FeedbackProvider';
 
 interface Props {
   draftId: string;
@@ -10,6 +17,7 @@ interface Props {
 
 export function StationListPanel({ draftId, stations, onChange }: Props) {
   const navigate = useNavigate();
+  const askConfirm = useConfirm();
 
   function addStation() {
     const id = createId('stn');
@@ -19,8 +27,14 @@ export function StationListPanel({ draftId, stations, onChange }: Props) {
     navigate(`/tours/${draftId}/stations/${id}`);
   }
 
-  function removeStation(id: string) {
-    if (!confirm('Delete this station?')) return;
+  async function removeStation(id: string) {
+    const confirmed = await askConfirm({
+      title: 'Delete station?',
+      message: 'This removes the station from the local draft.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     onChange(
       stations
         .filter((s) => s.id !== id)
@@ -87,7 +101,11 @@ export function StationListPanel({ draftId, stations, onChange }: Props) {
                   to={`/tours/${draftId}/stations/${station.id}`}
                   className="block truncate text-h6 text-primary"
                 >
-                  {station.en.location || station.de.location || station.it.location || 'Untitled station'}
+                  {getStationLocationLabel(
+                    station,
+                    DEFAULT_LOCALE,
+                    'Untitled station',
+                  )}
                 </Link>
                 <div className="mt-1 flex flex-wrap gap-2">
                   <span className="rounded-full border border-border bg-white px-2.5 py-1 text-labelSm text-disabled">

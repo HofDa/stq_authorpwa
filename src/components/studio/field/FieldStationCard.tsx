@@ -1,4 +1,5 @@
 import type { Locale, RiddleEntry } from '@/schema';
+import { getStationLocationLabel } from '@/utils/localizedContent';
 import { stationCompleteness } from '../completeness';
 
 interface Props {
@@ -45,7 +46,7 @@ export function FieldStationCard({
             whiteSpace: 'nowrap',
           }}
         >
-          {station[locale].location || 'Unnamed station'}
+          {getStationLocationLabel(station, locale)}
         </div>
         <div style={{ fontSize: 11, color: 'var(--stq-text-mute)' }}>
           {label} · {stats.percent}%

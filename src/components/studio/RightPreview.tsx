@@ -2,19 +2,72 @@ import { useState, type ReactNode } from 'react';
 import type { Locale, RiddleEntry, TourDraft } from '@/schema';
 import { InlineTourIntro } from '@/components/editable/InlineTourIntro';
 import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
+import { Icon } from './Icon';
 
 interface Props {
   draft: TourDraft;
   selected: RiddleEntry | null;
   locale: Locale;
   onChange: (recipe: (prev: TourDraft) => TourDraft) => void;
+  /**
+   * When `true`, the preview collapses to a 36px rail with an "Open" button.
+   * The Stations workspace toggles this so the right column doesn't compete
+   * with the Edit-mode editor for screen real estate.
+   */
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
+  /** Lock the inner mode (intro/station/outro). Used by Story workspace. */
+  forcedMode?: Mode;
 }
 
-type Mode = 'intro' | 'station';
+type Mode = 'intro' | 'station' | 'outro';
 
-export function RightPreview({ draft, selected, locale, onChange }: Props) {
-  const [mode, setMode] = useState<Mode>(selected ? 'station' : 'intro');
-  const effectiveMode: Mode = mode === 'station' && !selected ? 'intro' : mode;
+export function RightPreview({
+  draft,
+  selected,
+  locale,
+  onChange,
+  collapsed,
+  onToggleCollapsed,
+  forcedMode,
+}: Props) {
+  const [mode, setMode] = useState<Mode>(
+    forcedMode ?? (selected ? 'station' : 'intro'),
+  );
+  const activeMode = forcedMode ?? mode;
+  const effectiveMode: Mode = activeMode === 'station' && !selected ? 'intro' : activeMode;
+
+  if (collapsed) {
+    return (
+      <aside
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          paddingTop: 12,
+        }}
+      >
+        <button
+          type="button"
+          className="studio-btn-ghost"
+          onClick={onToggleCollapsed}
+          style={{
+            writingMode: 'vertical-rl',
+            transform: 'rotate(180deg)',
+            minHeight: 0,
+            padding: '12px 6px',
+            fontSize: 11,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+          }}
+          aria-label="Show tourist preview"
+        >
+          <Icon name="phone" size={12} />
+          <span style={{ marginTop: 6 }}>Show preview</span>
+        </button>
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -34,7 +87,7 @@ export function RightPreview({ draft, selected, locale, onChange }: Props) {
           boxShadow: 'var(--stq-shadow-soft)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div>
             <div
               style={{
@@ -51,20 +104,44 @@ export function RightPreview({ draft, selected, locale, onChange }: Props) {
               What they'll see
             </div>
           </div>
-          <div className="studio-seg">
-            <button
-              className={effectiveMode === 'intro' ? 'active' : ''}
-              onClick={() => setMode('intro')}
-            >
-              Intro
-            </button>
-            <button
-              className={effectiveMode === 'station' ? 'active' : ''}
-              onClick={() => setMode('station')}
-              disabled={!selected}
-            >
-              Station
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {!forcedMode && (
+              <div className="studio-seg">
+                <button
+                  type="button"
+                  className={effectiveMode === 'intro' ? 'active' : ''}
+                  onClick={() => setMode('intro')}
+                >
+                  Intro
+                </button>
+                <button
+                  type="button"
+                  className={effectiveMode === 'station' ? 'active' : ''}
+                  onClick={() => setMode('station')}
+                  disabled={!selected}
+                >
+                  Station
+                </button>
+                <button
+                  type="button"
+                  className={effectiveMode === 'outro' ? 'active' : ''}
+                  onClick={() => setMode('outro')}
+                >
+                  Outro
+                </button>
+              </div>
+            )}
+            {onToggleCollapsed && (
+              <button
+                type="button"
+                className="studio-btn-icon"
+                style={{ width: 28, height: 28 }}
+                onClick={onToggleCollapsed}
+                aria-label="Collapse tourist preview"
+              >
+                <Icon name="chevron-right" size={13} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -85,14 +162,20 @@ export function RightPreview({ draft, selected, locale, onChange }: Props) {
         }}
       >
         <PhoneFrame>
-          {effectiveMode === 'intro' || !selected ? (
-            <InlineTourIntro draft={draft} locale={locale} onChange={onChange} />
-          ) : (
+          {effectiveMode === 'station' && selected ? (
             <InlineStationDrawer
               draft={draft}
               station={selected}
               locale={locale}
               onChange={onChange}
+            />
+          ) : (
+            <InlineTourIntro
+              key={effectiveMode === 'outro' ? 'outro' : 'intro'}
+              draft={draft}
+              locale={locale}
+              onChange={onChange}
+              initialTab={effectiveMode === 'outro' ? 'outro' : 'intro'}
             />
           )}
         </PhoneFrame>

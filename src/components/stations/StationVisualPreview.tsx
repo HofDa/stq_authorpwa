@@ -15,9 +15,20 @@ interface BaseProps {
   alt?: string;
 }
 
+type StationLike = Pick<
+  RiddleEntry,
+  'id' | 'iconPath' | 'markerIconPath' | 'iconKey' | 'iconColorKey'
+>;
+
 type Props =
-  | ({ station: Pick<RiddleEntry, 'id' | 'iconPath' | 'markerIconPath' | 'iconKey' | 'iconColorKey'> } & BaseProps)
+  | ({ station: StationLike } & BaseProps)
   | ({ choice: StationVisualChoice } & BaseProps);
+
+interface RailProps extends BaseProps {
+  station: StationLike;
+  stations?: ReadonlyArray<StationLike>;
+  activeStationId?: string;
+}
 
 export function StationIconPreview(props: Props) {
   const choice = 'choice' in props ? props.choice : normalizeStationVisualChoice(props.station);
@@ -54,14 +65,21 @@ export function StationMarkerPreview(props: Props) {
   );
 }
 
-export function StationRailPreview(props: Props) {
-  const choice =
-    'choice' in props ? props.choice : normalizeStationVisualChoice(props.station);
-  const color = getStationColorOption(choice.iconColorKey);
+export function StationRailPreview({
+  station,
+  stations,
+  activeStationId,
+  className,
+  style,
+}: RailProps) {
+  const activeChoice = normalizeStationVisualChoice(station);
+  const activeColor = getStationColorOption(activeChoice.iconColorKey);
+  const railStations = stations && stations.length > 0 ? stations : [station];
+  const activeId = activeStationId ?? station.id;
 
   return (
     <div
-      className={props.className}
+      className={className}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -70,7 +88,8 @@ export function StationRailPreview(props: Props) {
         background: '#FFFFFF',
         padding: '10px 12px',
         boxShadow: '0 8px 24px rgba(35, 25, 25, 0.14)',
-        ...props.style,
+        minWidth: 0,
+        ...style,
       }}
     >
       <div
@@ -80,7 +99,7 @@ export function StationRailPreview(props: Props) {
           width: 44,
           height: 44,
           borderRadius: 9999,
-          background: color.ring,
+          background: activeColor.ring,
           color: '#FFFFFF',
           fontSize: 28,
           fontWeight: 700,
@@ -92,28 +111,33 @@ export function StationRailPreview(props: Props) {
       </div>
 
       <div
+        className="stq-station-rail-track"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 10,
           minWidth: 0,
           flex: 1,
-          justifyContent: 'center',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          padding: '2px 4px',
         }}
       >
-        <RailIcon
-          choice={{ iconKey: 'leaf', iconColorKey: 'pine' }}
-          tint="#B8B0AF"
-        />
-        <RailIcon
-          choice={{ iconKey: 'star', iconColorKey: 'amber' }}
-          tint="#B8B0AF"
-        />
-        <RailIcon choice={choice} active ringColor={color.ring} />
-        <RailIcon
-          choice={{ iconKey: 'cup', iconColorKey: 'claret' }}
-          tint="#B8B0AF"
-        />
+        {railStations.map((entry) => {
+          const choice = normalizeStationVisualChoice(entry);
+          const isActive = entry.id === activeId;
+          if (isActive) {
+            return (
+              <RailIcon
+                key={entry.id}
+                choice={choice}
+                active
+                ringColor={activeColor.ring}
+              />
+            );
+          }
+          return <RailIcon key={entry.id} choice={choice} tint="#B8B0AF" />;
+        })}
       </div>
 
       <div

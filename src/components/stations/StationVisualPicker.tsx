@@ -18,10 +18,13 @@ interface Props {
     RiddleEntry,
     'id' | 'iconPath' | 'markerIconPath' | 'iconKey' | 'iconColorKey'
   >;
+  stations?: ReadonlyArray<
+    Pick<RiddleEntry, 'id' | 'iconPath' | 'markerIconPath' | 'iconKey' | 'iconColorKey'>
+  >;
   onChange: (patch: Partial<RiddleEntry>) => void;
 }
 
-export function StationVisualPicker({ station, onChange }: Props) {
+export function StationVisualPicker({ station, stations, onChange }: Props) {
   const choice = normalizeStationVisualChoice(station);
   const selectedColor = getStationColorOption(choice.iconColorKey);
   const [search, setSearch] = useState('');
@@ -46,8 +49,8 @@ export function StationVisualPicker({ station, onChange }: Props) {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-      <div className="rounded-[20px] border border-border bg-background px-4 py-4">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <div className="min-w-0 rounded-[20px] border border-border bg-background px-4 py-4">
         <p className="text-labelSm uppercase tracking-[0.18em] text-primary/75">
           In App
         </p>
@@ -75,7 +78,11 @@ export function StationVisualPicker({ station, onChange }: Props) {
             />
           </div>
           <div className="p-3 pt-0">
-            <StationRailPreview station={station} />
+            <StationRailPreview
+              station={station}
+              stations={stations}
+              activeStationId={station.id}
+            />
           </div>
         </div>
         <div

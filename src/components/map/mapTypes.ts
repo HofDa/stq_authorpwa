@@ -125,6 +125,9 @@ export interface AuthorMapProps {
   currentPositionStyle?: AuthorMapCurrentPositionStyle;
   basemap?: AuthorMapBasemapKey;
   onSelectStation?: (stationId: string) => void;
+  draggableStationIds?: string[];
+  onStationCoordinateChange?: (stationId: string, coordinate: AuthorMapCoordinate) => void;
+  onViewportCenterChange?: (center: AuthorMapCoordinate) => void;
 }
 
 export const AUTHOR_MAP_SELECTION_STYLE_PLANNER: AuthorMapSelectionStyle = {

@@ -1,12 +1,6 @@
-node_modules
-dist
-dist-ssr
-*.local
+node_modules/
+dist/
 *.tsbuildinfo
-.vite
-.DS_Store
 .env
 .env.local
-.idea
-.vscode/*
-!.vscode/extensions.json
+.env.*.local

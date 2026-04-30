@@ -1,5 +1,12 @@
 import { z } from 'zod';
 import { ContentBlockSchema } from './contentBlock';
+import {
+  TourAdminMetaSchema,
+  TourAIContextSchema,
+  TourAuthoringMetaSchema,
+  TourPublicMetaSchema,
+  TourStoryMetaSchema,
+} from './tourMeta';
 
 /**
  * Tour metadata entry consumed by `Tour.fromJson` in `lib/models/tour.dart`.
@@ -34,6 +41,16 @@ export const TourEntrySchema = z.object({
   en: TourLocaleSchema,
   de: TourLocaleSchema,
   it: TourLocaleSchema,
+  /**
+   * Optional layered metadata. See `tourMeta.ts` for why each block is
+   * separate and which audience it serves. Pre-meta drafts still parse —
+   * absent blocks are treated as empty by `createDefaultTourMeta`.
+   */
+  publicMeta: TourPublicMetaSchema.optional(),
+  adminMeta: TourAdminMetaSchema.optional(),
+  authoringMeta: TourAuthoringMetaSchema.optional(),
+  aiContext: TourAIContextSchema.optional(),
+  storyMeta: TourStoryMetaSchema.optional(),
 });
 
 export type TourEntry = z.infer<typeof TourEntrySchema>;

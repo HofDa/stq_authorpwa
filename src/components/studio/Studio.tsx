@@ -1,6 +1,4 @@
 import {
-  Suspense,
-  lazy,
   useCallback,
   useEffect,
   useMemo,
@@ -19,18 +17,15 @@ import {
   DraftExportValidationError,
   downloadDraftExportZip,
 } from '@/export/tourExport';
-import { Icon } from './Icon';
-import { LeftRail } from './LeftRail';
-import { RightPreview } from './RightPreview';
 import { StudioHeader } from './StudioHeader';
-import { Swimlane } from './Swimlane';
-
-const LiveRoutePlannerPanel = lazy(async () => {
-  const module = await import('@/components/map/LiveRoutePlannerPanel');
-  return { default: module.LiveRoutePlannerPanel };
-});
-
-type View = 'overview' | 'stations' | 'intro-outro' | 'route';
+import { useToast } from '@/components/ui/FeedbackProvider';
+import type { StudioWorkflowSection } from './workflow/workflowTypes';
+import { PlanWorkspace } from './workspaces/PlanWorkspace';
+import { StoryWorkspace } from './workspaces/StoryWorkspace';
+import { StationsWorkspace } from './workspaces/StationsWorkspace';
+import { RouteWorkspace } from './workspaces/RouteWorkspace';
+import { PreviewWorkspace } from './workspaces/PreviewWorkspace';
+import { StudioSidebar } from './sidebar/StudioSidebar';
 
 interface Props {
   draft: TourDraft;
@@ -42,7 +37,9 @@ interface Props {
 export function Studio({ draft, onChange }: Props) {
   const navigate = useNavigate();
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
-  const [view, setView] = useState<View>('stations');
+  const [activeSection, setActiveSection] = useState<StudioWorkflowSection>(
+    'stations',
+  );
   const [selectedId, setSelectedId] = useState<string | null>(
     draft.stations[0]?.id ?? null,
   );
@@ -50,6 +47,7 @@ export function Studio({ draft, onChange }: Props) {
   const [exportError, setExportError] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (!selectedId && draft.stations.length > 0) {
@@ -105,7 +103,8 @@ export function Studio({ draft, onChange }: Props) {
     [onChange],
   );
 
-  // Keyboard shortcuts: ←/→ switch, R reorder, ⌘K / Ctrl+K jump.
+  // Keyboard shortcuts only apply while the Stations workspace is active —
+  // ←/→ switch station, R toggles reorder, ⌘K / Ctrl+K opens jump palette.
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
@@ -116,7 +115,11 @@ export function Studio({ draft, onChange }: Props) {
         tag === 'TEXTAREA' ||
         tag === 'SELECT';
 
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if (
+        activeSection === 'stations' &&
+        (e.metaKey || e.ctrlKey) &&
+        e.key.toLowerCase() === 'k'
+      ) {
         e.preventDefault();
         setJumpOpen(true);
         return;
@@ -126,6 +129,7 @@ export function Studio({ draft, onChange }: Props) {
         return;
       }
       if (isTyping) return;
+      if (activeSection !== 'stations') return;
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
         selectByDelta(-1);
@@ -139,7 +143,7 @@ export function Studio({ draft, onChange }: Props) {
     }
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [jumpOpen, selectByDelta]);
+  }, [activeSection, jumpOpen, selectByDelta]);
 
   async function onExport() {
     setExportError(null);
@@ -147,9 +151,12 @@ export function Studio({ draft, onChange }: Props) {
     try {
       const result = await downloadDraftExportZip(draft, { locale });
       const notice = formatSuccessfulExport(result);
-      if (notice) {
-        alert(notice);
-      }
+      toast({
+        title: `Export complete (${result.fileName})`,
+        message: notice ?? 'ZIP file downloaded successfully.',
+        tone: notice ? 'warning' : 'success',
+        durationMs: notice ? 9000 : 5200,
+      });
     } catch (error) {
       setExportError(formatExportError(error));
     } finally {
@@ -171,11 +178,11 @@ export function Studio({ draft, onChange }: Props) {
       <StudioHeader
         draft={draft}
         locale={locale}
-        view={view}
+        view={activeSection}
         exporting={exporting}
         onBack={() => navigate('/tours')}
         onLocaleChange={setLocale}
-        onViewChange={setView}
+        onViewChange={setActiveSection}
         onExport={onExport}
         onEnterField={() =>
           navigate(`/tours/${draft.draftId}/field`, {
@@ -211,103 +218,32 @@ export function Studio({ draft, onChange }: Props) {
 
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: '260px minmax(0, 1fr) 380px',
-          gap: 12,
           padding: '12px 16px 16px',
           minHeight: 0,
           minWidth: 0,
           width: '100%',
+          height: '100%',
           overflow: 'hidden',
         }}
       >
-        <LeftRail
-          draft={draft}
-          selected={selected}
-          locale={locale}
-          onSelectPrev={() => selectByDelta(-1)}
-          onSelectNext={() => selectByDelta(1)}
-          onOpenFullEditor={(stationId) =>
-            navigate(`/tours/${draft.draftId}/stations/${stationId}`)
-          }
-        />
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateRows: '1fr auto',
-            gridTemplateColumns: 'minmax(0, 1fr)',
-            gap: 14,
-            minHeight: 0,
-            minWidth: 0,
-          }}
-        >
-          <div
-            style={{
-              borderRadius: 20,
-              overflow: 'hidden',
-              position: 'relative',
-              border: '1px solid var(--stq-border)',
-              boxShadow: 'var(--stq-shadow-card)',
-              minHeight: 0,
-            }}
-          >
-            <Suspense
-              fallback={
-                <div
-                  style={{
-                    display: 'grid',
-                    placeItems: 'center',
-                    height: '100%',
-                    color: 'var(--stq-text-mute)',
-                    fontSize: 12,
-                  }}
-                >
-                  Loading map…
-                </div>
-              }
-            >
-              <LiveRoutePlannerPanel draft={draft} onChange={onChange} />
-            </Suspense>
-          </div>
-
-          <div
-            style={{
-              borderRadius: 20,
-              background: 'white',
-              border: '1px solid var(--stq-border)',
-              boxShadow: 'var(--stq-shadow-card)',
-              overflow: 'hidden',
-              minWidth: 0,
-            }}
-          >
-            <SwimlaneHeader
-              total={draft.stations.length}
-              reorderMode={reorderMode}
-              onToggleReorder={() => setReorderMode((v) => !v)}
-              onAddStation={addStation}
-            />
-            <Swimlane
-              stations={draft.stations}
-              selectedId={selectedId}
-              locale={locale}
-              reorderMode={reorderMode}
-              onSelect={setSelectedId}
-              onAdd={addStation}
-              onReorder={reorderStations}
-              onOpenFullEditor={(stationId) =>
-                navigate(`/tours/${draft.draftId}/stations/${stationId}`)
-              }
-            />
-          </div>
-        </div>
-
-        <RightPreview
-          draft={draft}
-          selected={selected}
-          locale={locale}
-          onChange={onChange}
-        />
+        {renderWorkspace({
+          activeSection,
+          draft,
+          locale,
+          selected,
+          selectedId,
+          reorderMode,
+          onChange,
+          onLocaleChange: setLocale,
+          onSelectStation: setSelectedId,
+          onSelectPrev: () => selectByDelta(-1),
+          onSelectNext: () => selectByDelta(1),
+          onAddStation: addStation,
+          onReorderStations: reorderStations,
+          onToggleReorder: () => setReorderMode((v) => !v),
+          onOpenFullEditor: (stationId) =>
+            navigate(`/tours/${draft.draftId}/stations/${stationId}`),
+        })}
       </div>
       {jumpOpen && (
         <JumpPalette
@@ -324,94 +260,115 @@ export function Studio({ draft, onChange }: Props) {
   );
 }
 
-function SwimlaneHeader({
-  total,
-  reorderMode,
-  onToggleReorder,
-  onAddStation,
-}: {
-  total: number;
+interface RenderWorkspaceArgs {
+  activeSection: StudioWorkflowSection;
+  draft: TourDraft;
+  locale: Locale;
+  selected: RiddleEntry | null;
+  selectedId: string | null;
   reorderMode: boolean;
-  onToggleReorder: () => void;
+  onChange: (
+    patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
+  ) => void;
+  onLocaleChange: (locale: Locale) => void;
+  onSelectStation: (id: string) => void;
+  onSelectPrev: () => void;
+  onSelectNext: () => void;
   onAddStation: () => void;
-}) {
+  onReorderStations: (sourceId: string, targetId: string) => void;
+  onToggleReorder: () => void;
+  onOpenFullEditor: (stationId: string) => void;
+}
+
+function renderWorkspace(args: RenderWorkspaceArgs) {
+  // The Stations workspace ships its own three-column layout (LeftRail +
+  // map/swimlane + RightPreview), so we render it raw. The other four
+  // workspaces are paired with the contextual `StudioSidebar` here.
+  if (args.activeSection === 'stations') {
+    return (
+      <StationsWorkspace
+        draft={args.draft}
+        locale={args.locale}
+        selected={args.selected}
+        selectedId={args.selectedId}
+        reorderMode={args.reorderMode}
+        onChange={args.onChange}
+        onSelectStation={args.onSelectStation}
+        onSelectPrev={args.onSelectPrev}
+        onSelectNext={args.onSelectNext}
+        onAddStation={args.onAddStation}
+        onReorderStations={args.onReorderStations}
+        onToggleReorder={args.onToggleReorder}
+        onOpenFullEditor={args.onOpenFullEditor}
+      />
+    );
+  }
+
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 20px 0',
+        display: 'grid',
+        gridTemplateColumns: '260px minmax(0, 1fr)',
         gap: 12,
-        flexWrap: 'wrap',
+        minHeight: 0,
+        minWidth: 0,
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
       }}
     >
-      <div>
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '0.14em',
-            color: 'var(--stq-primary)',
-            textTransform: 'uppercase',
-          }}
-        >
-          Stations · timeline
-        </div>
-        <h2
-          style={{
-            fontFamily: 'Lato, Georgia, serif',
-            fontSize: 17,
-            fontWeight: 700,
-            margin: '2px 0 0',
-          }}
-        >
-          {total} stop{total === 1 ? '' : 's'} along the loop
-        </h2>
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
-        <span className="studio-kbd-hint" aria-hidden>
-          <kbd className="studio-kbd">←</kbd>
-          <kbd className="studio-kbd">→</kbd>
-          <span>switch</span>
-          <span style={{ opacity: 0.5 }}>·</span>
-          <kbd className="studio-kbd">R</kbd>
-          <span>reorder</span>
-          <span style={{ opacity: 0.5 }}>·</span>
-          <kbd className="studio-kbd">⌘K</kbd>
-          <span>jump</span>
-        </span>
-        <button
-          type="button"
-          className={`studio-btn-ghost studio-reorder-toggle${
-            reorderMode ? ' active' : ''
-          }`}
-          style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
-          onClick={onToggleReorder}
-          aria-pressed={reorderMode}
-        >
-          <Icon name="drag" size={13} />
-          {reorderMode ? 'Done' : 'Reorder'}
-        </button>
-        <button
-          type="button"
-          className="studio-btn-primary"
-          style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
-          onClick={onAddStation}
-        >
-          <Icon name="plus" size={13} />
-          New station
-        </button>
+      <StudioSidebar
+        section={args.activeSection}
+        draft={args.draft}
+        locale={args.locale}
+        selectedStation={args.selected}
+        onOpenFullStationEditor={args.onOpenFullEditor}
+      />
+      <div style={{ minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
+        {renderWorkspaceBody(args)}
       </div>
     </div>
   );
+}
+
+function renderWorkspaceBody(args: RenderWorkspaceArgs) {
+  switch (args.activeSection) {
+    case 'plan':
+      return (
+        <PlanWorkspace
+          draft={args.draft}
+          locale={args.locale}
+          onChange={args.onChange}
+        />
+      );
+    case 'story':
+      return (
+        <StoryWorkspace
+          draft={args.draft}
+          locale={args.locale}
+          onChange={args.onChange}
+        />
+      );
+    case 'route':
+      return (
+        <RouteWorkspace
+          draft={args.draft}
+          locale={args.locale}
+          onChange={args.onChange}
+        />
+      );
+    case 'preview':
+      return (
+        <PreviewWorkspace
+          draft={args.draft}
+          locale={args.locale}
+          onLocaleChange={args.onLocaleChange}
+          onChange={args.onChange}
+        />
+      );
+    case 'stations':
+      return null;
+  }
 }
 
 function JumpPalette({
@@ -578,5 +535,5 @@ function formatSuccessfulExport(result: Awaited<ReturnType<typeof downloadDraftE
     return null;
   }
 
-  return `Export complete (${result.fileName}).\n${notes.join('\n\n')}`;
+  return notes.join('\n\n');
 }

@@ -1,8 +1,8 @@
 import type { Locale, RiddleEntry, TourDraft } from '@/schema';
 import type { AuthorMapBasemapKey } from '@/components/map/mapTypes';
-import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
 import { FieldMapSection } from './FieldMapSection';
 import { FieldStationList } from './FieldStationList';
+import { RiddleScreen } from './RiddleScreen';
 import type { CurrentGps, FieldView } from './types';
 
 interface Props {
@@ -24,6 +24,13 @@ interface Props {
   onPhotoCaptured: (blobId: string) => void;
   onAddStationAt: (coordinate: { lat: number; lng: number }) => void;
   onChangeBasemap: (key: AuthorMapBasemapKey) => void;
+  authorMode: boolean;
+  onAuthorModeChange: (enabled: boolean) => void;
+  isFirst: boolean;
+  isLast: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+  onBackToList: () => void;
 }
 
 export function FieldModeContent({
@@ -45,10 +52,17 @@ export function FieldModeContent({
   onPhotoCaptured,
   onAddStationAt,
   onChangeBasemap,
+  authorMode,
+  onAuthorModeChange,
+  isFirst,
+  isLast,
+  onPrev,
+  onNext,
+  onBackToList,
 }: Props) {
   return (
     <div className="stq-field-body">
-      {view === 'map' && (
+      {(view === 'map' || (view === 'station' && selected)) && (
         <FieldMapSection
           draftId={draft.draftId}
           stations={draft.stations}
@@ -57,6 +71,7 @@ export function FieldModeContent({
           gpsLive={gpsLive}
           gpsError={gpsError}
           tourLabel={tourLabel}
+          locale={locale}
           basemap={basemap}
           onSelectStation={onSelectStation}
           onToggleGps={onToggleGps}
@@ -65,18 +80,24 @@ export function FieldModeContent({
           onPhotoCaptured={onPhotoCaptured}
           onAddStationAt={onAddStationAt}
           onChangeBasemap={onChangeBasemap}
+          hideSelectedCard={view === 'station'}
         />
       )}
 
       {view === 'station' && selected && (
-        <div
-          className="studio-scroll"
-          style={{ height: '100%', overflowY: 'auto' }}
-        >
-          <InlineStationDrawer
+        <div className="stq-field-riddle-overlay">
+          <RiddleScreen
             draft={draft}
             station={selected}
             locale={locale}
+            authorMode={authorMode}
+            onAuthorModeChange={onAuthorModeChange}
+            onBack={onBackToList}
+            onPrev={onPrev}
+            onNext={onNext}
+            isFirst={isFirst}
+            isLast={isLast}
+            presentation="mapOverlay"
             onChange={onChange}
           />
         </div>
@@ -113,4 +134,3 @@ function FieldModeEmptyState() {
     </div>
   );
 }
-

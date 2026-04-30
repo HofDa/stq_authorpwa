@@ -1,4 +1,4 @@
-type IconName =
+export type IconName =
   | 'chevron-left'
   | 'chevron-right'
   | 'plus'
@@ -9,6 +9,8 @@ type IconName =
   | 'download'
   | 'check'
   | 'sparkles'
+  | 'wand'
+  | 'puzzle'
   | 'check-circle'
   | 'phone'
   | 'type'
@@ -20,6 +22,7 @@ type IconName =
   | 'wifi-off'
   | 'edit'
   | 'layers'
+  | 'hand'
   | 'mic'
   | 'x';
 
@@ -125,6 +128,19 @@ export function Icon({
           <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6" />
         </svg>
       );
+    case 'wand':
+      return (
+        <svg {...common}>
+          <path d="M15 4l5 5M14 10l-9 9-2-2 9-9" />
+          <path d="M5 4v2M4 5h2M19 14v2M18 15h2M10 2v2M9 3h2" />
+        </svg>
+      );
+    case 'puzzle':
+      return (
+        <svg {...common}>
+          <path d="M8 3h4v3a2 2 0 104 0V3h4v6h-3a2 2 0 100 4h3v6h-6v-3a2 2 0 10-4 0v3H4v-6h3a2 2 0 100-4H4V3h4z" />
+        </svg>
+      );
     case 'phone':
       return (
         <svg {...common}>
@@ -193,6 +209,15 @@ export function Icon({
         <svg {...common}>
           <path d="M12 2L2 7l10 5 10-5-10-5z" />
           <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+      );
+    case 'hand':
+      return (
+        <svg {...common}>
+          <path d="M7 11V5.5a1.5 1.5 0 013 0V11" />
+          <path d="M10 10V4.5a1.5 1.5 0 013 0V11" />
+          <path d="M13 10V6.5a1.5 1.5 0 013 0V12" />
+          <path d="M16 11.5V9a1.5 1.5 0 013 0v4.5a6.5 6.5 0 01-6.5 6.5H11a6 6 0 01-4.8-2.4L4 14.5a1.6 1.6 0 012.5-2l1.5 1.8" />
         </svg>
       );
     case 'mic':

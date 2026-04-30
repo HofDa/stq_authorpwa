@@ -11,9 +11,21 @@ import {
   DraftExportValidationError,
   downloadDraftExportZip,
 } from '@/export/tourExport';
-import { DEFAULT_LOCALE, type TourDraft } from '@/schema';
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  type Locale,
+  type TourDraft,
+} from '@/schema';
 import { Icon } from '@/components/studio/Icon';
+import {
+  getTourDurationLabel,
+  getTourLocationLabel,
+  getTourTitleLabel,
+} from '@/utils/localizedContent';
 import { tourCompleteness } from '@/components/studio/completeness';
+import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
+import { useEditorLanguage } from '@/i18n/editorLanguage';
 
 type Filter = 'all' | 'in-progress' | 'draft' | 'published';
 
@@ -39,22 +51,11 @@ function statusFor(draft: TourDraft): DraftStatusInfo {
 }
 
 function pickContent(draft: TourDraft) {
-  const title =
-    draft.tour.en.title ||
-    draft.tour.de.title ||
-    draft.tour.it.title ||
-    'Untitled tour';
-  const location =
-    draft.tour.en.location ||
-    draft.tour.de.location ||
-    draft.tour.it.location ||
-    'Location pending';
-  const duration =
-    draft.tour.en.duration ||
-    draft.tour.de.duration ||
-    draft.tour.it.duration ||
-    '—';
-  return { title, location, duration };
+  return {
+    title: getTourTitleLabel(draft.tour, DEFAULT_LOCALE),
+    location: getTourLocationLabel(draft.tour, DEFAULT_LOCALE),
+    duration: getTourDurationLabel(draft.tour, DEFAULT_LOCALE),
+  };
 }
 
 function coverHueFor(draft: TourDraft): number {
@@ -71,6 +72,9 @@ export function TourListPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
+  const { editorLanguage, setEditorLanguage, t } = useEditorLanguage();
+  const askConfirm = useConfirm();
+  const toast = useToast();
 
   const filtered = useMemo(() => {
     if (!drafts) return undefined;
@@ -96,8 +100,15 @@ export function TourListPage() {
   }
 
   async function onDelete(draftId: string) {
-    if (!confirm('Delete this draft? This cannot be undone.')) return;
+    const confirmed = await askConfirm({
+      title: 'Delete draft?',
+      message: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     await deleteDraft(draftId);
+    toast({ title: 'Draft deleted', tone: 'success' });
   }
 
   async function onExport(draftId: string) {
@@ -110,9 +121,12 @@ export function TourListPage() {
     try {
       const result = await downloadDraftExportZip(draft);
       const notice = formatSuccessfulExport(result);
-      if (notice) {
-        alert(notice);
-      }
+      toast({
+        title: `Export complete (${result.fileName})`,
+        message: notice ?? 'ZIP file downloaded successfully.',
+        tone: notice ? 'warning' : 'success',
+        durationMs: notice ? 9000 : 5200,
+      });
     } catch (error) {
       setExportError(formatExportError(error));
     } finally {
@@ -124,14 +138,18 @@ export function TourListPage() {
 
   return (
     <section className="flex flex-col gap-5">
-      <HeroCard onNew={onNew} />
+      <HeroCard
+        editorLanguage={editorLanguage}
+        onEditorLanguageChange={setEditorLanguage}
+        onNew={onNew}
+      />
 
       {exportError && <p className="text-bodySm text-error">{exportError}</p>}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-labelSm uppercase tracking-[0.18em] text-primary/75">
-            Local drafts
+            {t('list.localDrafts')}
           </p>
           <h2
             style={{
@@ -142,7 +160,7 @@ export function TourListPage() {
               margin: '2px 0 0',
             }}
           >
-            Choose a tour
+            {t('list.chooseTour')}
           </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -154,16 +172,16 @@ export function TourListPage() {
               className="stq-search__input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search places, titles…"
+              placeholder={t('list.search')}
             />
           </div>
           <div className="studio-seg">
             {(
               [
-                ['all', 'All'],
-                ['in-progress', 'Drafting'],
-                ['draft', 'Draft'],
-                ['published', 'Done'],
+                ['all', t('list.filterAll')],
+                ['in-progress', t('list.filterDrafting')],
+                ['draft', t('list.filterDraft')],
+                ['published', t('list.filterDone')],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -178,20 +196,22 @@ export function TourListPage() {
           </div>
           <button className="studio-btn-primary" onClick={onNew}>
             <Icon name="plus" size={15} />
-            New tour
+            {t('list.newTour')}
           </button>
         </div>
       </div>
 
       {filtered === undefined ? (
-        <p className="text-bodySm text-disabled">Loading…</p>
+        <p className="text-bodySm text-disabled">{t('list.loading')}</p>
       ) : filtered.length === 0 ? (
         drafts && drafts.length === 0 ? (
-          <EmptyState onNew={onNew} />
+          <EmptyState
+            editorLanguage={editorLanguage}
+            onEditorLanguageChange={setEditorLanguage}
+            onNew={onNew}
+          />
         ) : (
-          <p className="text-bodySm text-disabled">
-            No tours match the current search or filter.
-          </p>
+          <p className="text-bodySm text-disabled">{t('list.noMatches')}</p>
         )
       ) : (
         <ul className="stq-tour-grid">
@@ -214,7 +234,17 @@ export function TourListPage() {
   );
 }
 
-function HeroCard({ onNew }: { onNew: () => void }) {
+function HeroCard({
+  editorLanguage,
+  onEditorLanguageChange,
+  onNew,
+}: {
+  editorLanguage: Locale;
+  onEditorLanguageChange: (locale: Locale) => void;
+  onNew: () => void;
+}) {
+  const { t } = useEditorLanguage();
+
   return (
     <section className="stq-list-hero">
       <div>
@@ -228,33 +258,104 @@ function HeroCard({ onNew }: { onNew: () => void }) {
               display: 'inline-block',
             }}
           />
-          Field Authoring · v0.1
+          {t('list.badge')}
         </span>
         <h1 className="stq-list-hero__title">
-          Build the tour on the street,{' '}
-          <em>not later at a desk.</em>
+          {t('list.heroTitle')}{' '}
+          <em>{t('list.heroEmphasis')}</em>
         </h1>
         <p className="stq-list-hero__lead">
-          Capture a place, write the story, test the riddle, and walk the route
-          — with the same visual language the tourist will see in the native
-          app.
+          {t('list.heroLead')}
         </p>
+        <EditorLanguagePicker
+          editorLanguage={editorLanguage}
+          onChange={onEditorLanguageChange}
+        />
         <div className="stq-list-hero__cta">
           <button className="studio-btn-primary" onClick={onNew}>
             <Icon name="plus" size={15} />
-            Start a new tour
+            {t('list.startNewTour')}
           </button>
           <span
             className="studio-chip"
             style={{ background: 'white', color: 'var(--stq-text-mute)' }}
           >
             <Icon name="wifi-off" size={12} />
-            Works offline · installable PWA
+            {t('list.offline')}
           </span>
         </div>
       </div>
       <HeroMap />
     </section>
+  );
+}
+
+function EditorLanguagePicker({
+  editorLanguage,
+  onChange,
+}: {
+  editorLanguage: Locale;
+  onChange: (locale: Locale) => void;
+}) {
+  const { t } = useEditorLanguage();
+
+  return (
+    <div style={{ marginTop: 18 }}>
+      <div
+        style={{
+          marginBottom: 7,
+          fontSize: 10.5,
+          fontWeight: 800,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: 'var(--stq-text-mute)',
+        }}
+      >
+        {t('list.editorLanguage')}
+      </div>
+      <div
+        role="radiogroup"
+        aria-label={t('list.editorLanguage')}
+        style={{
+          display: 'inline-flex',
+          gap: 4,
+          padding: 4,
+          border: '1px solid var(--stq-border)',
+          borderRadius: 18,
+          background: 'rgba(255, 255, 255, 0.82)',
+          boxShadow: 'var(--stq-shadow-soft)',
+        }}
+      >
+        {LOCALES.map((option) => {
+          const active = option === editorLanguage;
+          return (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(option)}
+              style={{
+                minHeight: 32,
+                padding: '0 12px',
+                border: 0,
+                borderRadius: 14,
+                background: active ? 'var(--stq-primary)' : 'transparent',
+                color: active ? 'white' : 'var(--stq-text)',
+                fontSize: 12,
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: active
+                  ? '0 6px 16px rgba(144, 74, 72, 0.22)'
+                  : 'none',
+              }}
+            >
+              {option.toUpperCase()}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -477,18 +578,31 @@ function DraftCard({
   );
 }
 
-function EmptyState({ onNew }: { onNew: () => void }) {
+function EmptyState({
+  editorLanguage,
+  onEditorLanguageChange,
+  onNew,
+}: {
+  editorLanguage: Locale;
+  onEditorLanguageChange: (locale: Locale) => void;
+  onNew: () => void;
+}) {
+  const { t } = useEditorLanguage();
+
   return (
     <div className="card flex flex-col items-center gap-3 py-12 text-center">
       <div className="rounded-full border border-border bg-background px-4 py-2 text-labelLg text-primary">
-        No drafts yet
+        {t('list.noDrafts')}
       </div>
       <p className="max-w-md font-body text-body text-text/90">
-        Start the first tour draft and use the phone workflow to capture places,
-        stories, riddles, and the walked route.
+        {t('list.emptyCopy')}
       </p>
+      <EditorLanguagePicker
+        editorLanguage={editorLanguage}
+        onChange={onEditorLanguageChange}
+      />
       <button className="btn-primary" onClick={onNew}>
-        + New tour
+        + {t('list.newTour')}
       </button>
     </div>
   );
@@ -528,5 +642,5 @@ function formatSuccessfulExport(result: Awaited<ReturnType<typeof downloadDraftE
     return null;
   }
 
-  return `Export complete (${result.fileName}).\n${notes.join('\n\n')}`;
+  return notes.join('\n\n');
 }

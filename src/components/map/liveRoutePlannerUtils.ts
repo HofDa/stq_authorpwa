@@ -1,4 +1,5 @@
-import type { RiddleEntry } from '@/schema';
+import type { Locale, RiddleEntry } from '@/schema';
+import { getStationLocationLabel } from '@/utils/localizedContent';
 
 export function formatDistanceMeters(distanceMeters: number) {
   if (distanceMeters >= 1000) {
@@ -7,12 +8,6 @@ export function formatDistanceMeters(distanceMeters: number) {
   return `${Math.round(distanceMeters)} m`;
 }
 
-export function formatStationLabel(station: RiddleEntry) {
-  return (
-    station.en.location ||
-    station.de.location ||
-    station.it.location ||
-    station.id
-  );
+export function formatStationLabel(station: RiddleEntry, locale?: Locale) {
+  return getStationLocationLabel(station, locale, station.id);
 }
-

@@ -1,18 +1,35 @@
 import { useMemo } from 'react';
 import { LocaleTabs } from '@/components/LocaleTabs';
 import type { Locale, TourDraft } from '@/schema';
+import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { Icon } from './Icon';
+import { WorkflowNav } from './workflow/WorkflowNav';
+import type {
+  StudioWorkflowSection,
+  WorkflowStatus,
+} from './workflow/workflowTypes';
 
-type View = 'overview' | 'stations' | 'intro-outro' | 'route';
+/**
+ * Backwards-compatible aliases. The shared `StudioWorkflowSection` /
+ * `WorkflowStatus` types in `./workflow/workflowTypes` are the source of
+ * truth; these re-exports keep older imports working during the refactor.
+ */
+export type View = StudioWorkflowSection;
+export type ViewStatus = WorkflowStatus;
 
 interface Props {
   draft: TourDraft;
   locale: Locale;
-  view: View;
+  view: StudioWorkflowSection;
   exporting: boolean;
+  /**
+   * Optional per-section badge state. Wired up once the per-section
+   * readiness model lands in PR-16.
+   */
+  viewStatus?: Partial<Record<StudioWorkflowSection, WorkflowStatus>>;
   onBack: () => void;
   onLocaleChange: (locale: Locale) => void;
-  onViewChange: (view: View) => void;
+  onViewChange: (view: StudioWorkflowSection) => void;
   onExport: () => void;
   onEnterField: () => void;
 }
@@ -22,12 +39,14 @@ export function StudioHeader({
   locale,
   view,
   exporting,
+  viewStatus,
   onBack,
   onLocaleChange,
   onViewChange,
   onExport,
   onEnterField,
 }: Props) {
+  const { t } = useEditorLanguage();
   const savedAgo = useSavedAgo(draft.updatedAt);
 
   return (
@@ -46,7 +65,11 @@ export function StudioHeader({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <button className="studio-btn-icon" onClick={onBack} aria-label="Back to tours">
+        <button
+          className="studio-btn-icon"
+          onClick={onBack}
+          aria-label={t('studio.backToTours')}
+        >
           <Icon name="chevron-left" size={16} />
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -64,26 +87,17 @@ export function StudioHeader({
               SouthTyrolQuests · Author
             </div>
             <div style={{ fontSize: 14, fontWeight: 700 }}>
-              {draft.tour[locale].title || 'Untitled tour'}
+              {draft.tour[locale].title || t('studio.untitledTour')}
             </div>
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 6,
-          justifyContent: 'center',
-          fontSize: 12,
-          color: 'var(--stq-text-mute)',
-        }}
-      >
-        <ViewChip icon="grid" label="Overview" active={view === 'overview'} onClick={() => onViewChange('overview')} />
-        <ViewChip icon="map-pin" label="Stations" active={view === 'stations'} onClick={() => onViewChange('stations')} />
-        <ViewChip icon="type" label="Intro & Outro" active={view === 'intro-outro'} onClick={() => onViewChange('intro-outro')} />
-        <ViewChip icon="route" label="Route" active={view === 'route'} onClick={() => onViewChange('route')} />
-      </div>
+      <WorkflowNav
+        activeSection={view}
+        onSectionChange={onViewChange}
+        statusBySection={viewStatus}
+      />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div
@@ -96,7 +110,7 @@ export function StudioHeader({
           }}
         >
           <Icon name="check-circle" size={12} color="var(--stq-success)" />
-          Saved locally · {savedAgo}
+          {t('studio.savedLocally')} · {savedAgo}
         </div>
         <LocaleTabs active={locale} onChange={onLocaleChange} />
         <button
@@ -105,7 +119,7 @@ export function StudioHeader({
           style={{ minHeight: 36, fontSize: 13, padding: '0 12px' }}
         >
           <Icon name="phone" size={14} />
-          Field mode
+          {t('studio.fieldMode')}
         </button>
         <button
           className="studio-btn-primary"
@@ -113,45 +127,23 @@ export function StudioHeader({
           disabled={exporting}
         >
           <Icon name="download" size={14} />
-          {exporting ? 'Exporting…' : 'Export ZIP'}
+          {exporting ? t('studio.exporting') : t('studio.exportZip')}
         </button>
       </div>
     </header>
   );
 }
 
-function ViewChip({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: 'grid' | 'map-pin' | 'type' | 'route';
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={`studio-chip${active ? ' active' : ''}`}
-      onClick={onClick}
-      style={active ? undefined : { background: 'white' }}
-    >
-      <Icon name={icon} size={12} />
-      {label}
-    </button>
-  );
-}
-
 function useSavedAgo(updatedAt: number): string {
+  const { t } = useEditorLanguage();
   return useMemo(() => {
     const diff = Date.now() - updatedAt;
     const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 1) return t('studio.justNow');
+    if (minutes < 60) return `${minutes}${t('studio.minutesAgo')}`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return `${hours}${t('studio.hoursAgo')}`;
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  }, [updatedAt]);
+    return `${days}${t('studio.daysAgo')}`;
+  }, [t, updatedAt]);
 }

@@ -10,6 +10,8 @@ interface Props {
   draft: TourDraft;
   locale: Locale;
   onChange: (recipe: (prev: TourDraft) => TourDraft) => void;
+  /** Seed the inner tab when the component mounts. Defaults to `intro`. */
+  initialTab?: TourTab;
 }
 
 type TourTab = 'description' | 'intro' | 'outro';
@@ -24,8 +26,8 @@ const TOUR_TAB_LABELS: Record<TourTab, string> = {
  * Visual twin of the native `TourIntro` screen, with every visible field
  * editable in place.
  */
-export function InlineTourIntro({ draft, locale, onChange }: Props) {
-  const [tab, setTab] = useState<TourTab>('intro');
+export function InlineTourIntro({ draft, locale, onChange, initialTab = 'intro' }: Props) {
+  const [tab, setTab] = useState<TourTab>(initialTab);
   const content = draft.tour[locale];
   const coverUrl = useBlobUrl(draft.tour.coverBlobId);
 

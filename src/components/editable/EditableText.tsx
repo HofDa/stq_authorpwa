@@ -7,6 +7,7 @@ interface Props {
   className?: string;
   multiline?: boolean;
   as?: 'h1' | 'h2' | 'h3' | 'p';
+  editSignal?: number;
 }
 
 /**
@@ -20,6 +21,7 @@ export function EditableText({
   className = '',
   multiline = false,
   as = 'p',
+  editSignal = 0,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -30,6 +32,10 @@ export function EditableText({
   useEffect(() => {
     if (editing) ref.current?.focus();
   }, [editing]);
+
+  useEffect(() => {
+    if (editSignal > 0) setEditing(true);
+  }, [editSignal]);
 
   function commit() {
     setEditing(false);

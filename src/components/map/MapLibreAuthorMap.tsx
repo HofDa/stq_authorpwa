@@ -3,12 +3,10 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { buildStationMarkerSvg } from '@/stations/visuals';
 import {
-  DEFAULT_MAPLIBRE_STYLE,
   MAPLIBRE_STYLE_URL,
+  resolveMapLibreStyle,
 } from './mapConfig';
-import type { StyleSpecification } from 'maplibre-gl';
 import {
-  AUTHOR_MAP_BASEMAPS,
   AUTHOR_MAP_CURRENT_POSITION_STYLE_PLANNER,
   DEFAULT_AUTHOR_MAP_BASEMAP,
   type AuthorMapBasemapKey,
@@ -19,6 +17,12 @@ import {
 interface RouteLayerRef {
   layerId: string;
   sourceId: string;
+}
+
+interface MapLibreErrorEvent {
+  error?: {
+    message?: string;
+  };
 }
 
 const SELECTION_SOURCE_ID = 'stq-author-map-selection-source';
@@ -37,6 +41,9 @@ export function MapLibreAuthorMap({
   currentPositionStyle = AUTHOR_MAP_CURRENT_POSITION_STYLE_PLANNER,
   basemap = DEFAULT_AUTHOR_MAP_BASEMAP,
   onSelectStation,
+  draggableStationIds = [],
+  onStationCoordinateChange,
+  onViewportCenterChange,
 }: AuthorMapProps) {
   const initialBasemapRef = useRef<AuthorMapBasemapKey>(basemap);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -45,11 +52,23 @@ export function MapLibreAuthorMap({
   const initialZoomRef = useRef(viewport.zoom);
   const initialZoomControlRef = useRef(zoomControl);
   const [styleReady, setStyleReady] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
   const stationMarkersRef = useRef<maplibregl.Marker[]>([]);
   const routeLayersRef = useRef<RouteLayerRef[]>([]);
   const currentPositionMarkerRef = useRef<maplibregl.Marker | null>(null);
   const previousSelectedStationIdRef = useRef<string | null>(null);
   const previousFlyToCurrentPositionRef = useRef(false);
+  // Capture the latest `onSelectStation` so the marker effect doesn't have to
+  // re-run (and re-create every marker) when the parent supplies a fresh
+  // arrow-function reference on each render.
+  const onSelectStationRef = useRef(onSelectStation);
+  useEffect(() => {
+    onSelectStationRef.current = onSelectStation;
+  }, [onSelectStation]);
+  const onStationCoordinateChangeRef = useRef(onStationCoordinateChange);
+  useEffect(() => {
+    onStationCoordinateChangeRef.current = onStationCoordinateChange;
+  }, [onStationCoordinateChange]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -58,10 +77,7 @@ export function MapLibreAuthorMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style:
-        MAPLIBRE_STYLE_URL ??
-        buildBasemapStyle(initialBasemapRef.current) ??
-        DEFAULT_MAPLIBRE_STYLE,
+      style: resolveMapLibreStyle(initialBasemapRef.current),
       center: toLngLat(initialCenterRef.current),
       zoom: initialZoomRef.current,
       attributionControl: false,
@@ -72,10 +88,27 @@ export function MapLibreAuthorMap({
       map.addControl(new maplibregl.NavigationControl(), 'top-left');
     }
 
-    const handleLoad = () => setStyleReady(true);
+    const handleLoad = () => {
+      setMapError(null);
+      setStyleReady(true);
+      // The container often goes from 0×0 → laid-out between `new
+      // maplibregl.Map(...)` and the first paint. Force a resize once we
+      // know the style is loaded so tiles render at the correct dimensions.
+      window.requestAnimationFrame(() => map.resize());
+    };
+    const handleError = (event: MapLibreErrorEvent) => {
+      const message = event.error?.message ?? 'MapLibre map error';
+      setMapError(message);
+      console.warn('[AuthorMap] MapLibre error:', event.error);
+    };
     map.on('load', handleLoad);
+    map.on('error', handleError);
     mapRef.current = map;
 
+    // ResizeObserver keeps tiles aligned when the layout shifts (sidebar
+    // drawer opens, parent height changes, etc.). It also covers the
+    // initial-mount case where the container had 0 height when the map
+    // constructor ran.
     const resizeObserver =
       typeof ResizeObserver === 'undefined' || !containerRef.current
         ? null
@@ -84,19 +117,20 @@ export function MapLibreAuthorMap({
           });
     resizeObserver?.observe(containerRef.current);
 
-    const frameId = window.requestAnimationFrame(() => {
-      map.resize();
-    });
-    const handleWindowResize = () => {
-      map.resize();
-    };
+    const frameId = window.requestAnimationFrame(() => map.resize());
+    // Belt and suspenders: a second resize on the next macrotask catches the
+    // case where layout settles after the RAF.
+    const timerId = window.setTimeout(() => map.resize(), 0);
+    const handleWindowResize = () => map.resize();
     window.addEventListener('resize', handleWindowResize);
 
     return () => {
       window.cancelAnimationFrame(frameId);
+      window.clearTimeout(timerId);
       window.removeEventListener('resize', handleWindowResize);
       resizeObserver?.disconnect();
       map.off('load', handleLoad);
+      map.off('error', handleError);
       setStyleReady(false);
       removeStationMarkers(stationMarkersRef.current);
       removeCurrentPositionMarker(currentPositionMarkerRef.current);
@@ -117,25 +151,56 @@ export function MapLibreAuthorMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || MAPLIBRE_STYLE_URL) return;
-    if (basemap === initialBasemapRef.current && stationMarkersRef.current.length === 0) {
-      // First render already used this style; no-op to avoid double-load.
+    if (basemap === initialBasemapRef.current) {
+      // First render of this basemap is handled by the mount-effect's
+      // initial style; nothing to swap.
       return;
     }
     initialBasemapRef.current = basemap;
-    const nextStyle = buildBasemapStyle(basemap) ?? DEFAULT_MAPLIBRE_STYLE;
+    const nextStyle = resolveMapLibreStyle(basemap, null);
     setStyleReady(false);
-    // Detach derived layers/markers from the old style; the dependent
-    // effects re-add them once styleReady flips back to true.
+    setMapError(null);
+    // DOM markers survive style changes, while style layers/sources do not.
+    // Remove everything explicitly before swapping styles so the effects can
+    // re-add a clean map state once the new style is ready.
+    removeStationMarkers(stationMarkersRef.current);
+    removeCurrentPositionMarker(currentPositionMarkerRef.current);
+    currentPositionMarkerRef.current = null;
+    removeRouteLayers(map, routeLayersRef.current);
+    removeLayerAndSource(map, SELECTION_LAYER_ID, SELECTION_SOURCE_ID);
     routeLayersRef.current = [];
-    stationMarkersRef.current = [];
     previousSelectedStationIdRef.current = null;
     map.setStyle(nextStyle);
-    const handleLoad = () => setStyleReady(true);
-    map.once('load', handleLoad);
+    const handleStyleData = () => {
+      if (!map.isStyleLoaded()) return;
+      setStyleReady(true);
+      window.requestAnimationFrame(() => map.resize());
+      map.off('styledata', handleStyleData);
+    };
+    map.on('styledata', handleStyleData);
     return () => {
-      map.off('load', handleLoad);
+      map.off('styledata', handleStyleData);
     };
   }, [basemap]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !onViewportCenterChange) {
+      return;
+    }
+
+    const emitCenter = () => {
+      const center = map.getCenter();
+      onViewportCenterChange({ lat: center.lat, lng: center.lng });
+    };
+
+    emitCenter();
+    map.on('moveend', emitCenter);
+
+    return () => {
+      map.off('moveend', emitCenter);
+    };
+  }, [onViewportCenterChange, styleReady]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -144,31 +209,57 @@ export function MapLibreAuthorMap({
     }
 
     removeStationMarkers(stationMarkersRef.current);
+    const draggableStationIdSet = new Set(draggableStationIds);
     const markers = stations.map((station) => {
       const selected = station.id === selectedStationId;
+      const draggable = draggableStationIdSet.has(station.id);
       const element = document.createElement('div');
       element.className = `stq-station-marker${
         selected ? ' stq-station-marker--selected' : ''
-      }`;
+      }${draggable ? ' stq-station-marker--draggable' : ''}`;
       element.innerHTML = buildStationMarkerSvg(station.visual, {
         highlighted: selected,
       });
       element.title = station.tooltip || `Station ${station.number}`;
-      element.style.cursor = onSelectStation ? 'pointer' : 'default';
-      if (onSelectStation) {
-        element.addEventListener('click', () => onSelectStation(station.id));
-      }
+      element.style.cursor = draggable ? 'grab' : 'pointer';
+      let handledDrag = false;
+      element.addEventListener('click', () => {
+        if (handledDrag) {
+          handledDrag = false;
+          return;
+        }
 
-      return new maplibregl.Marker({
+        onSelectStationRef.current?.(station.id);
+      });
+
+      const marker = new maplibregl.Marker({
         element,
         anchor: 'bottom',
+        draggable,
       })
         .setLngLat(toLngLat(station.coordinate))
         .addTo(map);
+
+      if (draggable) {
+        marker.on('dragstart', () => {
+          handledDrag = true;
+          element.style.cursor = 'grabbing';
+        });
+        marker.on('dragend', () => {
+          element.style.cursor = 'grab';
+          const next = marker.getLngLat();
+          onStationCoordinateChangeRef.current?.(station.id, {
+            lat: next.lat,
+            lng: next.lng,
+          });
+        });
+      }
+
+      return marker;
     });
 
     stationMarkersRef.current = markers;
-  }, [stations, selectedStationId, onSelectStation, styleReady]);
+  }, [draggableStationIds, stations, selectedStationId, styleReady]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -205,6 +296,10 @@ export function MapLibreAuthorMap({
         id: layerId,
         type: 'line',
         source: sourceId,
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+        },
         paint: {
           'line-color': route.style.color,
           'line-width': route.style.weight,
@@ -385,7 +480,25 @@ export function MapLibreAuthorMap({
     map.resize();
   }, [className, style, styleReady]);
 
-  return <div ref={containerRef} className={className} style={style} />;
+  return (
+    <div
+      className={className}
+      style={{ ...style, position: style?.position ?? 'relative' }}
+    >
+      <div
+        ref={containerRef}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      />
+      {mapError ? (
+        <div
+          className="pointer-events-none absolute inset-x-3 top-3 z-[500] rounded-2xl border border-amber-200 bg-amber-50/95 px-3 py-2 text-xs font-semibold text-amber-900 shadow-sm"
+          role="status"
+        >
+          Map tiles could not be loaded. Check the map style URL or network connection.
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function removeStationMarkers(markers: maplibregl.Marker[]) {
@@ -445,46 +558,5 @@ function toPaddingOptions(padding: [number, number]) {
     right: padding[0],
     bottom: padding[1],
     left: padding[0],
-  };
-}
-
-/**
- * Build a one-source raster `StyleSpecification` from a basemap key. We
- * intentionally render the basemap raster source under any other layers
- * MapLibre may add (markers are DOM-overlay only, so they are unaffected).
- *
- * Returns `null` when the key is unknown — callers fall back to the bundled
- * default OpenStreetMap style.
- */
-function buildBasemapStyle(
-  key: AuthorMapBasemapKey,
-): StyleSpecification | null {
-  const basemap = AUTHOR_MAP_BASEMAPS[key];
-  if (!basemap) return null;
-  const subdomains = basemap.subdomains?.[0];
-  // MapLibre raster `tiles` arrays do not understand Leaflet's `{s}` token,
-  // so we collapse it to the first declared subdomain (or strip it).
-  const tileUrl = basemap.tileUrl.replace(
-    '{s}',
-    subdomains ?? '',
-  );
-  return {
-    version: 8,
-    sources: {
-      basemap: {
-        type: 'raster',
-        tiles: [tileUrl],
-        tileSize: 256,
-        maxzoom: basemap.maxZoom,
-        attribution: basemap.attribution,
-      },
-    },
-    layers: [
-      {
-        id: 'basemap',
-        type: 'raster',
-        source: 'basemap',
-      },
-    ],
   };
 }

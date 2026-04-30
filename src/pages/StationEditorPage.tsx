@@ -7,12 +7,14 @@ import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
 import { OpenClawAssistantPanel } from '@/components/assistant/OpenClawAssistantPanel';
 import { StationVisualPicker } from '@/components/stations/StationVisualPicker';
 import { DEFAULT_LOCALE, type Locale, type RiddleEntry } from '@/schema';
+import { useToast } from '@/components/ui/FeedbackProvider';
 
 export function StationEditorPage() {
   const { draftId, stationId } = useParams();
   const navigate = useNavigate();
   const { draft, update } = useDraft(draftId);
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const toast = useToast();
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   if (!draft) {
@@ -48,7 +50,11 @@ export function StationEditorPage() {
 
   async function fillGps() {
     if (!navigator.geolocation) {
-      alert('Geolocation not supported on this device.');
+      toast({
+        title: 'GPS unavailable',
+        message: 'Geolocation is not supported on this device.',
+        tone: 'error',
+      });
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -57,7 +63,12 @@ export function StationEditorPage() {
           position_lat: pos.coords.latitude,
           position_lng: pos.coords.longitude,
         }),
-      (err) => alert(`GPS error: ${err.message}`),
+      (err) =>
+        toast({
+          title: 'GPS error',
+          message: err.message,
+          tone: 'error',
+        }),
       { enableHighAccuracy: true, maximumAge: 0, timeout: 10_000 },
     );
   }
@@ -160,7 +171,11 @@ export function StationEditorPage() {
           </p>
           <h2 className="mt-1 text-h6">Station icon and marker</h2>
         </div>
-        <StationVisualPicker station={station} onChange={patchStation} />
+        <StationVisualPicker
+          station={station}
+          stations={draft.stations}
+          onChange={patchStation}
+        />
       </section>
 
       <section className="card flex flex-col gap-2">

@@ -53,7 +53,10 @@ export function RoutePlannerMap({
   }`;
 
   return (
-    <div className="stq-map-shell overflow-hidden rounded-md border border-border">
+    <div
+      className="stq-map-shell"
+      style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
+    >
       <AuthorMap
         stations={mapStations}
         selectedStationId={selectedStationId}
@@ -97,7 +100,7 @@ export function RoutePlannerMap({
           fitMaxZoom: 17,
           fitTrigger: fitTriggerKey,
         }}
-        className="h-[26rem] w-full"
+        style={{ width: '100%', height: '100%' }}
       />
     </div>
   );

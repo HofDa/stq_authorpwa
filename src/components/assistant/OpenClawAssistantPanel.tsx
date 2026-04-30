@@ -8,6 +8,7 @@ import {
   runLocalAssistantChecks,
   type AssistantFocus,
 } from '@/assistant/openClaw';
+import { useToast } from '@/components/ui/FeedbackProvider';
 
 interface Props {
   draft: TourDraft;
@@ -25,6 +26,7 @@ export function OpenClawAssistantPanel({ draft, locale, station }: Props) {
   const [copyState, setCopyState] = useState<'idle' | 'prompt' | 'context'>(
     'idle',
   );
+  const toast = useToast();
 
   const scope = { draft, locale, kind, station } as const;
   const checks = runLocalAssistantChecks(scope);
@@ -37,7 +39,11 @@ export function OpenClawAssistantPanel({ draft, locale, station }: Props) {
       setCopyState(target);
       window.setTimeout(() => setCopyState('idle'), 1600);
     } catch {
-      alert('Clipboard access failed on this device.');
+      toast({
+        title: 'Clipboard unavailable',
+        message: 'Could not copy the assistant text on this device.',
+        tone: 'error',
+      });
     }
   }
 

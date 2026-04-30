@@ -208,11 +208,9 @@ function StationCard({
     .join(' ');
 
   return (
-    <button
+    <div
       data-station={station.id}
-      type="button"
       className={cardClass}
-      onClick={onSelect}
       style={{ scrollSnapAlign: 'center', position: 'relative' }}
       draggable={reorderMode}
       onDragStart={(e) => {
@@ -234,159 +232,162 @@ function StationCard({
       }}
       onDragEnd={onDragEnd}
     >
-      <div style={{ position: 'relative' }}>
-        {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt=""
-            style={{
-              width: '100%',
-              height: 130,
-              objectFit: 'cover',
-              display: 'block',
-            }}
-          />
-        ) : (
-          <div
-            className="studio-placeholder-stripe"
-            style={{
-              height: 130,
-              display: 'grid',
-              placeItems: 'center',
-              color: 'rgba(144,74,72,0.55)',
-            }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <Icon name="camera" size={22} color="rgba(144,74,72,0.6)" />
-              <div
-                style={{
-                  fontSize: 10,
-                  marginTop: 6,
-                  letterSpacing: '0.1em',
-                  fontWeight: 500,
-                }}
-              >
-                NO PHOTO YET
+      <button
+        type="button"
+        className="studio-lane-card-main"
+        aria-pressed={active}
+        onClick={onSelect}
+      >
+        <div style={{ position: 'relative' }}>
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt=""
+              style={{
+                width: '100%',
+                height: 130,
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          ) : (
+            <div
+              className="studio-placeholder-stripe"
+              style={{
+                height: 130,
+                display: 'grid',
+                placeItems: 'center',
+                color: 'rgba(144,74,72,0.55)',
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <Icon name="camera" size={22} color="rgba(144,74,72,0.6)" />
+                <div
+                  style={{
+                    fontSize: 10,
+                    marginTop: 6,
+                    letterSpacing: '0.1em',
+                    fontWeight: 500,
+                  }}
+                >
+                  NO PHOTO YET
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        <div
-          style={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
+          )}
           <div
             style={{
-              display: 'grid',
-              placeItems: 'center',
-              width: 36,
-              height: 36,
-              borderRadius: 14,
-              background: 'rgba(255,255,255,0.96)',
-              boxShadow: 'var(--stq-shadow-soft)',
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
             }}
           >
-            <StationIconPreview
-              station={station}
-              style={{ width: 30, height: 30 }}
-            />
-          </div>
-          <div className="studio-pin">{station.number}</div>
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <span
-            className="studio-chip"
-            style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(255,255,255,0.95)' }}
-          >
-            <span className={`studio-dot studio-dot--${status === 'done' ? 'ok' : status}`} />
-            {statusLabel}
-          </span>
-          {onOpenFullEditor && (
-            <button
-              type="button"
-              className="studio-lane-edit-btn"
-              aria-label="Open full station editor"
-              title="Open full station editor"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenFullEditor();
+            <div
+              style={{
+                display: 'grid',
+                placeItems: 'center',
+                width: 36,
+                height: 36,
+                borderRadius: 14,
+                background: 'rgba(255,255,255,0.96)',
+                boxShadow: 'var(--stq-shadow-soft)',
               }}
-              onMouseDown={(e) => e.stopPropagation()}
-              draggable={false}
             >
-              <Icon name="edit" size={13} />
-            </button>
-          )}
+              <StationIconPreview
+                station={station}
+                style={{ width: 30, height: 30 }}
+              />
+            </div>
+            <div className="studio-pin">{station.number}</div>
+          </div>
         </div>
-      </div>
-      <div style={{ padding: '11px 12px 12px' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.005em' }}>
-          {localeContent.location || (
-            <span style={{ color: 'var(--stq-text-mute)', fontWeight: 400, fontStyle: 'italic' }}>
-              Unnamed station
+        <div style={{ padding: '11px 12px 12px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.005em' }}>
+            {localeContent.location || (
+              <span style={{ color: 'var(--stq-text-mute)', fontWeight: 400, fontStyle: 'italic' }}>
+                Unnamed station
+              </span>
+            )}
+          </div>
+          <div className="studio-progress" style={{ marginTop: 10 }}>
+            <div style={{ width: `${percent}%` }} />
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 10,
+              marginTop: 8,
+              fontSize: 10.5,
+              color: 'var(--stq-text-mute)',
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+            }}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <Icon
+                name="camera"
+                size={11}
+                color={hasPhoto ? 'var(--stq-success)' : 'var(--stq-text-mute)'}
+              />
+              {hasPhoto ? 'Photo' : '—'}
             </span>
-          )}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <Icon
+                name="map-pin"
+                size={11}
+                color={hasGps ? 'var(--stq-success)' : 'var(--stq-text-mute)'}
+              />
+              GPS
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <Icon
+                name="sparkles"
+                size={11}
+                color={hasRiddle ? 'var(--stq-success)' : 'var(--stq-text-mute)'}
+              />
+              Riddle
+            </span>
+          </div>
         </div>
-        <div className="studio-progress" style={{ marginTop: 10 }}>
-          <div style={{ width: `${percent}%` }} />
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            gap: 10,
-            marginTop: 8,
-            fontSize: 10.5,
-            color: 'var(--stq-text-mute)',
-            fontWeight: 600,
-            letterSpacing: '0.04em',
-          }}
+      </button>
+
+      <div
+        className="studio-lane-card-toolbar"
+        aria-hidden={onOpenFullEditor ? undefined : true}
+      >
+        <span
+          className="studio-chip"
+          style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(255,255,255,0.95)' }}
         >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <Icon
-              name="camera"
-              size={11}
-              color={hasPhoto ? 'var(--stq-success)' : 'var(--stq-text-mute)'}
-            />
-            {hasPhoto ? 'Photo' : '—'}
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <Icon
-              name="map-pin"
-              size={11}
-              color={hasGps ? 'var(--stq-success)' : 'var(--stq-text-mute)'}
-            />
-            GPS
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <Icon
-              name="sparkles"
-              size={11}
-              color={hasRiddle ? 'var(--stq-success)' : 'var(--stq-text-mute)'}
-            />
-            Riddle
-          </span>
-        </div>
+          <span className={`studio-dot studio-dot--${status === 'done' ? 'ok' : status}`} />
+          {statusLabel}
+        </span>
+        {onOpenFullEditor && (
+          <button
+            type="button"
+            className="studio-lane-edit-btn"
+            aria-label="Open full station editor"
+            title="Open full station editor"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenFullEditor();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            draggable={false}
+          >
+            <Icon name="edit" size={13} />
+          </button>
+        )}
       </div>
+
       {reorderMode && (
         <span className="studio-lane-drag-handle" aria-hidden>
           <Icon name="drag" size={14} />
         </span>
       )}
-    </button>
+    </div>
   );
 }
