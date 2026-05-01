@@ -121,6 +121,24 @@ export function MapScreen({
     });
   }
 
+  function deleteStation(stationId: string) {
+    const currentIndex = draft.stations.findIndex((station) => station.id === stationId);
+    const nextStation =
+      draft.stations[currentIndex + 1] ??
+      draft.stations[currentIndex - 1] ??
+      draft.stations.find((station) => station.id !== stationId) ??
+      null;
+
+    onChange((prev) => ({
+      ...prev,
+      stations: prev.stations
+        .filter((station) => station.id !== stationId)
+        .map((station, index) => ({ ...station, number: index + 1 })),
+    }));
+    onSelectStation(nextStation?.id ?? '');
+    onSheetStateChange(nextStation ? 'collapsed' : 'closed');
+  }
+
   function goToNextWithNavigation() {
     if (!selectedStation || !nextStation) {
       onNext();
@@ -270,6 +288,7 @@ export function MapScreen({
         onBack={() => onSheetStateChange('closed')}
         onPrev={onPrev}
         onNext={goToNextWithNavigation}
+        onDeleteStation={deleteStation}
         onChange={onChange}
       />
     </main>

@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDraft } from '@/hooks/useDraft';
 import { FieldMode } from '@/components/studio/FieldMode';
+import { deleteDraft } from '@/storage';
 
 interface FieldRouteState {
   selectedStationId?: string;
@@ -38,6 +39,10 @@ export function FieldModePage() {
       draft={draft}
       initialStationId={initialId}
       onChange={update}
+      onDeleteTour={async (id) => {
+        await deleteDraft(id);
+        navigate('/tours');
+      }}
       onExit={() => navigate(`/tours/${draft.draftId}`)}
     />
   );

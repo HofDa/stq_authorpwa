@@ -26,7 +26,12 @@ export function StoryText({
 
   return (
     <section className="stq-riddle-section">
-      <div className="stq-riddle-heading-row">
+      <div
+        className={[
+          'stq-riddle-heading-row',
+          headingAction ? 'stq-riddle-heading-row--with-action' : '',
+        ].join(' ')}
+      >
         <h2 className="stq-riddle-heading">{title}</h2>
         {headingAction}
       </div>

@@ -1,8 +1,8 @@
 import type { Locale, RiddleEntry, TourDraft } from '@/schema';
 import type { AuthorMapBasemapKey } from '@/components/map/mapTypes';
+import { FieldInspector } from '@/author/FieldInspector';
 import { FieldMapSection } from './FieldMapSection';
 import { FieldStationList } from './FieldStationList';
-import { RiddleScreen } from './RiddleScreen';
 import type { CurrentGps, FieldView } from './types';
 
 interface Props {
@@ -86,7 +86,7 @@ export function FieldModeContent({
 
       {view === 'station' && selected && (
         <div className="stq-field-riddle-overlay">
-          <RiddleScreen
+          <FieldInspector
             draft={draft}
             station={selected}
             locale={locale}

@@ -150,6 +150,18 @@ function BlockContent({
           editSignal={editSignal}
         />
       );
+    case 'paragraph_styled':
+      return (
+        <EditableText
+          as="p"
+          multiline
+          value={block.text}
+          onChange={(text) => onChange({ ...block, text })}
+          placeholder="Styled paragraph text..."
+          className="whitespace-pre-wrap rounded-md border-l-4 border-primary/50 bg-primary/5 px-3 py-2 font-body text-body text-text"
+          editSignal={editSignal}
+        />
+      );
     case 'line':
       return (
         <EditableText
@@ -355,6 +367,8 @@ function iconFor(type: ContentBlockType): string {
       return '🔤';
     case 'paragraph':
       return '📝';
+    case 'paragraph_styled':
+      return '▌';
     case 'image':
       return '📷';
     case 'line':

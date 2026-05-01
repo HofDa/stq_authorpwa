@@ -19,6 +19,12 @@ export function ContentSectionRenderer({ blocks, centeredLines = false }: Props)
             );
           case 'paragraph':
             return <p key={index}>{block.text}</p>;
+          case 'paragraph_styled':
+            return (
+              <p key={index} className="stq-riddle-styled-paragraph">
+                {block.text}
+              </p>
+            );
           case 'line':
             return (
               <p

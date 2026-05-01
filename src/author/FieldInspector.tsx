@@ -15,7 +15,7 @@ import { AgentPanel } from './AgentPanel';
 import { EditPanel, type EditPayload } from './EditPanel';
 import { useAuthorSelection } from './useAuthorSelection';
 import { Icon } from '@/components/studio/Icon';
-import type { IconName } from '@/components/studio/Icon';
+import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
 import { CaptureButton } from '@/components/CaptureButton';
 import { StationVisualPicker } from '@/components/stations/StationVisualPicker';
 import { normalizeStationVisualChoice } from '@/stations/visuals';
@@ -32,6 +32,7 @@ interface Props {
   onBack?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
+  onDeleteStation?: (stationId: string) => void;
   isFirst?: boolean;
   isLast?: boolean;
   presentation?: 'fullscreen' | 'mapOverlay';
@@ -60,6 +61,7 @@ export function FieldInspector({
   onBack,
   onPrev,
   onNext,
+  onDeleteStation,
   isFirst,
   isLast,
   presentation,
@@ -70,6 +72,8 @@ export function FieldInspector({
   const [aiPanelMode, setAiPanelMode] = useState<RiddleAiPanelMode>('image');
   const [iconEditorOpen, setIconEditorOpen] = useState(false);
   const selection = useAuthorSelection();
+  const confirm = useConfirm();
+  const toast = useToast();
   const heroBlobUrl = useBlobUrl(station.imageBlobId);
   const content = station[locale];
   const title = getStationLocationLabel(station, locale);
@@ -80,7 +84,7 @@ export function FieldInspector({
         ...section,
         blocks: content[section.key],
       })),
-    [content.firstSection, content.historySection, content.riddleSection, content.successSection],
+    [content],
   );
 
   function patchStation(patch: Partial<RiddleEntry>) {
@@ -158,6 +162,62 @@ export function FieldInspector({
     selection.close();
   }
 
+  function openManualEditorFromAi(mode: RiddleAiPanelMode) {
+    setAiPanelOpen(false);
+
+    if (mode === 'icon') {
+      setIconEditorOpen(true);
+      return;
+    }
+
+    if (mode === 'image') {
+      selection.edit(`riddles[${station.number}].image`, 'station image');
+      return;
+    }
+
+    if (mode === 'story') {
+      selection.edit(
+        `riddles[${station.number}].firstSection`,
+        'Story heading and text',
+      );
+      return;
+    }
+
+    if (mode === 'facts') {
+      selection.edit(
+        `riddles[${station.number}].sections.historySection`,
+        'Mehr Infos',
+      );
+      return;
+    }
+
+    if (mode === 'riddle') {
+      selection.edit(
+        `riddles[${station.number}].sections.riddleSection`,
+        'Riddle',
+      );
+      return;
+    }
+
+    selection.edit(
+      `riddles[${station.number}].sections.successSection`,
+      'Success',
+    );
+  }
+
+  async function deleteStation() {
+    if (!onDeleteStation) return;
+    const confirmed = await confirm({
+      title: 'Delete station?',
+      message: `This removes "${title}" from the tour and cannot be undone.`,
+      confirmLabel: 'Delete station',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+    onDeleteStation(station.id);
+    toast({ title: 'Station deleted', tone: 'success' });
+  }
+
   const overlays = authorMode
     ? {
         hero: (
@@ -165,9 +225,8 @@ export function FieldInspector({
             targetPath={`riddles[${station.number}].image`}
             label="station image"
             tone="dark"
-            agentIcon="wand"
+            accent="image"
             onEdit={selection.edit}
-            onAgent={selection.agent}
           />
         ),
         title: (
@@ -175,7 +234,6 @@ export function FieldInspector({
             targetPath={`riddles[${station.number}].title`}
             label="station title"
             onEdit={selection.edit}
-            onAgent={selection.agent}
           />
         ),
         firstSection: sectionOverlay(
@@ -183,51 +241,34 @@ export function FieldInspector({
           'firstSection',
           'Story',
           selection,
-          () => {
-            setAiPanelMode('story');
-            setAiPanelOpen(true);
-          },
-          'sparkles',
+          'story',
         ),
         historySection: sectionOverlay(
           station.number,
           'historySection',
           'Mehr Infos',
           selection,
-          () => {
-            setAiPanelMode('facts');
-            setAiPanelOpen(true);
-          },
-          'layers',
+          'facts',
         ),
         riddleSection: sectionOverlay(
           station.number,
           'riddleSection',
           'Riddle',
           selection,
-          () => {
-            setAiPanelMode('riddle');
-            setAiPanelOpen(true);
-          },
-          'puzzle',
+          'riddle',
         ),
         successSection: sectionOverlay(
           station.number,
           'successSection',
           'Success',
           selection,
-          () => {
-            setAiPanelMode('success');
-            setAiPanelOpen(true);
-          },
-          'check-circle',
+          'success',
         ),
         answers: (
           <AuthorOverlay
             targetPath={`riddles[${station.number}].answers`}
             label="solution and hints"
             onEdit={selection.edit}
-            onAgent={selection.agent}
           />
         ),
       }
@@ -263,40 +304,51 @@ export function FieldInspector({
         authorMode={authorMode}
         authorToggle={
           onAuthorModeChange ? (
-            <button
-              type="button"
-              className={`stq-riddle-author-toggle${authorMode ? ' active' : ''}`}
-              onClick={() => onAuthorModeChange(!authorMode)}
-              aria-pressed={authorMode}
-            >
-              <Icon name="edit" size={13} />
-              Author
-            </button>
+            <div className="stq-riddle-author-top-actions">
+              {authorMode && onDeleteStation && (
+                <button
+                  type="button"
+                  className="stq-riddle-danger-toggle"
+                  onClick={deleteStation}
+                  aria-label="Delete station"
+                >
+                  <Icon name="trash" size={13} />
+                </button>
+              )}
+              <button
+                type="button"
+                className={`stq-riddle-author-toggle${authorMode ? ' active' : ''}`}
+                onClick={() => onAuthorModeChange(!authorMode)}
+                aria-pressed={authorMode}
+              >
+                <Icon name="edit" size={13} />
+                Author
+              </button>
+            </div>
           ) : null
         }
         mapHeroAction={
           authorMode ? (
             <div className="stq-riddle-map-card-actions">
+              {onDeleteStation && (
+                <button
+                  type="button"
+                  className="stq-riddle-map-card-action stq-riddle-map-card-action--danger"
+                  onClick={deleteStation}
+                  aria-label="Delete station"
+                >
+                  <Icon name="trash" size={18} />
+                </button>
+              )}
               <CaptureButton
                 draftId={draft.draftId}
                 preset="station"
                 onCaptured={setStationImageBlob}
-                className="stq-riddle-map-card-action"
+                className="stq-riddle-map-card-action stq-riddle-map-card-action--image"
                 ariaLabel={imageUrl ? 'Replace station image' : 'Capture station image'}
                 label={<Icon name="camera" size={18} />}
                 capture={false}
               />
-              <button
-                type="button"
-                className="stq-riddle-map-card-action"
-                onClick={() => {
-                  setAiPanelMode('image');
-                  setAiPanelOpen(true);
-                }}
-                aria-label="AI image editing coming soon"
-              >
-                <Icon name="wand" size={18} />
-              </button>
             </div>
           ) : null
         }
@@ -305,7 +357,7 @@ export function FieldInspector({
             <>
               <button
                 type="button"
-                className="stq-riddle-map-icon-action stq-riddle-map-icon-action--edit"
+                className="stq-riddle-map-icon-action stq-riddle-map-icon-action--icon"
                 onClick={(event) => {
                   event.stopPropagation();
                   setIconEditorOpen(true);
@@ -313,18 +365,6 @@ export function FieldInspector({
                 aria-label="Edit station icon"
               >
                 <Icon name="edit" size={13} />
-              </button>
-              <button
-                type="button"
-                className="stq-riddle-map-icon-action stq-riddle-map-icon-action--ai"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setAiPanelMode('icon');
-                  setAiPanelOpen(true);
-                }}
-                aria-label="Open AI helper for station icon"
-              >
-                <Icon name="map-pin" size={13} />
               </button>
             </>
           ) : null
@@ -334,7 +374,7 @@ export function FieldInspector({
             <div className="stq-riddle-heading-actions">
               <button
                 type="button"
-                className="stq-riddle-heading-action"
+                className="stq-riddle-heading-action stq-riddle-heading-action--story"
                 onClick={() =>
                   selection.edit(
                     `riddles[${station.number}].firstSection`,
@@ -345,17 +385,6 @@ export function FieldInspector({
               >
                 <Icon name="edit" size={17} />
               </button>
-              <button
-                type="button"
-                className="stq-riddle-heading-action"
-                onClick={() => {
-                  setAiPanelMode('story');
-                  setAiPanelOpen(true);
-                }}
-                aria-label="Open AI assistant for story heading"
-              >
-                <Icon name="sparkles" size={17} />
-              </button>
             </div>
           ) : null
         }
@@ -364,7 +393,7 @@ export function FieldInspector({
             <div className="stq-riddle-heading-actions">
               <button
                 type="button"
-                className="stq-riddle-heading-action"
+                className="stq-riddle-heading-action stq-riddle-heading-action--facts"
                 onClick={() =>
                   selection.edit(
                     `riddles[${station.number}].sections.historySection`,
@@ -375,17 +404,6 @@ export function FieldInspector({
               >
                 <Icon name="edit" size={17} />
               </button>
-              <button
-                type="button"
-                className="stq-riddle-heading-action"
-                onClick={() => {
-                  setAiPanelMode('facts');
-                  setAiPanelOpen(true);
-                }}
-                aria-label="Open AI assistant for background facts"
-              >
-                <Icon name="layers" size={17} />
-              </button>
             </div>
           ) : null
         }
@@ -394,7 +412,7 @@ export function FieldInspector({
             <div className="stq-riddle-heading-actions">
               <button
                 type="button"
-                className="stq-riddle-heading-action"
+                className="stq-riddle-heading-action stq-riddle-heading-action--riddle"
                 onClick={() =>
                   selection.edit(
                     `riddles[${station.number}].sections.riddleSection`,
@@ -405,17 +423,6 @@ export function FieldInspector({
               >
                 <Icon name="edit" size={17} />
               </button>
-              <button
-                type="button"
-                className="stq-riddle-heading-action"
-                onClick={() => {
-                  setAiPanelMode('riddle');
-                  setAiPanelOpen(true);
-                }}
-                aria-label="Open AI assistant for riddle"
-              >
-                <Icon name="puzzle" size={17} />
-              </button>
             </div>
           ) : null
         }
@@ -424,7 +431,7 @@ export function FieldInspector({
             <div className="stq-riddle-heading-actions">
               <button
                 type="button"
-                className="stq-riddle-heading-action"
+                className="stq-riddle-heading-action stq-riddle-heading-action--success"
                 onClick={() =>
                   selection.edit(
                     `riddles[${station.number}].sections.successSection`,
@@ -434,17 +441,6 @@ export function FieldInspector({
                 aria-label="Edit success message"
               >
                 <Icon name="edit" size={17} />
-              </button>
-              <button
-                type="button"
-                className="stq-riddle-heading-action"
-                onClick={() => {
-                  setAiPanelMode('success');
-                  setAiPanelOpen(true);
-                }}
-                aria-label="Open AI assistant for success message"
-              >
-                <Icon name="check-circle" size={17} />
               </button>
             </div>
           ) : null
@@ -459,6 +455,7 @@ export function FieldInspector({
           onModeChange={setAiPanelMode}
           open={aiPanelOpen}
           onOpenChange={setAiPanelOpen}
+          onManualEdit={openManualEditorFromAi}
         />
       )}
 
@@ -542,16 +539,14 @@ function sectionOverlay(
   key: RendererSectionKey,
   label: string,
   selection: ReturnType<typeof useAuthorSelection>,
-  onAgent?: () => void,
-  agentIcon?: IconName,
+  accent: 'story' | 'facts' | 'riddle' | 'success',
 ) {
   return (
     <AuthorOverlay
       targetPath={`riddles[${stationNumber}].sections.${key}`}
       label={label}
-      agentIcon={agentIcon}
+      accent={accent}
       onEdit={selection.edit}
-      onAgent={onAgent ?? selection.agent}
     />
   );
 }

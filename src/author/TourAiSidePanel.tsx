@@ -8,7 +8,7 @@ interface ChatMessage {
   content: string;
 }
 
-export type TourAiPanelMode = 'image' | 'intro';
+export type TourAiPanelMode = 'image' | 'intro' | 'masterStory';
 
 interface Props {
   locale: Locale;
@@ -17,13 +17,15 @@ interface Props {
   onModeChange: (mode: TourAiPanelMode) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onManualEdit: (mode: TourAiPanelMode) => void;
 }
 
 const TOUR_AI_PANEL_MODES: Array<{
   mode: TourAiPanelMode;
-  icon: 'wand' | 'sparkles';
+  icon: 'wand' | 'sparkles' | 'book-open';
   label: string;
 }> = [
+  { mode: 'masterStory', icon: 'book-open', label: 'Storyline AI' },
   { mode: 'image', icon: 'wand', label: 'Image AI' },
   { mode: 'intro', icon: 'sparkles', label: 'Intro AI' },
 ];
@@ -35,6 +37,7 @@ export function TourAiSidePanel({
   onModeChange,
   open,
   onOpenChange,
+  onManualEdit,
 }: Props) {
   const [input, setInput] = useState('');
   const dragStartX = useRef<number | null>(null);
@@ -67,7 +70,9 @@ export function TourAiSidePanel({
         content:
           mode === 'image'
             ? 'Got it. Once AI image editing is connected, this request can be applied to the tour cover image.'
-            : 'Got it. Once AI intro editing is connected, this request can be applied to the tour title and description.',
+            : mode === 'intro'
+              ? 'Got it. Once AI intro editing is connected, this request can be applied to the tour title and description.'
+              : 'Got it. Once AI storyline editing is connected, this request can shape the tour-wide narrative arc.',
       },
     ]);
     setInput('');
@@ -158,6 +163,17 @@ export function TourAiSidePanel({
           <span>{modeLabel(mode)}</span>
           <strong>{tourTitle}</strong>
         </div>
+        {mode !== 'masterStory' && (
+          <button
+            type="button"
+            className="stq-riddle-ai-manual"
+            onClick={() => onManualEdit(mode)}
+            aria-label={manualEditLabel(mode)}
+          >
+            <Icon name="edit" size={15} />
+            <span>Manual</span>
+          </button>
+        )}
         <span className="stq-riddle-ai-status">Soon</span>
       </header>
 
@@ -196,7 +212,9 @@ export function TourAiSidePanel({
           placeholder={
             mode === 'image'
               ? 'Describe cover image changes...'
-              : 'Describe title or description changes...'
+              : mode === 'intro'
+                ? 'Describe title or description changes...'
+                : 'Describe the storyline arc...'
           }
           className="stq-riddle-ai-input"
         />
@@ -220,19 +238,30 @@ function initialMessages(mode: TourAiPanelMode, tourTitle: string): ChatMessage[
       content:
         mode === 'image'
           ? `Tell me what kind of cover image should represent "${tourTitle}". Voice input works here too.`
-          : `Tell me how the title or description for "${tourTitle}" should change. Voice input works here too.`,
+          : mode === 'intro'
+            ? `Tell me how the title or description for "${tourTitle}" should change. Voice input works here too.`
+            : `Tell me how the storyline for "${tourTitle}" should evolve across the whole tour. Voice input works here too.`,
     },
     {
       role: 'assistant',
       content:
         mode === 'image'
           ? 'AI image editing is not implemented yet, but this chat will collect the request.'
-          : 'AI intro editing is not implemented yet, but this chat will collect the request.',
+          : mode === 'intro'
+            ? 'AI intro editing is not implemented yet, but this chat will collect the request.'
+            : 'AI storyline editing is not implemented yet, but this chat will collect the narrative direction.',
     },
   ];
 }
 
 function modeLabel(mode: TourAiPanelMode) {
   if (mode === 'image') return 'AI cover image';
+  if (mode === 'masterStory') return 'AI storyline';
   return 'AI tour intro';
+}
+
+function manualEditLabel(mode: TourAiPanelMode) {
+  if (mode === 'image') return 'Open manual tour cover image editor';
+  if (mode === 'masterStory') return 'Manual storyline editor is not available yet';
+  return 'Open manual tour intro editor';
 }

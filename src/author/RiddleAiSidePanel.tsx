@@ -23,6 +23,7 @@ interface Props {
   onModeChange: (mode: RiddleAiPanelMode) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onManualEdit: (mode: RiddleAiPanelMode) => void;
 }
 
 const AI_PANEL_MODES: Array<{
@@ -45,6 +46,7 @@ export function RiddleAiSidePanel({
   onModeChange,
   open,
   onOpenChange,
+  onManualEdit,
 }: Props) {
   const [input, setInput] = useState('');
   const dragStartX = useRef<number | null>(null);
@@ -175,6 +177,15 @@ export function RiddleAiSidePanel({
           <span>{modeLabel(mode)}</span>
           <strong>{stationTitle}</strong>
         </div>
+        <button
+          type="button"
+          className="stq-riddle-ai-manual"
+          onClick={() => onManualEdit(mode)}
+          aria-label={manualEditLabel(mode)}
+        >
+          <Icon name="edit" size={15} />
+          <span>Manual</span>
+        </button>
         <span className="stq-riddle-ai-status">Soon</span>
       </header>
 
@@ -280,4 +291,13 @@ function modeLabel(mode: Props['mode']) {
   if (mode === 'riddle') return 'AI riddle editor';
   if (mode === 'success') return 'AI success editor';
   return 'AI facts editor';
+}
+
+function manualEditLabel(mode: Props['mode']) {
+  if (mode === 'image') return 'Open manual station image editor';
+  if (mode === 'icon') return 'Open manual station icon editor';
+  if (mode === 'story') return 'Open manual story editor';
+  if (mode === 'facts') return 'Open manual background facts editor';
+  if (mode === 'riddle') return 'Open manual riddle editor';
+  return 'Open manual success message editor';
 }

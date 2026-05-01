@@ -28,7 +28,13 @@ export function TourIntro({
         {heroAction}
       </div>
       <section className="stq-tour-intro-body">
-        <div className="stq-render-target stq-tour-intro-title-block">
+        <div
+          className={[
+            'stq-render-target',
+            'stq-tour-intro-title-block',
+            titleHeadingAction ? 'stq-tour-intro-title-block--with-action' : '',
+          ].join(' ')}
+        >
           {titleHeadingAction}
           <h1>{title}</h1>
           <p className="stq-tour-intro-location">{location}</p>

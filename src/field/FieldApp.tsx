@@ -17,6 +17,7 @@ interface Props {
   initialStationId?: string | null;
   onChange: (draftId: string, recipe: (prev: TourDraft) => TourDraft) => void;
   onCreateTour?: () => void;
+  onDeleteTour?: (draftId: string) => Promise<void> | void;
 }
 
 export function FieldApp({
@@ -25,6 +26,7 @@ export function FieldApp({
   initialStationId,
   onChange,
   onCreateTour,
+  onDeleteTour,
 }: Props) {
   const [view, setView] = useState<FieldView>('tourMenu');
   const [selectedTourId, setSelectedTourId] = useState<string | null>(
@@ -124,6 +126,9 @@ export function FieldApp({
         onBack={() => setView('tourMenu')}
         onStart={startTour}
         onChange={(recipe) => onChange(selectedDraft.draftId, recipe)}
+        onDeleteTour={
+          onDeleteTour ? () => onDeleteTour(selectedDraft.draftId) : undefined
+        }
       />
     );
   }

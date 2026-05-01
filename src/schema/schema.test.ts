@@ -19,6 +19,9 @@ describe('ContentBlockSchema', () => {
     expect(
       ContentBlockSchema.parse({ type: 'paragraph', text: 'hi' }),
     ).toEqual({ type: 'paragraph', text: 'hi' });
+    expect(
+      ContentBlockSchema.parse({ type: 'paragraph_styled', text: 'hi' }),
+    ).toEqual({ type: 'paragraph_styled', text: 'hi' });
     expect(ContentBlockSchema.parse({ type: 'heading', text: 'hi' })).toEqual({
       type: 'heading',
       text: 'hi',

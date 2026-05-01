@@ -19,6 +19,7 @@ interface Props {
   onBack: () => void;
   onPrev: () => void;
   onNext: () => void;
+  onDeleteStation?: (stationId: string) => void;
   onChange: (recipe: (prev: TourDraft) => TourDraft) => void;
 }
 
@@ -37,6 +38,7 @@ export function StationBottomSheet({
   onBack,
   onPrev,
   onNext,
+  onDeleteStation,
   onChange,
 }: Props) {
   const dragStartY = useRef<number | null>(null);
@@ -100,6 +102,7 @@ export function StationBottomSheet({
           onBack={onBack}
           onPrev={onPrev}
           onNext={onNext}
+          onDeleteStation={onDeleteStation}
           isFirst={isFirst}
           isLast={isLast}
           presentation="mapOverlay"

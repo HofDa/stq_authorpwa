@@ -3,11 +3,16 @@ import { z } from 'zod';
 /**
  * Content blocks supported by v1.
  *
- * The native app also understands `paragraph_styled`, `audio`, and `chat`
- * blocks. Those are deferred to Phase 2.
+ * The native app also understands `audio` and `chat` blocks. Those are
+ * deferred to Phase 2.
  */
 export const ParagraphBlockSchema = z.object({
   type: z.literal('paragraph'),
+  text: z.string(),
+});
+
+export const StyledParagraphBlockSchema = z.object({
+  type: z.literal('paragraph_styled'),
   text: z.string(),
 });
 
@@ -36,6 +41,7 @@ export const ImageBlockSchema = z.object({
 
 export const ContentBlockSchema = z.discriminatedUnion('type', [
   ParagraphBlockSchema,
+  StyledParagraphBlockSchema,
   HeadingBlockSchema,
   LineBlockSchema,
   ImageBlockSchema,
@@ -46,6 +52,7 @@ export type ContentBlockType = ContentBlock['type'];
 
 export const CONTENT_BLOCK_TYPES: readonly ContentBlockType[] = [
   'paragraph',
+  'paragraph_styled',
   'heading',
   'image',
   'line',
@@ -54,6 +61,8 @@ export const CONTENT_BLOCK_TYPES: readonly ContentBlockType[] = [
 export function emptyBlock(type: ContentBlockType): ContentBlock {
   switch (type) {
     case 'paragraph':
+      return { type, text: '' };
+    case 'paragraph_styled':
       return { type, text: '' };
     case 'heading':
       return { type, text: '' };

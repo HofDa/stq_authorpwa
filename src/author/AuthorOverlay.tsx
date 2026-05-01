@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import type { IconName } from '@/components/studio/Icon';
 import { AuthorToolbar } from './AuthorToolbar';
 
 interface Props {
@@ -7,9 +6,8 @@ interface Props {
   label: string;
   children?: ReactNode;
   tone?: 'light' | 'dark';
-  agentIcon?: IconName;
+  accent?: 'image' | 'icon' | 'story' | 'facts' | 'riddle' | 'success';
   onEdit: (targetPath: string, label: string) => void;
-  onAgent: (targetPath: string, label: string) => void;
 }
 
 export function AuthorOverlay({
@@ -17,9 +15,8 @@ export function AuthorOverlay({
   label,
   children,
   tone,
-  agentIcon,
+  accent,
   onEdit,
-  onAgent,
 }: Props) {
   return (
     <>
@@ -27,9 +24,8 @@ export function AuthorOverlay({
       <AuthorToolbar
         label={label}
         tone={tone}
-        agentIcon={agentIcon}
+        accent={accent}
         onEdit={() => onEdit(targetPath, label)}
-        onAgent={() => onAgent(targetPath, label)}
       />
     </>
   );

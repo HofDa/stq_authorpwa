@@ -1,15 +1,12 @@
-import { useMemo } from 'react';
 import type { Locale, RiddleEntry, TourDraft } from '@/schema';
-import { runLocalAssistantChecks } from '@/assistant/openClaw';
 import { Icon } from '../../Icon';
-import { stationCompleteness } from '../../completeness';
 import { AssistantCaptureMicButton } from './AssistantCaptureMicButton';
 import { AssistantChecksList } from './AssistantChecksList';
 import { AssistantFitnessCard } from './AssistantFitnessCard';
 import { AssistantFitnessScore } from './AssistantFitnessScore';
 import { AssistantProgressSegments } from './AssistantProgressSegments';
-import type { AssistantProgressSegment } from './AssistantProgressSegments';
 import { AssistantPromptCard } from './AssistantPromptCard';
+import { useStationFitness } from './useStationFitness';
 
 interface StationAssistantContentProps {
   draft: TourDraft;
@@ -30,44 +27,18 @@ export function StationAssistantContent({
   onPrev,
   onNext,
 }: StationAssistantContentProps) {
-  const stats = stationCompleteness(station, locale);
-  const checks = useMemo(
-    () => runLocalAssistantChecks({ draft, locale, kind: 'station', station }),
-    [draft, locale, station],
-  );
-  const localized = station[locale];
-  const stationTitle = localized.location || `Station ${station.number}`;
-
-  const segments = useMemo<AssistantProgressSegment[]>(
-    () => [
-      { key: 'photo', label: 'Photo', done: stats.hasPhoto },
-      { key: 'gps', label: 'GPS', done: stats.hasGps },
-      {
-        key: 'story',
-        label: 'Story',
-        done: localized.firstSection.length > 0,
-      },
-      { key: 'riddle', label: 'Riddle', done: stats.hasRiddle },
-      {
-        key: 'context',
-        label: 'Context',
-        done:
-          localized.historySection.length > 0 ||
-          localized.successSection.length > 0,
-      },
-    ],
-    [stats, localized],
-  );
-
-  const readyLabel = buildReadyLabel(stats.percent);
-  const photoCount = station.imageBlobId || station.imagePath ? 1 : 0;
-  const gpsLabel = stats.hasGps
-    ? `${station.position_lat.toFixed(3)}°, ${station.position_lng.toFixed(3)}°`
-    : 'No pin yet';
-  const riddleLabel = stats.hasRiddle ? 'Written' : 'Missing';
-  const contextBlockCount =
-    localized.historySection.length + localized.successSection.length;
-  const hasContext = contextBlockCount > 0;
+  const {
+    stats,
+    checks,
+    stationTitle,
+    segments,
+    readyLabel,
+    photoCount,
+    gpsLabel,
+    riddleLabel,
+    contextBlockCount,
+    hasContext,
+  } = useStationFitness(draft, locale, station);
 
   return (
     <>
@@ -163,11 +134,4 @@ export function StationAssistantContent({
       <AssistantCaptureMicButton draft={draft} locale={locale} station={station} />
     </>
   );
-}
-
-function buildReadyLabel(percent: number) {
-  if (percent === 100) return 'Ready to ship';
-  if (percent >= 75) return 'Almost there';
-  if (percent >= 25) return 'Drafting';
-  return 'Just started';
 }

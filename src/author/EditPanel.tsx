@@ -7,6 +7,18 @@ import {
 import { ImageCapture } from '@/components/ImageCapture';
 import { splitHeading } from '@/renderer/ContentSectionRenderer';
 
+type EditableTextBlockType = 'paragraph' | 'paragraph_styled' | 'line';
+type EditableTextBlock = Extract<ContentBlock, { type: EditableTextBlockType }>;
+
+const EDITABLE_TEXT_BLOCK_TYPES: Array<{
+  type: EditableTextBlockType;
+  label: string;
+}> = [
+  { type: 'paragraph', label: 'Paragraph' },
+  { type: 'paragraph_styled', label: 'Styled paragraph' },
+  { type: 'line', label: 'Line' },
+];
+
 export type EditPayload =
   | { kind: 'hero'; blobId: string }
   | { kind: 'stationTitle'; value: string }
@@ -173,7 +185,7 @@ function SectionPanel({
 }) {
   const split = splitHeading(blocks, fallbackTitle);
   const [draftTitle, setDraftTitle] = useState(split.title);
-  const [draftBody, setDraftBody] = useState(blocksToEditableText(split.body));
+  const [draftBody, setDraftBody] = useState(() => normalizeEditableBodyBlocks(split.body));
   return (
     <>
       <h2>{title}</h2>
@@ -184,18 +196,11 @@ function SectionPanel({
           onChange={(event) => setDraftTitle(event.target.value)}
         />
       </label>
-      <label className="stq-riddle-modal-field">
-        <span>Text</span>
-        <textarea
-          value={draftBody}
-          onChange={(event) => setDraftBody(event.target.value)}
-          rows={9}
-        />
-      </label>
+      <TextBlocksEditor blocks={draftBody} onChange={setDraftBody} />
       <button
         type="button"
         className="stq-riddle-modal-save"
-        onClick={() => onSave(editableTextToBlocks(draftTitle, draftBody))}
+        onClick={() => onSave(blocksWithHeading(draftTitle, draftBody))}
       >
         Save
       </button>
@@ -213,7 +218,9 @@ function TourIntroPanel({
   onSave: (title: string, description: ContentBlock[]) => void;
 }) {
   const [draftTitle, setDraftTitle] = useState(titleValue);
-  const [draftBody, setDraftBody] = useState(blocksToEditableText(descriptionBlocks));
+  const [draftBody, setDraftBody] = useState(() =>
+    normalizeEditableBodyBlocks(descriptionBlocks),
+  );
   return (
     <>
       <h2>Tour intro</h2>
@@ -224,31 +231,16 @@ function TourIntroPanel({
           onChange={(event) => setDraftTitle(event.target.value)}
         />
       </label>
-      <label className="stq-riddle-modal-field">
-        <span>Description</span>
-        <textarea
-          value={draftBody}
-          onChange={(event) => setDraftBody(event.target.value)}
-          rows={9}
-        />
-      </label>
+      <TextBlocksEditor label="Description blocks" blocks={draftBody} onChange={setDraftBody} />
       <button
         type="button"
         className="stq-riddle-modal-save"
-        onClick={() => onSave(draftTitle, bodyTextToBlocks(draftBody))}
+        onClick={() => onSave(draftTitle, cleanBodyBlocks(draftBody))}
       >
         Save
       </button>
     </>
   );
-}
-
-function bodyTextToBlocks(body: string): ContentBlock[] {
-  return body
-    .split(/\n{2,}/)
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((text) => ({ type: 'paragraph', text }));
 }
 
 function RiddleSetupPanel({
@@ -276,7 +268,7 @@ function RiddleSetupPanel({
 }) {
   const split = splitHeading(blocks, fallbackTitle);
   const [draftTitle, setDraftTitle] = useState(split.title);
-  const [draftBody, setDraftBody] = useState(blocksToEditableText(split.body));
+  const [draftBody, setDraftBody] = useState(() => normalizeEditableBodyBlocks(split.body));
   const [draftRiddleType, setDraftRiddleType] =
     useState<RiddleEntry['riddleType']>(riddleType);
   const [draftSolutionInputType, setDraftSolutionInputType] =
@@ -301,14 +293,7 @@ function RiddleSetupPanel({
         <span>Title</span>
         <input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} />
       </label>
-      <label className="stq-riddle-modal-field">
-        <span>Text</span>
-        <textarea
-          value={draftBody}
-          onChange={(event) => setDraftBody(event.target.value)}
-          rows={7}
-        />
-      </label>
+      <TextBlocksEditor blocks={draftBody} onChange={setDraftBody} />
       <label className="stq-riddle-modal-field">
         <span>Riddle type</span>
         <select
@@ -355,7 +340,7 @@ function RiddleSetupPanel({
         className="stq-riddle-modal-save"
         onClick={() =>
           onSave({
-            blocks: editableTextToBlocks(draftTitle, draftBody),
+            blocks: blocksWithHeading(draftTitle, draftBody),
             riddleType: draftRiddleType,
             solutionInputType: draftSolutionInputType,
             acceptedAnswers: parseAcceptedAnswersInput(answersText),
@@ -366,6 +351,81 @@ function RiddleSetupPanel({
         Save
       </button>
     </>
+  );
+}
+
+function TextBlocksEditor({
+  label = 'Text blocks',
+  blocks,
+  onChange,
+}: {
+  label?: string;
+  blocks: EditableTextBlock[];
+  onChange: (blocks: EditableTextBlock[]) => void;
+}) {
+  function updateBlock(index: number, next: EditableTextBlock) {
+    onChange(blocks.map((block, i) => (i === index ? next : block)));
+  }
+
+  function updateType(index: number, type: EditableTextBlockType) {
+    const current = blocks[index];
+    updateBlock(index, { type, text: current.text });
+  }
+
+  function addBlock(type: EditableTextBlockType = 'paragraph') {
+    onChange([...blocks, { type, text: '' }]);
+  }
+
+  function removeBlock(index: number) {
+    const next = blocks.filter((_, i) => i !== index);
+    onChange(next.length > 0 ? next : [{ type: 'paragraph', text: '' }]);
+  }
+
+  return (
+    <div className="stq-riddle-modal-field stq-riddle-text-blocks">
+      <span>{label}</span>
+      <div className="stq-riddle-text-block-list">
+        {blocks.map((block, index) => (
+          <div key={index} className="stq-riddle-text-block-row">
+            <div className="stq-riddle-text-block-controls">
+              <select
+                value={block.type}
+                onChange={(event) =>
+                  updateType(index, event.target.value as EditableTextBlockType)
+                }
+                aria-label={`Block ${index + 1} type`}
+              >
+                {EDITABLE_TEXT_BLOCK_TYPES.map((option) => (
+                  <option key={option.type} value={option.type}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => removeBlock(index)}
+                aria-label={`Remove block ${index + 1}`}
+              >
+                Remove
+              </button>
+            </div>
+            <textarea
+              value={block.text}
+              onChange={(event) => updateBlock(index, { ...block, text: event.target.value })}
+              rows={block.type === 'line' ? 2 : 5}
+              placeholder={placeholderForTextBlock(block.type)}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="stq-riddle-text-block-add">
+        {EDITABLE_TEXT_BLOCK_TYPES.map((option) => (
+          <button key={option.type} type="button" onClick={() => addBlock(option.type)}>
+            Add {option.label.toLowerCase()}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -420,19 +480,30 @@ function AnswersPanel({
   );
 }
 
-function blocksToEditableText(blocks: ContentBlock[]): string {
-  return blocks
-    .map((block) => {
-      if (block.type === 'image') return `[image: ${block.imagePath}]`;
-      return block.text;
-    })
-    .join('\n\n');
+function normalizeEditableBodyBlocks(blocks: ContentBlock[]): EditableTextBlock[] {
+  const editable = blocks.filter(isEditableTextBlock);
+  if (editable.length > 0) return editable;
+  return [{ type: 'paragraph', text: '' }];
 }
 
-function editableTextToBlocks(title: string, body: string): ContentBlock[] {
+function blocksWithHeading(title: string, body: EditableTextBlock[]): ContentBlock[] {
   const blocks: ContentBlock[] = [{ type: 'heading', text: title }];
-  for (const text of body.split(/\n{2,}/).map((entry) => entry.trim()).filter(Boolean)) {
-    blocks.push({ type: 'paragraph', text });
-  }
+  blocks.push(...cleanBodyBlocks(body));
   return blocks;
+}
+
+function cleanBodyBlocks(blocks: EditableTextBlock[]): EditableTextBlock[] {
+  return blocks
+    .map((block) => ({ ...block, text: block.text.trim() }))
+    .filter((block) => block.text.length > 0);
+}
+
+function isEditableTextBlock(block: ContentBlock): block is EditableTextBlock {
+  return block.type === 'paragraph' || block.type === 'paragraph_styled' || block.type === 'line';
+}
+
+function placeholderForTextBlock(type: EditableTextBlockType) {
+  if (type === 'line') return 'Short line...';
+  if (type === 'paragraph_styled') return 'Styled paragraph text...';
+  return 'Paragraph text...';
 }

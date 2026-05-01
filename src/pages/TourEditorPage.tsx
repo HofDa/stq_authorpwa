@@ -3,6 +3,7 @@ import { useDraft } from '@/hooks/useDraft';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { Studio } from '@/components/studio/Studio';
 import { FieldMode } from '@/components/studio/FieldMode';
+import { deleteDraft } from '@/storage';
 
 export function TourEditorPage() {
   const { draftId } = useParams();
@@ -24,6 +25,10 @@ export function TourEditorPage() {
       draft={draft}
       initialStationId={draft.stations[0]?.id ?? null}
       onChange={update}
+      onDeleteTour={async (id) => {
+        await deleteDraft(id);
+        navigate('/tours');
+      }}
       onExit={() => navigate('/tours')}
       exitLabel="Tours"
       embedded

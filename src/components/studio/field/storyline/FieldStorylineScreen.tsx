@@ -6,7 +6,7 @@ import { synthesizeStorylineReply } from './storylineReply';
 import { StorylineInputBar } from './StorylineInputBar';
 import { StorylineThread } from './StorylineThread';
 import { StorylineTopBar } from './StorylineTopBar';
-import { useBodyScrollLock } from './useBodyScrollLock';
+import { useBodyScrollLock } from '../useBodyScrollLock';
 import { useSpeechDictation } from '@/hooks/useSpeechDictation';
 
 interface Props {

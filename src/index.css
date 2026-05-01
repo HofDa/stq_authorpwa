@@ -1410,15 +1410,10 @@
 }
 
 .stq-riddle-author-toggle {
-  position: sticky;
-  top: max(98px, calc(env(safe-area-inset-top) + 82px));
-  left: 100%;
-  z-index: 24;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-height: 34px;
-  margin: -42px 16px 8px auto;
   border: 1px solid rgba(216, 193, 192, 0.6);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.78);
@@ -1430,7 +1425,19 @@
   backdrop-filter: blur(12px);
 }
 
-.stq-riddle-screen--map-overlay .stq-riddle-author-toggle {
+.stq-riddle-author-top-actions {
+  position: sticky;
+  top: max(98px, calc(env(safe-area-inset-top) + 82px));
+  left: 100%;
+  z-index: 24;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: -42px 16px 8px auto;
+  pointer-events: auto;
+}
+
+.stq-riddle-screen--map-overlay .stq-riddle-author-top-actions {
   position: absolute;
   top: auto;
   right: 18px;
@@ -1443,6 +1450,16 @@
   background: var(--riddle-primary);
   border-color: var(--riddle-primary);
   color: white;
+}
+
+.stq-riddle-danger-toggle,
+.stq-field-danger-toggle {
+  background: var(--stq-error) !important;
+  border-color: rgba(255, 255, 255, 0.86) !important;
+  color: white !important;
+  box-shadow:
+    0 8px 20px rgba(186, 26, 26, 0.28),
+    0 0 0 3px rgba(186, 26, 26, 0.18) !important;
 }
 
 .stq-riddle-sheet {
@@ -1551,16 +1568,10 @@
   position: absolute;
 }
 
-.stq-riddle-map-icon-action--edit {
-  --icon-action-bg: var(--riddle-primary);
-  right: -13px;
-  bottom: -17px;
-}
-
-.stq-riddle-map-icon-action--ai {
+.stq-riddle-map-icon-action--icon {
   --icon-action-bg: #2f7f9f;
   right: -13px;
-  top: -17px;
+  bottom: -17px;
 }
 
 .stq-riddle-map-card-icon .stq-riddle-center-icon {
@@ -1627,6 +1638,18 @@
   backdrop-filter: blur(10px);
 }
 
+.stq-riddle-map-card-action--image {
+  border-color: rgba(65, 104, 52, 0.45);
+  background: #416834;
+  color: white;
+}
+
+.stq-riddle-map-card-action--danger {
+  border-color: rgba(186, 26, 26, 0.45);
+  background: var(--stq-error);
+  color: white;
+}
+
 .stq-riddle-map-card-action:disabled {
   opacity: 0.72;
 }
@@ -1691,6 +1714,14 @@
   --ai-tab-color: var(--stq-primary);
 }
 
+.stq-riddle-ai-tab--intro {
+  --ai-tab-color: var(--stq-primary);
+}
+
+.stq-riddle-ai-tab--masterStory {
+  --ai-tab-color: #0f766e;
+}
+
 .stq-riddle-ai-tab--facts {
   --ai-tab-color: #4f6385;
 }
@@ -1716,9 +1747,9 @@
 
 .stq-riddle-ai-header {
   display: grid;
-  grid-template-columns: 42px 34px minmax(0, 1fr) auto;
+  grid-template-columns: 42px 34px minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: max(14px, env(safe-area-inset-top)) 14px 12px;
   border-bottom: 1px solid rgba(216, 193, 192, 0.72);
   background: rgba(255, 250, 249, 0.96);
@@ -1763,6 +1794,33 @@
   background: rgba(144, 74, 72, 0.08);
   letter-spacing: 0 !important;
   text-transform: none !important;
+}
+
+.stq-riddle-ai-manual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 31px;
+  border: 1px solid rgba(144, 74, 72, 0.32);
+  border-radius: 9999px;
+  background: white;
+  color: var(--stq-primary);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(35, 25, 25, 0.06);
+}
+
+.stq-riddle-ai-manual span {
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.stq-riddle-ai-manual:hover {
+  background: rgba(144, 74, 72, 0.08);
 }
 
 .stq-riddle-ai-icon-btn,
@@ -1893,30 +1951,51 @@
   position: relative;
 }
 
-.stq-riddle-heading-row .stq-riddle-heading {
-  padding-right: 96px;
+.stq-riddle-heading-row--with-action .stq-riddle-heading {
+  padding-left: 58px;
 }
 
 .stq-riddle-heading-actions {
   position: absolute;
   top: -4px;
-  right: 0;
+  left: 0;
   display: flex;
   gap: 8px;
 }
 
 .stq-riddle-heading-action {
+  --heading-action-color: var(--riddle-primary);
   display: grid;
   place-items: center;
   width: 42px;
   height: 42px;
-  border: 1px solid rgba(216, 193, 192, 0.72);
+  border: 1px solid color-mix(in srgb, var(--heading-action-color), white 46%);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--riddle-primary);
+  background: var(--heading-action-color);
+  color: white;
   padding: 0;
   box-shadow: 0 10px 22px rgba(35, 25, 25, 0.12);
   backdrop-filter: blur(10px);
+}
+
+.stq-riddle-heading-action--story {
+  --heading-action-color: var(--stq-primary);
+}
+
+.stq-riddle-heading-action--intro {
+  --heading-action-color: var(--stq-primary);
+}
+
+.stq-riddle-heading-action--facts {
+  --heading-action-color: #4f6385;
+}
+
+.stq-riddle-heading-action--riddle {
+  --heading-action-color: #7b4f89;
+}
+
+.stq-riddle-heading-action--success {
+  --heading-action-color: #416834;
 }
 
 .stq-riddle-screen--map-overlay .stq-riddle-heading {
@@ -2005,6 +2084,13 @@
   margin: 0 0 26px;
 }
 
+.stq-riddle-styled-paragraph {
+  border-left: 4px solid rgba(144, 74, 72, 0.46);
+  border-radius: 0 8px 8px 0;
+  background: rgba(144, 74, 72, 0.06);
+  padding: 12px 14px;
+}
+
 .stq-riddle-line-centered {
   text-align: center;
 }
@@ -2026,6 +2112,7 @@
 }
 
 .stq-riddle-history-header {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2040,7 +2127,7 @@
   flex: 1;
   min-width: 0;
   min-height: 64px;
-  padding: 0;
+  padding: 0 0 0 58px;
   border: 0;
   background: transparent;
   color: var(--riddle-ink);
@@ -2051,9 +2138,9 @@
 }
 
 .stq-riddle-history-actions {
-  flex: none;
-  align-self: flex-start;
-  margin-top: -8px;
+  position: absolute;
+  top: 8px;
+  left: 0;
 }
 
 .stq-riddle-history-actions .stq-riddle-heading-actions {
@@ -2412,7 +2499,7 @@
 .stq-riddle-author-tools {
   position: absolute;
   top: 8px;
-  right: 8px;
+  right: 72px;
   z-index: 20;
   display: flex;
   gap: 5px;
@@ -2431,26 +2518,60 @@
 }
 
 .stq-riddle-author-tools button {
+  --author-tool-color: var(--riddle-primary);
   display: grid;
   place-items: center;
   width: 30px;
   height: 30px;
-  border: 1px solid rgba(216, 193, 192, 0.72);
+  border: 1px solid color-mix(in srgb, var(--author-tool-color), white 46%);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--riddle-primary);
+  background: var(--author-tool-color);
+  color: white;
   box-shadow: 0 8px 18px rgba(35, 25, 25, 0.12);
   backdrop-filter: blur(10px);
   transition: transform 100ms, background 120ms;
 }
 
 .stq-riddle-author-tools button:hover {
-  background: white;
+  background: color-mix(in srgb, var(--author-tool-color), white 8%);
   transform: translateY(-1px);
 }
 
 .stq-riddle-author-tools--dark button {
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.42);
+}
+
+.stq-riddle-author-tools--image button {
+  --author-tool-color: #416834;
+}
+
+.stq-riddle-author-tools--icon button {
+  --author-tool-color: #2f7f9f;
+}
+
+.stq-riddle-author-tools--story button {
+  --author-tool-color: var(--stq-primary);
+}
+
+.stq-riddle-author-tools--facts button {
+  --author-tool-color: #4f6385;
+}
+
+.stq-riddle-author-tools--riddle button {
+  --author-tool-color: #7b4f89;
+}
+
+.stq-riddle-author-tools--success button {
+  --author-tool-color: #416834;
+}
+
+.stq-riddle-author-tools:not(.stq-riddle-author-tools--image):not(.stq-riddle-author-tools--icon):not(.stq-riddle-author-tools--story):not(.stq-riddle-author-tools--facts):not(.stq-riddle-author-tools--riddle):not(.stq-riddle-author-tools--success) button {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--riddle-primary);
+  border-color: rgba(216, 193, 192, 0.72);
+}
+
+.stq-riddle-author-tools--dark:not(.stq-riddle-author-tools--image):not(.stq-riddle-author-tools--icon):not(.stq-riddle-author-tools--story):not(.stq-riddle-author-tools--facts):not(.stq-riddle-author-tools--riddle):not(.stq-riddle-author-tools--success) button {
   background: rgba(18, 14, 14, 0.56);
   color: white;
 }
@@ -2579,6 +2700,59 @@
 .stq-riddle-modal-field textarea {
   min-height: 140px;
   resize: vertical;
+}
+
+.stq-riddle-text-blocks {
+  gap: 10px;
+}
+
+.stq-riddle-text-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stq-riddle-text-block-row {
+  border: 1px solid rgba(216, 193, 192, 0.78);
+  border-radius: 12px;
+  background: rgba(255, 250, 249, 0.68);
+  padding: 10px;
+}
+
+.stq-riddle-text-block-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stq-riddle-text-block-controls button,
+.stq-riddle-text-block-add button {
+  border: 1px solid rgba(144, 74, 72, 0.24);
+  border-radius: 9999px;
+  background: white;
+  color: var(--stq-primary);
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stq-riddle-text-block-controls button {
+  min-height: 42px;
+}
+
+.stq-riddle-text-block-row textarea {
+  min-height: 96px;
+}
+
+.stq-riddle-text-block-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stq-riddle-text-block-add button {
+  min-height: 34px;
 }
 
 .stq-riddle-modal-save {
@@ -2791,6 +2965,12 @@
   gap: 10px;
 }
 
+.stq-field-detail-actions {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
 .stq-field-detail-topbar button,
 .stq-field-map-topbar button {
   display: inline-flex;
@@ -2877,18 +3057,21 @@
 }
 
 .stq-tour-intro-hero .stq-riddle-map-card-actions {
-  top: auto;
-  bottom: 14px;
-  left: auto;
-  right: 60px;
+  top: 64px;
+  bottom: auto;
+  left: 18px;
+  right: auto;
 }
 
-.stq-tour-intro-title-block {
-  padding-right: 110px;
+.stq-tour-intro-title-block--with-action {
+  position: static;
+  padding-left: 58px;
 }
 
-.stq-tour-intro-title-block .stq-riddle-heading-actions {
-  right: 50px;
+.stq-tour-intro-title-block--with-action .stq-riddle-heading-actions {
+  top: 8px;
+  left: 8px;
+  right: auto;
 }
 
 .stq-tour-intro-hero img,
@@ -2907,6 +3090,7 @@
 }
 
 .stq-tour-intro-body {
+  position: relative;
   margin-top: -28px;
   min-height: 54dvh;
   border-radius: 32px 32px 0 0;
@@ -3164,7 +3348,7 @@
 }
 
 .stq-station-bottom-sheet .stq-riddle-screen--map-overlay .stq-riddle-floating-title,
-.stq-station-bottom-sheet .stq-riddle-screen--map-overlay .stq-riddle-author-toggle {
+.stq-station-bottom-sheet .stq-riddle-screen--map-overlay .stq-riddle-author-top-actions {
   display: none;
 }
 

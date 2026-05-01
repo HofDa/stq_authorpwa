@@ -22,6 +22,7 @@ export type IconName =
   | 'wifi-off'
   | 'edit'
   | 'layers'
+  | 'book-open'
   | 'hand'
   | 'mic'
   | 'x';
@@ -209,6 +210,13 @@ export function Icon({
         <svg {...common}>
           <path d="M12 2L2 7l10 5 10-5-10-5z" />
           <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+      );
+    case 'book-open':
+      return (
+        <svg {...common}>
+          <path d="M2 5.5A3.5 3.5 0 015.5 2H12v18H5.5A3.5 3.5 0 002 23V5.5z" />
+          <path d="M22 5.5A3.5 3.5 0 0018.5 2H12v18h6.5A3.5 3.5 0 0122 23V5.5z" />
         </svg>
       );
     case 'hand':

@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { Locale, RiddleEntry, TourDraft } from '@/schema';
 import type { AssistantFocus } from '@/assistant/openClaw';
 import { Icon } from '../Icon';
 import { StationAssistantContent } from './assistant/StationAssistantContent';
+import { useBodyScrollLock } from './useBodyScrollLock';
 
 interface Props {
   draft: TourDraft;
@@ -26,13 +27,7 @@ export function FieldAssistantSheet({
   onClose,
   onSelectStation,
 }: Props) {
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
+  useBodyScrollLock();
 
   const stationIndex = useMemo(
     () =>
