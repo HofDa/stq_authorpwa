@@ -9,21 +9,20 @@ interface SectionDef {
     | 'workflow.story'
     | 'workflow.stations'
     | 'workflow.route'
-    | 'workflow.preview';
-  icon: 'grid' | 'map-pin' | 'sparkles' | 'route' | 'phone';
+    | 'studio.outroPage';
+  icon: 'grid' | 'map-pin' | 'sparkles' | 'route';
 }
 
 /**
  * Visual order matches the natural authoring flow: shape the plan, write the
- * story, lay down the stations, walk the route, then preview what the tourist
- * will see.
+ * story, lay down the stations, review the route, then close with the outro.
  */
 const SECTIONS: SectionDef[] = [
   { key: 'plan', labelKey: 'workflow.plan', icon: 'grid' },
   { key: 'story', labelKey: 'workflow.story', icon: 'sparkles' },
+  { key: 'outro', labelKey: 'studio.outroPage', icon: 'sparkles' },
   { key: 'stations', labelKey: 'workflow.stations', icon: 'map-pin' },
   { key: 'route', labelKey: 'workflow.route', icon: 'route' },
-  { key: 'preview', labelKey: 'workflow.preview', icon: 'phone' },
 ];
 
 interface Props {

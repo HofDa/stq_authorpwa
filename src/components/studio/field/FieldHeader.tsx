@@ -79,7 +79,7 @@ export function FieldHeader({
             </div>
             <div
               style={{
-                fontFamily: 'Lato, Georgia, serif',
+                fontFamily: 'var(--stq-font-ui)',
                 fontSize: 15,
                 fontWeight: 700,
                 marginTop: 2,

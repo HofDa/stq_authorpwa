@@ -125,9 +125,11 @@ function chipStyle(active: boolean, recommended: boolean): CSSProperties {
     fontSize: 12,
     fontWeight: 600,
     letterSpacing: '0.01em',
-    borderRadius: 999,
+    borderRadius: 8,
     cursor: 'pointer',
-    background: active ? 'var(--stq-primary)' : 'white',
+    background: active
+      ? 'var(--stq-primary)'
+      : 'var(--stq-author-surface-raised, white)',
     color: active
       ? 'white'
       : recommended
@@ -140,7 +142,7 @@ function chipStyle(active: boolean, recommended: boolean): CSSProperties {
           ? 'rgba(144, 74, 72, 0.35)'
           : 'var(--stq-border)'
     }`,
-    boxShadow: active ? 'var(--stq-shadow-soft)' : 'none',
+    boxShadow: 'none',
     transition: 'background 0.12s ease, color 0.12s ease',
   };
 }

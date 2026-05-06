@@ -143,18 +143,6 @@ function suggestionsForAction(input: AiRequest): AssistantSuggestion[] {
           target: { section: 'route', field: 'recordedRoute' },
         },
       ];
-    case 'preview.runQA':
-      return [
-        {
-          id: `mock.preview.qa.${input.timestamp}`,
-          title: 'Walk every language in the phone frame',
-          reason:
-            'Most translation issues are spotted within 60 seconds of seeing them in context.',
-          proposedChange:
-            'Switch DE → EN → IT and tap Intro · Station · Outro for each.',
-          target: { section: 'preview' },
-        },
-      ];
     case 'translation.checkCompleteness':
       return [
         {

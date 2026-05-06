@@ -5,7 +5,7 @@ import { LOCALES, type Locale } from './locales';
 import { emptyAcceptedAnswers } from './riddle';
 import { createDefaultTourMeta } from './tourMeta';
 import {
-  applyStationVisualSelection,
+  buildDraftStationAssetPaths,
   DEFAULT_STATION_VISUAL,
 } from '@/stations/visuals';
 
@@ -22,6 +22,7 @@ export function emptyTourLocale(): TourLocaleContent {
     description: [],
     introSection: [],
     outroSection: [],
+    welcomeMessage: '',
   };
 }
 
@@ -72,7 +73,8 @@ export function emptyStation(id: string, number: number): RiddleEntry {
     position_lng: 0,
     polylineString: '',
     imagePath: '',
-    ...applyStationVisualSelection(id, DEFAULT_STATION_VISUAL),
+    ...buildDraftStationAssetPaths(id),
+    iconColorKey: DEFAULT_STATION_VISUAL.iconColorKey,
     riddleType: 'text',
     solutionInputType: 'text',
     acceptedAnswers: emptyAcceptedAnswers(),

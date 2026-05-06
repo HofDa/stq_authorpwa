@@ -1,6 +1,7 @@
 import type { ContentBlock } from '@/schema';
 import type { ReactNode } from 'react';
-import { ContentSectionRenderer, splitHeading } from './ContentSectionRenderer';
+import { ContentSectionRenderer } from './ContentSectionRenderer';
+import { splitHeading } from './splitHeading';
 
 interface Props {
   blocks: ContentBlock[];

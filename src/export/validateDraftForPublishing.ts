@@ -13,6 +13,11 @@ import {
   isValidCoordinate,
 } from '@/utils/coordinates';
 
+export interface ExportValidationError {
+  path: string;
+  message: string;
+}
+
 export type ValidationSeverity = 'error' | 'warning';
 export type PublishingValidationEntityType = 'tour' | 'station' | 'blob';
 

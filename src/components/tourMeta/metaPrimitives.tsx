@@ -96,8 +96,8 @@ export function EmptyHint({ children }: { children: ReactNode }) {
       style={{
         padding: '10px 12px',
         border: '1px dashed var(--stq-border)',
-        borderRadius: 12,
-        background: 'var(--stq-bg)',
+        borderRadius: 8,
+        background: 'var(--stq-author-surface-raised, var(--stq-bg))',
         fontSize: 12.5,
         color: 'var(--stq-text-mute)',
         lineHeight: 1.5,

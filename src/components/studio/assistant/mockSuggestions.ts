@@ -33,13 +33,12 @@ export function buildMockSuggestions(
     case 'plan':
       return capped(buildPlanSuggestions(args), args);
     case 'story':
+    case 'outro':
       return capped(buildStorySuggestions(args), args);
     case 'stations':
       return capped(buildStationsSuggestions(args), args);
     case 'route':
       return capped(buildRouteSuggestions(args), args);
-    case 'preview':
-      return capped(buildPreviewSuggestions(args), args);
   }
 }
 
@@ -218,20 +217,20 @@ function buildRouteSuggestions({ draft, locale }: BuildArgs) {
   if (draft.recordedRoute.length === 0) {
     out.push({
       id: 'mock.route.record',
-      title: 'Record a GPS track for the loop',
+      title: 'Add route path data for the loop',
       reason:
         'Without a track we can\'t derive per-station segments or surface long-segment warnings.',
       proposedChange:
-        'Open Stations · Map mode → walk the loop → the recorder appends to draft.recordedRoute.',
+        'Add route data so the desktop review can derive per-station segments.',
       target: { section: 'route', field: 'recordedRoute' },
     });
   } else if (draft.recordedRoute.length < 10) {
     out.push({
       id: 'mock.route.record-more',
-      title: 'Record more GPS points',
+      title: 'Add more route points',
       reason:
         `${draft.recordedRoute.length} points isn't enough to derive station segments reliably.`,
-      proposedChange: 'Walk a longer stretch with the recorder still active.',
+      proposedChange: 'Add enough path detail for reliable segment review.',
       target: { section: 'route', field: 'recordedRoute' },
     });
   }
@@ -243,36 +242,6 @@ function buildRouteSuggestions({ draft, locale }: BuildArgs) {
       reason: 'Distance alone doesn\'t tell players how long the loop takes.',
       proposedChange: `tour.${locale}.duration := "≈ <minutes> min"`,
       target: { section: 'route', field: 'duration' },
-    });
-  }
-
-  return out;
-}
-
-function buildPreviewSuggestions({ draft, locale }: BuildArgs) {
-  const out: AssistantSuggestion[] = [];
-  const blockers = getExportReadiness(draft, locale);
-
-  if (blockers.length > 0) {
-    out.push({
-      id: 'mock.preview.blockers',
-      title: 'Walk export blockers in Preview',
-      reason:
-        'Switch the language picker through every locale and use the station picker — blockers are usually obvious in the phone frame.',
-      proposedChange: blockers
-        .slice(0, 3)
-        .map((blocker) => `• ${blocker.message ?? blocker.label}`)
-        .join('\n'),
-      target: { section: 'preview' },
-    });
-  } else {
-    out.push({
-      id: 'mock.preview.smoke',
-      title: 'Run a final smoke test',
-      reason:
-        'No blockers right now — a quick walk-through across all three languages catches the last typos before export.',
-      proposedChange: 'Switch DE → EN → IT and tap Intro · Station · Outro for each.',
-      target: { section: 'preview' },
     });
   }
 

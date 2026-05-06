@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import type { Locale, RiddleEntry, TourDraft } from '@/schema';
 import { InlineTourIntro } from '@/components/editable/InlineTourIntro';
 import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
 import { Icon } from './Icon';
+import { DeviceMockup } from './DeviceMockup';
 
 interface Props {
   draft: TourDraft;
@@ -80,11 +81,12 @@ export function RightPreview({
     >
       <div
         style={{
-          background: 'white',
+          background: 'var(--stq-author-surface, white)',
           border: '1px solid var(--stq-border)',
-          borderRadius: 18,
+          borderRadius: 10,
           padding: '12px 14px',
-          boxShadow: 'var(--stq-shadow-soft)',
+          boxShadow: 'none',
+          color: 'var(--stq-text)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -149,19 +151,20 @@ export function RightPreview({
       <div
         style={{
           flex: 1,
-          background:
-            'linear-gradient(180deg, rgba(35,25,25,0.03), rgba(35,25,25,0.06))',
-          border: '1px solid var(--stq-border)',
-          borderRadius: 20,
           display: 'grid',
           placeItems: 'center',
-          padding: 18,
+          padding: 0,
           minHeight: 0,
           overflow: 'hidden',
           position: 'relative',
         }}
       >
-        <PhoneFrame>
+        <DeviceMockup
+          label="Tourist preview"
+          detail={previewDetail(effectiveMode, selected, locale)}
+          width={402}
+          height={870}
+        >
           {effectiveMode === 'station' && selected ? (
             <InlineStationDrawer
               draft={draft}
@@ -178,29 +181,19 @@ export function RightPreview({
               initialTab={effectiveMode === 'outro' ? 'outro' : 'intro'}
             />
           )}
-        </PhoneFrame>
+        </DeviceMockup>
       </div>
     </aside>
   );
 }
 
-function PhoneFrame({ children }: { children: ReactNode }) {
-  return (
-    <div
-      className="studio-phone-shell"
-      style={{ width: 320, maxHeight: '100%' }}
-    >
-      <div className="studio-phone-notch" />
-      <div className="studio-phone-screen" style={{ height: 640 }}>
-        <div
-          className="studio-scroll"
-          style={{ height: '100%', overflowY: 'auto', paddingTop: 38 }}
-        >
-          {children}
-          <div style={{ height: 24 }} />
-        </div>
-      </div>
-      <div className="studio-phone-home" />
-    </div>
-  );
+function previewDetail(
+  mode: Mode,
+  selected: RiddleEntry | null,
+  locale: Locale,
+): string {
+  if (mode === 'intro') return 'Intro screen';
+  if (mode === 'outro') return 'Outro screen';
+  if (!selected) return 'No station selected';
+  return `Station ${selected.number}: ${selected[locale].location || 'Unnamed station'}`;
 }

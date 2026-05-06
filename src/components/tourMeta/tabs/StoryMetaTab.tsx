@@ -60,9 +60,9 @@ export function StoryMetaTab({ tour }: Props) {
                 key={`${character.name}-${index}`}
                 style={{
                   border: '1px solid var(--stq-border-soft)',
-                  borderRadius: 10,
+                  borderRadius: 8,
                   padding: '8px 10px',
-                  background: 'var(--stq-bg)',
+                  background: 'var(--stq-author-surface-raised, var(--stq-bg))',
                 }}
               >
                 <div style={{ fontWeight: 700, fontSize: 13 }}>{character.name}</div>

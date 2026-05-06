@@ -8,12 +8,9 @@ import { CenterIcon } from './CenterIcon';
 import { HeroImage } from './HeroImage';
 import { HistoryPanel } from './HistoryPanel';
 import { StoryText } from './StoryText';
+import type { RendererSectionKey } from './stationSections';
 
-export type RendererSectionKey =
-  | 'firstSection'
-  | 'historySection'
-  | 'riddleSection'
-  | 'successSection';
+export type { RendererSectionKey } from './stationSections';
 
 export interface RendererSection {
   key: RendererSectionKey;

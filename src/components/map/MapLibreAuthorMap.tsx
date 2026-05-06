@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { buildStationMarkerSvg } from '@/stations/visuals';
+import {
+  buildNumberedStationMarkerSvg,
+  buildStationMarkerSvg,
+} from '@/stations/visuals';
 import {
   MAPLIBRE_STYLE_URL,
   resolveMapLibreStyle,
@@ -28,6 +31,16 @@ interface MapLibreErrorEvent {
 const SELECTION_SOURCE_ID = 'stq-author-map-selection-source';
 const SELECTION_LAYER_ID = 'stq-author-map-selection-layer';
 
+/* Station marker geometry — must stay in lockstep with `.stq-station-marker`
+   in `src/index.css`. The marker SVG (`buildStationMarkerSvg`) uses a 63×70
+   viewBox where the pin's tip sits at y≈68.7. With a CSS box of 40×44 px
+   the tip is at y ≈ 44 * (68.7/70) ≈ 43.2 px from the top, so the marker's
+   center sits ~21 px above its tip. We anchor at `center` and shift the
+   marker UP by 21 px (negative y in MapLibre's pixel space) so the tip
+   lands on the geographic point — and we don't rely on `anchor: 'bottom'`,
+   which forces MapLibre to re-measure the DOM box on every zoom. */
+const STATION_MARKER_TIP_OFFSET_PX: [number, number] = [0, -21];
+
 export function MapLibreAuthorMap({
   stations,
   viewport,
@@ -39,11 +52,16 @@ export function MapLibreAuthorMap({
   currentPosition,
   selectionStyle,
   currentPositionStyle = AUTHOR_MAP_CURRENT_POSITION_STYLE_PLANNER,
+  routePointMarkers = [],
   basemap = DEFAULT_AUTHOR_MAP_BASEMAP,
   onSelectStation,
   draggableStationIds = [],
+  deletableStationIds = [],
+  onDeleteStation,
   onStationCoordinateChange,
+  onRoutePointCoordinateChange,
   onViewportCenterChange,
+  onMapClick,
 }: AuthorMapProps) {
   const initialBasemapRef = useRef<AuthorMapBasemapKey>(basemap);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +73,8 @@ export function MapLibreAuthorMap({
   const [mapError, setMapError] = useState<string | null>(null);
   const stationMarkersRef = useRef<maplibregl.Marker[]>([]);
   const routeLayersRef = useRef<RouteLayerRef[]>([]);
+  const routeEndpointMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const routePointMarkersRef = useRef<maplibregl.Marker[]>([]);
   const currentPositionMarkerRef = useRef<maplibregl.Marker | null>(null);
   const previousSelectedStationIdRef = useRef<string | null>(null);
   const previousFlyToCurrentPositionRef = useRef(false);
@@ -65,10 +85,22 @@ export function MapLibreAuthorMap({
   useEffect(() => {
     onSelectStationRef.current = onSelectStation;
   }, [onSelectStation]);
+  const onDeleteStationRef = useRef(onDeleteStation);
+  useEffect(() => {
+    onDeleteStationRef.current = onDeleteStation;
+  }, [onDeleteStation]);
   const onStationCoordinateChangeRef = useRef(onStationCoordinateChange);
   useEffect(() => {
     onStationCoordinateChangeRef.current = onStationCoordinateChange;
   }, [onStationCoordinateChange]);
+  const onRoutePointCoordinateChangeRef = useRef(onRoutePointCoordinateChange);
+  useEffect(() => {
+    onRoutePointCoordinateChangeRef.current = onRoutePointCoordinateChange;
+  }, [onRoutePointCoordinateChange]);
+  const onMapClickRef = useRef(onMapClick);
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -117,16 +149,33 @@ export function MapLibreAuthorMap({
           });
     resizeObserver?.observe(containerRef.current);
 
-    const frameId = window.requestAnimationFrame(() => map.resize());
+    const secondFrameRef: { current: number | null } = { current: null };
+    const frameId = window.requestAnimationFrame(() => {
+      map.resize();
+      secondFrameRef.current = window.requestAnimationFrame(() => map.resize());
+    });
     // Belt and suspenders: a second resize on the next macrotask catches the
     // case where layout settles after the RAF.
-    const timerId = window.setTimeout(() => map.resize(), 0);
+    const resizeTimerIds = [0, 80, 240, 800, 1600].map((delay) =>
+      window.setTimeout(() => {
+        map.resize();
+        map.triggerRepaint();
+        if (map.loaded() || map.isStyleLoaded()) {
+          handleLoad();
+        }
+      }, delay),
+    );
     const handleWindowResize = () => map.resize();
     window.addEventListener('resize', handleWindowResize);
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.clearTimeout(timerId);
+      if (secondFrameRef.current !== null) {
+        window.cancelAnimationFrame(secondFrameRef.current);
+      }
+      for (const timerId of resizeTimerIds) {
+        window.clearTimeout(timerId);
+      }
       window.removeEventListener('resize', handleWindowResize);
       resizeObserver?.disconnect();
       map.off('load', handleLoad);
@@ -134,12 +183,16 @@ export function MapLibreAuthorMap({
       setStyleReady(false);
       removeStationMarkers(stationMarkersRef.current);
       removeCurrentPositionMarker(currentPositionMarkerRef.current);
+      removeStationMarkers(routeEndpointMarkersRef.current);
+      removeStationMarkers(routePointMarkersRef.current);
       removeRouteLayers(map, routeLayersRef.current);
       removeLayerAndSource(map, SELECTION_LAYER_ID, SELECTION_SOURCE_ID);
       map.remove();
       mapRef.current = null;
       currentPositionMarkerRef.current = null;
       routeLayersRef.current = [];
+      routeEndpointMarkersRef.current = [];
+      routePointMarkersRef.current = [];
       previousSelectedStationIdRef.current = null;
       previousFlyToCurrentPositionRef.current = false;
     };
@@ -165,10 +218,14 @@ export function MapLibreAuthorMap({
     // re-add a clean map state once the new style is ready.
     removeStationMarkers(stationMarkersRef.current);
     removeCurrentPositionMarker(currentPositionMarkerRef.current);
+    removeStationMarkers(routeEndpointMarkersRef.current);
+    removeStationMarkers(routePointMarkersRef.current);
     currentPositionMarkerRef.current = null;
     removeRouteLayers(map, routeLayersRef.current);
     removeLayerAndSource(map, SELECTION_LAYER_ID, SELECTION_SOURCE_ID);
     routeLayersRef.current = [];
+    routeEndpointMarkersRef.current = [];
+    routePointMarkersRef.current = [];
     previousSelectedStationIdRef.current = null;
     map.setStyle(nextStyle);
     const handleStyleData = () => {
@@ -208,22 +265,62 @@ export function MapLibreAuthorMap({
       return;
     }
 
+    const handleClick = (event: maplibregl.MapMouseEvent) => {
+      onMapClickRef.current?.({
+        lat: event.lngLat.lat,
+        lng: event.lngLat.lng,
+      });
+    };
+
+    map.on('click', handleClick);
+    return () => {
+      map.off('click', handleClick);
+    };
+  }, [styleReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady) {
+      return;
+    }
+
     removeStationMarkers(stationMarkersRef.current);
     const draggableStationIdSet = new Set(draggableStationIds);
+    const deletableStationIdSet = new Set(deletableStationIds);
     const markers = stations.map((station) => {
       const selected = station.id === selectedStationId;
       const draggable = draggableStationIdSet.has(station.id);
+      const deletable = deletableStationIdSet.has(station.id);
       const element = document.createElement('div');
       element.className = `stq-station-marker${
         selected ? ' stq-station-marker--selected' : ''
-      }${draggable ? ' stq-station-marker--draggable' : ''}`;
-      element.innerHTML = buildStationMarkerSvg(station.visual, {
-        highlighted: selected,
-      });
+      }${draggable ? ' stq-station-marker--draggable' : ''}${
+        deletable ? ' stq-station-marker--deletable' : ''
+      }`;
+      element.innerHTML = station.hasSelectedIcon
+        ? buildStationMarkerSvg(station.visual, {
+            highlighted: selected,
+          })
+        : buildNumberedStationMarkerSvg(station.visual, station.number, {
+            highlighted: selected,
+          });
+      if (deletable) {
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'stq-station-marker-delete';
+        deleteButton.setAttribute('aria-label', `Delete station ${station.number}`);
+        deleteButton.textContent = '×';
+        deleteButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          onDeleteStationRef.current?.(station.id);
+        });
+        element.appendChild(deleteButton);
+      }
       element.title = station.tooltip || `Station ${station.number}`;
       element.style.cursor = draggable ? 'grab' : 'pointer';
       let handledDrag = false;
-      element.addEventListener('click', () => {
+      element.addEventListener('click', (event) => {
+        event.stopPropagation();
         if (handledDrag) {
           handledDrag = false;
           return;
@@ -234,7 +331,8 @@ export function MapLibreAuthorMap({
 
       const marker = new maplibregl.Marker({
         element,
-        anchor: 'bottom',
+        anchor: 'center',
+        offset: STATION_MARKER_TIP_OFFSET_PX,
         draggable,
       })
         .setLngLat(toLngLat(station.coordinate))
@@ -259,7 +357,43 @@ export function MapLibreAuthorMap({
     });
 
     stationMarkersRef.current = markers;
-  }, [draggableStationIds, stations, selectedStationId, styleReady]);
+  }, [deletableStationIds, draggableStationIds, stations, selectedStationId, styleReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady) {
+      return;
+    }
+
+    removeStationMarkers(routePointMarkersRef.current);
+    const nextRoutePointMarkers = routePointMarkers.map((routePoint) => {
+      const element = createRoutePointMarkerElement(routePoint.color);
+      const marker = new maplibregl.Marker({
+        element,
+        anchor: 'center',
+        draggable: routePoint.draggable ?? false,
+      })
+        .setLngLat(toLngLat(routePoint.coordinate))
+        .addTo(map);
+
+      if (routePoint.draggable) {
+        marker.on('dragstart', () => {
+          element.style.cursor = 'grabbing';
+        });
+        marker.on('dragend', () => {
+          element.style.cursor = 'grab';
+          const next = marker.getLngLat();
+          onRoutePointCoordinateChangeRef.current?.(routePoint.id, {
+            lat: next.lat,
+            lng: next.lng,
+          });
+        });
+      }
+
+      return marker;
+    });
+    routePointMarkersRef.current = nextRoutePointMarkers;
+  }, [routePointMarkers, styleReady]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -268,7 +402,9 @@ export function MapLibreAuthorMap({
     }
 
     removeRouteLayers(map, routeLayersRef.current);
+    removeStationMarkers(routeEndpointMarkersRef.current);
     const nextRouteLayers: RouteLayerRef[] = [];
+    const nextEndpointMarkers: maplibregl.Marker[] = [];
 
     for (const route of routes) {
       if (route.points.length < 2) {
@@ -309,9 +445,23 @@ export function MapLibreAuthorMap({
       });
 
       nextRouteLayers.push({ layerId, sourceId });
+
+      if (route.endpointMarkers) {
+        for (const point of getRouteEndpointPoints(route.points)) {
+          const element = createRouteEndpointMarkerElement(route.style.color);
+          const marker = new maplibregl.Marker({
+            element,
+            anchor: 'center',
+          })
+            .setLngLat(toLngLat(point))
+            .addTo(map);
+          nextEndpointMarkers.push(marker);
+        }
+      }
     }
 
     routeLayersRef.current = nextRouteLayers;
+    routeEndpointMarkersRef.current = nextEndpointMarkers;
   }, [routes, styleReady]);
 
   useEffect(() => {
@@ -542,6 +692,50 @@ function parseDashArray(dashArray: string | undefined) {
     .filter((value) => Number.isFinite(value) && value > 0);
 
   return values.length > 0 ? values : undefined;
+}
+
+function getRouteEndpointPoints(points: AuthorMapCoordinate[]) {
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (!first || !last) {
+    return [];
+  }
+
+  if (first.lat === last.lat && first.lng === last.lng) {
+    return [first];
+  }
+
+  return [first, last];
+}
+
+function createRouteEndpointMarkerElement(color: string) {
+  const element = document.createElement('div');
+  element.style.width = '12px';
+  element.style.height = '12px';
+  element.style.borderRadius = '999px';
+  element.style.background = color;
+  element.style.border = '2px solid #ffffff';
+  element.style.boxShadow = '0 2px 8px rgba(25, 35, 45, 0.22)';
+  element.style.pointerEvents = 'none';
+  element.style.zIndex = '20';
+  return element;
+}
+
+function createRoutePointMarkerElement(color: string) {
+  const element = document.createElement('button');
+  element.type = 'button';
+  element.setAttribute('aria-label', 'Move route point');
+  element.style.width = '18px';
+  element.style.height = '18px';
+  element.style.borderRadius = '999px';
+  element.style.background = '#ffffff';
+  element.style.border = `3px solid ${color}`;
+  element.style.boxShadow = '0 2px 9px rgba(25, 35, 45, 0.25)';
+  element.style.cursor = 'grab';
+  element.style.padding = '0';
+  element.style.touchAction = 'none';
+  element.style.zIndex = '30';
+  return element;
 }
 
 function sanitizeLayerSuffix(value: string) {

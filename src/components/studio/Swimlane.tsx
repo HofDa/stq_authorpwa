@@ -291,9 +291,9 @@ function StationCard({
                 placeItems: 'center',
                 width: 36,
                 height: 36,
-                borderRadius: 14,
+                borderRadius: 8,
                 background: 'rgba(255,255,255,0.96)',
-                boxShadow: 'var(--stq-shadow-soft)',
+                boxShadow: 'none',
               }}
             >
               <StationIconPreview

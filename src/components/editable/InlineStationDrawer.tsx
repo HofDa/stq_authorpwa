@@ -9,7 +9,6 @@ import type {
   ContentBlock,
   Locale,
   RiddleEntry,
-  RiddleLocaleContent,
   TourDraft,
 } from '@/schema';
 import { EditableText } from './EditableText';
@@ -17,7 +16,14 @@ import { EditableContentSection } from './EditableContentSection';
 import { ImageCapture } from '@/components/ImageCapture';
 import { CaptureButton } from '@/components/CaptureButton';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
+import { useStationPatcher } from '@/hooks/useDraftPatchers';
+import { useSignal } from '@/hooks/useSignal';
 import { Icon } from '@/components/studio/Icon';
+import {
+  STATION_SECTION_FALLBACK_TITLES,
+  STATION_SECTION_KEYS,
+  type RendererSectionKey,
+} from '@/renderer/stationSections';
 
 interface Props {
   draft: TourDraft;
@@ -26,28 +32,18 @@ interface Props {
   onChange: (recipe: (prev: TourDraft) => TourDraft) => void;
 }
 
-type SectionKey = 'firstSection' | 'historySection' | 'riddleSection' | 'successSection';
-
-const SECTIONS: Array<{
-  key: SectionKey;
-  fallbackTitle: string;
-  aiTarget: string;
-}> = [
-  { key: 'firstSection', fallbackTitle: 'Story', aiTarget: 'story section' },
-  {
-    key: 'historySection',
-    fallbackTitle: 'Background',
-    aiTarget: 'background section',
-  },
-  { key: 'riddleSection', fallbackTitle: 'Riddle', aiTarget: 'riddle section' },
-  { key: 'successSection', fallbackTitle: 'Success', aiTarget: 'success section' },
-];
-
-const SECTION_EYEBROWS: Record<SectionKey, string> = {
+const SECTION_EYEBROWS: Record<RendererSectionKey, string> = {
   firstSection: 'Story',
   historySection: 'Context',
   riddleSection: 'Challenge',
   successSection: 'Solved',
+};
+
+const SECTION_AI_TARGETS: Record<RendererSectionKey, string> = {
+  firstSection: 'story section',
+  historySection: 'background section',
+  riddleSection: 'riddle section',
+  successSection: 'success section',
 };
 
 /**
@@ -59,28 +55,11 @@ export function InlineStationDrawer({
   locale,
   onChange,
 }: Props) {
-  const [titleEditSignal, setTitleEditSignal] = useState(0);
-  const [heroCaptureSignal, setHeroCaptureSignal] = useState(0);
+  const [titleEditSignal, triggerTitleEdit] = useSignal();
+  const [heroCaptureSignal, triggerHeroCapture] = useSignal();
   const content = station[locale];
   const photoUrl = useBlobUrl(station.imageBlobId);
-
-  function patchStation(patch: Partial<RiddleEntry>) {
-    onChange((prev) => ({
-      ...prev,
-      stations: prev.stations.map((s) =>
-        s.id === station.id ? { ...s, ...patch } : s,
-      ),
-    }));
-  }
-
-  function patchLocale(patch: Partial<RiddleLocaleContent>) {
-    onChange((prev) => ({
-      ...prev,
-      stations: prev.stations.map((s) =>
-        s.id === station.id ? { ...s, [locale]: { ...s[locale], ...patch } } : s,
-      ),
-    }));
-  }
+  const { patchStation, patchLocale } = useStationPatcher(onChange, station.id, locale);
 
   function setStationBlob(blobId: string) {
     patchStation({
@@ -89,7 +68,7 @@ export function InlineStationDrawer({
     });
   }
 
-  function setSectionBlocks(key: SectionKey, blocks: ContentBlock[]) {
+  function setSectionBlocks(key: RendererSectionKey, blocks: ContentBlock[]) {
     patchLocale({ [key]: blocks });
   }
 
@@ -99,7 +78,7 @@ export function InlineStationDrawer({
         <FieldElementActions
           editLabel="Edit station image"
           aiLabel="Ask AI agent for station image"
-          onEdit={() => setHeroCaptureSignal((value) => value + 1)}
+          onEdit={triggerHeroCapture}
           tone="onImage"
         />
         {photoUrl ? (
@@ -142,7 +121,7 @@ export function InlineStationDrawer({
         <FieldElementActions
           editLabel="Edit station title"
           aiLabel="Ask AI agent for station title"
-          onEdit={() => setTitleEditSignal((value) => value + 1)}
+          onEdit={triggerTitleEdit}
           tone="onPrimary"
         />
         <span
@@ -169,17 +148,17 @@ export function InlineStationDrawer({
       </header>
 
       <div className="stq-native-section-stack">
-        {SECTIONS.map((section) => (
+        {STATION_SECTION_KEYS.map((key) => (
           <StationContentSection
-            key={section.key}
+            key={key}
             draftId={draft.draftId}
-            eyebrow={SECTION_EYEBROWS[section.key]}
-            fallbackTitle={section.fallbackTitle}
-            aiTarget={section.aiTarget}
-            blocks={content[section.key]}
-            onChange={(blocks) => setSectionBlocks(section.key, blocks)}
+            eyebrow={SECTION_EYEBROWS[key]}
+            fallbackTitle={STATION_SECTION_FALLBACK_TITLES[key]}
+            aiTarget={SECTION_AI_TARGETS[key]}
+            blocks={content[key]}
+            onChange={(blocks) => setSectionBlocks(key, blocks)}
           >
-            {section.key === 'riddleSection' && (
+            {key === 'riddleSection' && (
               <RiddleAnswerSection
                 acceptedAnswers={station.acceptedAnswers[locale]}
                 onAcceptedAnswers={(acceptedAnswers) =>
@@ -218,7 +197,7 @@ function StationContentSection({
   onChange: (blocks: ContentBlock[]) => void;
   children?: ReactNode;
 }) {
-  const [sectionTitleEditSignal, setSectionTitleEditSignal] = useState(0);
+  const [sectionTitleEditSignal, triggerSectionTitleEdit] = useSignal();
   const headingIndex = blocks.findIndex((block) => block.type === 'heading');
   const heading =
     headingIndex >= 0 && blocks[headingIndex].type === 'heading'
@@ -265,7 +244,7 @@ function StationContentSection({
         <FieldElementActions
           editLabel={`Edit ${fallbackTitle} title`}
           aiLabel={`Ask AI agent for ${aiTarget} title`}
-          onEdit={() => setSectionTitleEditSignal((value) => value + 1)}
+          onEdit={triggerSectionTitleEdit}
         />
         <div className="stq-native-section-eyebrow">{eyebrow}</div>
         <EditableText
@@ -338,7 +317,7 @@ function RiddleAnswerSection({
   hints: string[];
   onHints: (next: string[]) => void;
 }) {
-  const [answerEditSignal, setAnswerEditSignal] = useState(0);
+  const [answerEditSignal, triggerAnswerEdit] = useSignal();
   const [hintEditSignal, setHintEditSignal] = useState<number | null>(null);
 
   return (
@@ -347,7 +326,7 @@ function RiddleAnswerSection({
         <FieldElementActions
           editLabel="Edit accepted answers"
           aiLabel="Ask AI agent for accepted answers"
-          onEdit={() => setAnswerEditSignal((value) => value + 1)}
+          onEdit={triggerAnswerEdit}
         />
         <span className="text-labelSm text-disabled">Accepted answers</span>
         <input

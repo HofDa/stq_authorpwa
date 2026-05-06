@@ -206,6 +206,12 @@ export function normalizeStationVisualChoice(
   };
 }
 
+export function hasSelectedStationIcon(
+  record: Pick<StationVisualRecordLike, 'iconKey'>,
+): boolean {
+  return isStationIconKey(record.iconKey);
+}
+
 export function ensureStationVisualDefaults<T extends StationVisualRecordLike>(
   station: T,
 ): T {
@@ -254,7 +260,7 @@ export function buildStationMarkerSvg(
   const color = getStationColorOption(choice.iconColorKey);
   const highlighted = options?.highlighted ?? false;
   return [
-    svgOpen(63, 96),
+    svgOpen(63, 70),
     highlighted
       ? `<ellipse cx="31.5" cy="29" rx="25" ry="25" fill="${color.soft}" />`
       : '',
@@ -265,8 +271,35 @@ export function buildStationMarkerSvg(
   ].join('');
 }
 
+export function buildNumberedStationMarkerSvg(
+  choice: StationVisualChoice,
+  number: number | string,
+  options?: { highlighted?: boolean },
+) {
+  const color = getStationColorOption(choice.iconColorKey);
+  const highlighted = options?.highlighted ?? false;
+  return [
+    svgOpen(63, 70),
+    highlighted
+      ? `<ellipse cx="31.5" cy="29" rx="25" ry="25" fill="${color.soft}" />`
+      : '',
+    `<path d="M31.5 5.5C19.2 5.5 9.2 15.7 9.2 28.2c0 16.6 16.9 35.9 21.1 40.5.6.7 1.7.7 2.3 0 4.2-4.6 21.1-23.9 21.1-40.5 0-12.5-10-22.7-22.2-22.7z" fill="${color.fill}" />`,
+    `<circle cx="31.5" cy="29.5" r="14.2" fill="#FFFFFF" />`,
+    `<text x="31.5" y="35" text-anchor="middle" font-family="Open Sans, Arial, sans-serif" font-size="17" font-weight="800" fill="${color.fill}">${escapeSvgText(String(number))}</text>`,
+    '</svg>',
+  ].join('');
+}
+
 export function svgToDataUri(svg: string) {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function escapeSvgText(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export async function renderStationVisualPngs(

@@ -87,17 +87,18 @@ const listReset: CSSProperties = {
 };
 
 const cardStyle: CSSProperties = {
-  background: 'white',
+  background: 'var(--stq-author-surface-raised, white)',
   border: '1px solid var(--stq-border-soft)',
-  borderRadius: 12,
+  borderRadius: 8,
   padding: 12,
+  color: 'var(--stq-text)',
 };
 
 const diffStyle: CSSProperties = {
   marginTop: 8,
   marginBottom: 0,
   padding: 8,
-  fontFamily: 'ui-monospace, "JetBrains Mono", monospace',
+  fontFamily: 'var(--stq-font-ui)',
   fontSize: 11.5,
   background: 'var(--stq-bg)',
   borderRadius: 8,

@@ -28,6 +28,7 @@ export function LeftRail({
 
   return (
     <aside
+      className="stq-author-tool-left-rail"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -38,11 +39,12 @@ export function LeftRail({
       {/* Tour meta card */}
       <section
         style={{
-          background: 'white',
-          border: '1px solid var(--stq-border)',
-          borderRadius: 18,
+          background: 'var(--stq-desktop-panel-bg, white)',
+          border: '1px solid var(--stq-desktop-panel-border, var(--stq-border))',
+          borderRadius: 'var(--stq-desktop-panel-radius, 18px)',
           padding: 14,
-          boxShadow: 'var(--stq-shadow-soft)',
+          boxShadow: 'var(--stq-desktop-panel-shadow, var(--stq-shadow-soft))',
+          color: 'var(--stq-desktop-panel-text, var(--stq-text))',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -54,7 +56,7 @@ export function LeftRail({
         </div>
         <h3
           style={{
-            fontFamily: 'Lato, Georgia, serif',
+            fontFamily: 'var(--stq-font-ui)',
             fontSize: 17,
             fontWeight: 700,
             margin: '6px 0 0',
@@ -104,11 +106,12 @@ export function LeftRail({
       {/* Selected station inspector */}
       <section
         style={{
-          background: 'white',
-          border: '1px solid var(--stq-border)',
-          borderRadius: 18,
+          background: 'var(--stq-desktop-panel-bg, white)',
+          border: '1px solid var(--stq-desktop-panel-border, var(--stq-border))',
+          borderRadius: 'var(--stq-desktop-panel-radius, 18px)',
           padding: 14,
-          boxShadow: 'var(--stq-shadow-soft)',
+          boxShadow: 'var(--stq-desktop-panel-shadow, var(--stq-shadow-soft))',
+          color: 'var(--stq-desktop-panel-text, var(--stq-text))',
           flex: 1,
           minHeight: 0,
           display: 'flex',
@@ -144,7 +147,7 @@ export function LeftRail({
             </div>
             <h3
               style={{
-                fontFamily: 'Lato, Georgia, serif',
+                fontFamily: 'var(--stq-font-ui)',
                 fontSize: 16,
                 fontWeight: 700,
                 margin: '6px 0 2px',
@@ -159,7 +162,7 @@ export function LeftRail({
             </h3>
             <div
               style={{
-                fontFamily: 'ui-monospace, "JetBrains Mono", monospace',
+                fontFamily: 'var(--stq-font-ui)',
                 fontSize: 10.5,
                 color: 'var(--stq-text-mute)',
               }}

@@ -101,6 +101,7 @@ export function FieldApp({
         locale={activeLanguage}
         onCreateTour={onCreateTour ?? (() => undefined)}
         onOpenTour={openTour}
+        onChange={onChange}
       />
     );
   }
@@ -112,6 +113,7 @@ export function FieldApp({
         locale={activeLanguage}
         onCreateTour={onCreateTour ?? (() => undefined)}
         onOpenTour={openTour}
+        onChange={onChange}
       />
     );
   }

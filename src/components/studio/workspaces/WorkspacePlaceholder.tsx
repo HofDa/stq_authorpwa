@@ -34,16 +34,17 @@ export function WorkspacePlaceholder({
       <div
         style={{
           width: 'min(560px, 100%)',
-          background: 'white',
+          background: 'var(--stq-author-surface, white)',
           border: '1px solid var(--stq-border)',
-          borderRadius: 20,
-          boxShadow: 'var(--stq-shadow-card)',
+          borderRadius: 10,
+          boxShadow: 'none',
           padding: '28px 28px 26px',
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: 12,
+          color: 'var(--stq-text)',
         }}
       >
         <span
@@ -52,7 +53,7 @@ export function WorkspacePlaceholder({
             placeItems: 'center',
             width: 44,
             height: 44,
-            borderRadius: 14,
+            borderRadius: 8,
             background: 'rgba(144, 74, 72, 0.08)',
             color: 'var(--stq-primary)',
           }}
@@ -72,7 +73,7 @@ export function WorkspacePlaceholder({
         </div>
         <h2
           style={{
-            fontFamily: 'Lato, Georgia, serif',
+            fontFamily: 'var(--stq-font-ui)',
             fontSize: 20,
             fontWeight: 700,
             margin: 0,

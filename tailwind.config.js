@@ -15,7 +15,7 @@ export default {
       },
       fontFamily: {
         ui: ['"Open Sans"', 'system-ui', 'sans-serif'],
-        body: ['Lato', 'Georgia', 'serif'],
+        body: ['"Open Sans"', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         h3: ['20.8px', { fontWeight: '700' }],

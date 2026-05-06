@@ -76,6 +76,9 @@ export const PracticalInfoSchema = z.object({
   daylightOnly: z.boolean().optional(),
   availableOffline: z.boolean().optional(),
   requiresInternet: z.boolean().optional(),
+  refreshmentsNearby: z.boolean().optional(),
+  drinkingWater: z.boolean().optional(),
+  shaded: z.boolean().optional(),
 });
 export type PracticalInfo = z.infer<typeof PracticalInfoSchema>;
 

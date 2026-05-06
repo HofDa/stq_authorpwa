@@ -57,15 +57,6 @@ describe('buildMockSuggestions', () => {
     ).toBe(true);
   });
 
-  it('produces a smoke-test suggestion for a fully ready preview', () => {
-    const draft = buildValidDraft();
-    const suggestions = buildMockSuggestions('preview', {
-      draft,
-      locale: 'de',
-    });
-    expect(suggestions.some((s) => s.id === 'mock.preview.smoke')).toBe(true);
-  });
-
   it('produces a record-route suggestion when no GPS track exists', () => {
     const draft = buildValidDraft();
     draft.recordedRoute = [];

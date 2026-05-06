@@ -5,7 +5,7 @@ import {
 } from '@/schema';
 import { getStationReadiness } from './stationReadiness';
 import { getTourReadiness } from './tourReadiness';
-import type { LocalCheck } from './readinessTypes';
+import { pluralBlocker, type LocalCheck } from './readinessTypes';
 
 /**
  * Returns the subset of checks that must clear before export. Aggregates
@@ -18,84 +18,53 @@ export function getExportReadiness(
   draft: TourDraft,
   locale: Locale = DEFAULT_LOCALE,
 ): LocalCheck[] {
-  const blockers: LocalCheck[] = [];
-  const tourChecks = getTourReadiness(draft, locale);
+  const stationsTarget = { section: 'stations' as const };
+  const tourBlockers = getTourReadiness(draft, locale).filter(isExportBlocking);
 
-  for (const check of tourChecks) {
-    if (isExportBlocking(check)) blockers.push(check);
-  }
+  const countStations = (predicate: (s: TourDraft['stations'][number]) => boolean) =>
+    draft.stations.filter(predicate).length;
 
-  const stationsMissingTitle = countStationField(
-    draft,
-    locale,
-    (s) => !s[locale].location.trim(),
-  );
-  if (stationsMissingTitle > 0) {
-    blockers.push({
+  const stationBlockers = [
+    pluralBlocker({
       id: 'export.stations.title',
       label: 'Station titles',
-      status: 'missing',
-      severity: 'error',
-      message: `${stationsMissingTitle} station${
-        stationsMissingTitle === 1 ? '' : 's'
-      } missing a title.`,
-      target: { section: 'stations' },
-    });
-  }
-
-  const stationsMissingGps = countStationField(
-    draft,
-    locale,
-    (s) => s.position_lat === 0 && s.position_lng === 0,
-  );
-  if (stationsMissingGps > 0) {
-    blockers.push({
+      count: countStations((s) => !s[locale].location.trim()),
+      noun: 'station',
+      missingWhat: 'missing a title',
+      target: stationsTarget,
+    }),
+    pluralBlocker({
       id: 'export.stations.gps',
       label: 'Station GPS',
-      status: 'missing',
-      severity: 'error',
-      message: `${stationsMissingGps} station${
-        stationsMissingGps === 1 ? '' : 's'
-      } missing GPS coordinates.`,
-      target: { section: 'stations' },
-    });
-  }
-
-  const stationsMissingSuccess = countStationField(
-    draft,
-    locale,
-    (s) => s[locale].successSection.length === 0,
-  );
-  if (stationsMissingSuccess > 0) {
-    blockers.push({
+      count: countStations(
+        (s) => s.position_lat === 0 && s.position_lng === 0,
+      ),
+      noun: 'station',
+      missingWhat: 'missing GPS coordinates',
+      target: stationsTarget,
+    }),
+    pluralBlocker({
       id: 'export.stations.success',
       label: 'Station success messages',
-      status: 'missing',
-      severity: 'error',
-      message: `${stationsMissingSuccess} station${
-        stationsMissingSuccess === 1 ? '' : 's'
-      } missing a success message.`,
-      target: { section: 'stations' },
-    });
-  }
-
-  const stationsWithProblems = draft.stations.filter((station) =>
-    getStationReadiness(station, locale).some((c) => c.status === 'problem'),
-  ).length;
-  if (stationsWithProblems > 0) {
-    blockers.push({
+      count: countStations((s) => s[locale].successSection.length === 0),
+      noun: 'station',
+      missingWhat: 'missing a success message',
+      target: stationsTarget,
+    }),
+    pluralBlocker({
       id: 'export.stations.problems',
       label: 'Station issues',
+      count: countStations((station) =>
+        getStationReadiness(station, locale).some((c) => c.status === 'problem'),
+      ),
+      noun: 'station',
+      missingWhat: 'with unresolved issues (e.g. riddle without an answer)',
       status: 'problem',
-      severity: 'error',
-      message: `${stationsWithProblems} station${
-        stationsWithProblems === 1 ? '' : 's'
-      } with unresolved issues (e.g. riddle without an answer).`,
-      target: { section: 'stations' },
-    });
-  }
+      target: stationsTarget,
+    }),
+  ].filter((check): check is LocalCheck => check !== null);
 
-  return blockers;
+  return [...tourBlockers, ...stationBlockers];
 }
 
 export function isReadyToExport(
@@ -108,12 +77,4 @@ export function isReadyToExport(
 function isExportBlocking(check: LocalCheck): boolean {
   if (check.severity !== 'error') return false;
   return check.status === 'missing' || check.status === 'problem';
-}
-
-function countStationField(
-  draft: TourDraft,
-  _locale: Locale,
-  predicate: (station: TourDraft['stations'][number]) => boolean,
-): number {
-  return draft.stations.filter(predicate).length;
 }

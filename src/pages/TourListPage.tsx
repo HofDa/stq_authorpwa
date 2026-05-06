@@ -8,15 +8,12 @@ import {
   listDrafts,
 } from '@/storage';
 import {
-  DraftExportValidationError,
-  downloadDraftExportZip,
-} from '@/export/tourExport';
-import {
   DEFAULT_LOCALE,
   LOCALES,
   type Locale,
   type TourDraft,
 } from '@/schema';
+import { useExportTour } from '@/hooks/useExportTour';
 import { Icon } from '@/components/studio/Icon';
 import {
   getTourDurationLabel,
@@ -68,8 +65,7 @@ function coverHueFor(draft: TourDraft): number {
 export function TourListPage() {
   const navigate = useNavigate();
   const drafts = useLiveQuery(() => listDrafts(), []);
-  const [exportingDraftId, setExportingDraftId] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
+  const { exportingDraftId, exportError, runExport } = useExportTour();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const { editorLanguage, setEditorLanguage, t } = useEditorLanguage();
@@ -111,29 +107,11 @@ export function TourListPage() {
     toast({ title: 'Draft deleted', tone: 'success' });
   }
 
-  async function onExport(draftId: string) {
+  function onExport(draftId: string) {
     if (!drafts) return;
     const draft = drafts.find((entry) => entry.draftId === draftId);
     if (!draft) return;
-
-    setExportError(null);
-    setExportingDraftId(draftId);
-    try {
-      const result = await downloadDraftExportZip(draft);
-      const notice = formatSuccessfulExport(result);
-      toast({
-        title: `Export complete (${result.fileName})`,
-        message: notice ?? 'ZIP file downloaded successfully.',
-        tone: notice ? 'warning' : 'success',
-        durationMs: notice ? 9000 : 5200,
-      });
-    } catch (error) {
-      setExportError(formatExportError(error));
-    } finally {
-      setExportingDraftId((current) =>
-        current === draftId ? null : current,
-      );
-    }
+    runExport(draft);
   }
 
   return (
@@ -606,41 +584,4 @@ function EmptyState({
       </button>
     </div>
   );
-}
-
-function formatExportError(error: unknown): string {
-  if (error instanceof DraftExportValidationError) {
-    const lines = error.errors.slice(0, 8).map((e) => `• ${e.path}: ${e.message}`);
-    const extra =
-      error.errors.length > 8 ? `\n…and ${error.errors.length - 8} more` : '';
-    return `Cannot export — please fix:\n${lines.join('\n')}${extra}`;
-  }
-  return error instanceof Error ? error.message : 'Could not export this draft.';
-}
-
-function formatSuccessfulExport(result: Awaited<ReturnType<typeof downloadDraftExportZip>>) {
-  const notes: string[] = [];
-
-  if (result.missingBlobIds.length > 0) {
-    notes.push(
-      `${result.missingBlobIds.length} image(s) were missing in local storage and kept as existing imagePath values.`,
-    );
-  }
-
-  if (result.validationWarnings.length > 0) {
-    const lines = result.validationWarnings
-      .slice(0, 4)
-      .map((warning) => `• ${warning.message}`);
-    const extra =
-      result.validationWarnings.length > 4
-        ? `\n…and ${result.validationWarnings.length - 4} more warning(s)`
-        : '';
-    notes.push(`Warnings:\n${lines.join('\n')}${extra}`);
-  }
-
-  if (notes.length === 0) {
-    return null;
-  }
-
-  return notes.join('\n\n');
 }

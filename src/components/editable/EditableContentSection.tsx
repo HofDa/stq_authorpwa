@@ -8,6 +8,7 @@ import {
 import { EditableText } from './EditableText';
 import { ImageCapture } from '@/components/ImageCapture';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
+import { useSignal } from '@/hooks/useSignal';
 import { Icon } from '@/components/studio/Icon';
 
 interface Props {
@@ -89,14 +90,14 @@ function BlockRow({
   isFirst,
   isLast,
 }: RowProps) {
-  const [editSignal, setEditSignal] = useState(0);
+  const [editSignal, triggerEdit] = useSignal();
 
   return (
     <div className="stq-native-element group">
       <FieldElementActions
         editLabel={`Edit ${block.type} block`}
         aiLabel={`Ask AI agent for ${block.type} block`}
-        onEdit={() => setEditSignal((value) => value + 1)}
+        onEdit={triggerEdit}
       />
       <RowControls
         onMoveUp={onMoveUp}

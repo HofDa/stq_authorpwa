@@ -10,11 +10,8 @@ interface Props {
 }
 
 /**
- * The Studio map cell. Renders only the map — the route stats, recording
- * controls, and warnings cards that used to sit above and below were
- * removed when we tightened the Studio chrome (see commit message). The
- * underlying recording / derivation hooks and helper components are still
- * on disk so a future dedicated "Route" tab can re-use them.
+ * The Studio map cell. Renders only the route map; route stats and warning
+ * cards live in the desktop Route workspace.
  */
 export function LiveRoutePlannerPanel({ draft, onChange }: Props) {
   const [selectedStationId, setSelectedStationId] = useState(
@@ -32,8 +29,8 @@ export function LiveRoutePlannerPanel({ draft, onChange }: Props) {
     setSelectedStationId(draft.stations[0]?.id ?? '');
   }, [draft.stations, selectedStationId]);
 
-  // Recording is still wired up so the user's GPS track keeps appending to
-  // `draft.recordedRoute` even though the toggle/clear UI lives elsewhere.
+  // Keep the hook here for current-position support; tracking stays off until
+  // a field capture flow explicitly enables it.
   const { currentPosition } = useRouteRecording({
     recordedRoute: draft.recordedRoute,
     onAppendPoint: (point) => {

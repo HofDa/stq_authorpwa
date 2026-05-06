@@ -28,7 +28,6 @@ interface Props {
  *   Story     → storyline / intro / outro / writing rules
  *   Stations  → selected-station checklist
  *   Route     → station count, distance, route review status
- *   Preview   → export readiness + language coverage
  *
  * Stations keeps its richer existing inspector (LeftRail) inside the
  * StationsWorkspace itself; this slim variant is used in workspaces that
@@ -42,9 +41,10 @@ export function StudioSidebar({
   onOpenFullStationEditor,
 }: Props) {
   return (
-    <aside style={asideStyle}>
+    <aside className="stq-author-tool-sidebar" style={asideStyle}>
       {section === 'plan' && <PlanSidebar draft={draft} locale={locale} />}
       {section === 'story' && <StorySidebar draft={draft} locale={locale} />}
+      {section === 'outro' && <StorySidebar draft={draft} locale={locale} />}
       {section === 'stations' && (
         <StationsSidebar
           draft={draft}
@@ -54,7 +54,6 @@ export function StudioSidebar({
         />
       )}
       {section === 'route' && <RouteSidebar draft={draft} locale={locale} />}
-      {section === 'preview' && <PreviewSidebar draft={draft} locale={locale} />}
     </aside>
   );
 }
@@ -226,8 +225,8 @@ function RouteSidebar({ draft, locale: _locale }: { draft: TourDraft; locale: Lo
       severity: 'warning',
       message:
         recordedPoints > 0
-          ? `${recordedPoints} GPS points recorded.`
-          : 'Walk or trace the route before exporting.',
+          ? `${recordedPoints} route points available.`
+          : 'Add route path data before exporting.',
       target: { section: 'route', field: 'recordedRoute' },
     },
     {
@@ -243,44 +242,6 @@ function RouteSidebar({ draft, locale: _locale }: { draft: TourDraft; locale: Lo
     <Panel title="Route checklist" eyebrow="Route" status={getWorstStatus(checks)}>
       <LocalCheckList checks={checks} />
     </Panel>
-  );
-}
-
-function PreviewSidebar({ draft, locale }: { draft: TourDraft; locale: Locale }) {
-  const blockers = getExportReadiness(draft, locale);
-  const checks: LocalCheck[] = [
-    {
-      id: 'preview.languages',
-      label: 'Language coverage',
-      status: 'draft',
-      severity: 'info',
-      message: 'Per-language completeness lands with the preview workspace.',
-    },
-    {
-      id: 'preview.tested',
-      label: 'Preview tested',
-      status: 'missing',
-      severity: 'info',
-      message: 'Run through the tour from the Preview workspace.',
-    },
-  ];
-  return (
-    <>
-      <Panel
-        title="Export readiness"
-        eyebrow="Preview"
-        status={blockers.length === 0 ? 'ready' : 'problem'}
-      >
-        {blockers.length === 0 ? (
-          <ReadyLine label="Ready to export" />
-        ) : (
-          <LocalCheckList checks={blockers} showReady={false} />
-        )}
-      </Panel>
-      <Panel title="Preview checks" eyebrow="Preview" status="draft">
-        <LocalCheckList checks={checks} />
-      </Panel>
-    </>
   );
 }
 
@@ -326,7 +287,7 @@ function Panel({
       </div>
       <h3
         style={{
-          fontFamily: 'Lato, Georgia, serif',
+          fontFamily: 'var(--stq-font-ui)',
           fontSize: 15,
           fontWeight: 700,
           margin: '0 0 8px',
@@ -407,20 +368,25 @@ const asideStyle: CSSProperties = {
   gap: 12,
   minHeight: 0,
   overflow: 'auto',
+  background: '#1a1614',
+  border: '1px solid #2c2520',
+  borderRadius: 12,
+  padding: 14,
 };
 
 const panelStyle: CSSProperties = {
-  background: 'white',
-  border: '1px solid var(--stq-border)',
-  borderRadius: 18,
+  background: '#1f1a17',
+  border: '1px solid #2c2520',
+  borderRadius: 10,
   padding: 14,
-  boxShadow: 'var(--stq-shadow-soft)',
+  boxShadow: 'none',
+  color: '#e8d8c8',
 };
 
 const eyebrowStyle: CSSProperties = {
   fontSize: 10,
   fontWeight: 700,
   letterSpacing: '0.14em',
-  color: 'var(--stq-primary)',
+  color: '#a89888',
   textTransform: 'uppercase',
 };

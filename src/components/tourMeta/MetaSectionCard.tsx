@@ -38,7 +38,7 @@ export function MetaSectionCard({
           <div style={eyebrowStyle}>{eyebrow}</div>
           <h3
             style={{
-              fontFamily: 'Lato, Georgia, serif',
+              fontFamily: 'var(--stq-font-ui)',
               fontSize: 15,
               fontWeight: 700,
               margin: '2px 0 0',
@@ -69,14 +69,15 @@ export function MetaSectionCard({
 
 function cardStyle(tone: 'default' | 'muted'): CSSProperties {
   const base: CSSProperties = {
-    background: 'white',
+    background: 'var(--stq-author-surface, white)',
     border: '1px solid var(--stq-border)',
-    borderRadius: 18,
+    borderRadius: 10,
     padding: 14,
-    boxShadow: 'var(--stq-shadow-soft)',
+    boxShadow: 'none',
+    color: 'var(--stq-text)',
   };
   if (tone === 'muted') {
-    return { ...base, background: 'var(--stq-bg)' };
+    return { ...base, background: 'var(--stq-author-surface-raised, var(--stq-bg))' };
   }
   return base;
 }

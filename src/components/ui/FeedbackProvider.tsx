@@ -301,7 +301,7 @@ function ConfirmDialog({
           id={`${request.id}-title`}
           style={{
             margin: 0,
-            fontFamily: 'Lato, Georgia, serif',
+            fontFamily: 'var(--stq-font-ui)',
             fontSize: 20,
             fontWeight: 800,
             color: 'var(--stq-text)',

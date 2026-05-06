@@ -4,7 +4,7 @@ import {
   type Locale,
   type RiddleEntry,
 } from '@/schema';
-import type { LocalCheck } from './readinessTypes';
+import { presenceCheck, type LocalCheck } from './readinessTypes';
 
 /**
  * Returns the per-station local checks. The active locale is what's checked
@@ -15,53 +15,10 @@ export function getStationReadiness(
   locale: Locale = DEFAULT_LOCALE,
 ): LocalCheck[] {
   const localized = station[locale];
-  const checks: LocalCheck[] = [];
-
-  checks.push({
-    id: `${station.id}.title`,
-    label: 'Station name',
-    status: localized.location.trim() ? 'ready' : 'missing',
-    severity: 'warning',
-    message: localized.location.trim()
-      ? undefined
-      : 'Give this station a recognisable name.',
-    target: { section: 'stations', stationId: station.id, field: 'location' },
-  });
-
-  const hasGps = station.position_lat !== 0 || station.position_lng !== 0;
-  checks.push({
-    id: `${station.id}.gps`,
-    label: 'GPS coordinates',
-    status: hasGps ? 'ready' : 'missing',
-    severity: 'error',
-    message: hasGps ? undefined : 'Drop or capture a pin for this station.',
-    target: { section: 'stations', stationId: station.id, field: 'gps' },
-  });
-
-  const hasPhoto = Boolean(station.imageBlobId || station.imagePath);
-  checks.push({
-    id: `${station.id}.photo`,
-    label: 'Station photo',
-    status: hasPhoto ? 'ready' : 'missing',
-    severity: 'info',
-    message: hasPhoto
-      ? undefined
-      : 'A photo helps players recognise the spot on arrival.',
-    target: { section: 'stations', stationId: station.id, field: 'photo' },
-  });
-
-  const storyBlocks =
-    localized.firstSection.length + localized.historySection.length;
-  checks.push({
-    id: `${station.id}.story`,
-    label: 'Story blocks',
-    status: storyBlocks > 0 ? 'ready' : 'missing',
-    severity: 'warning',
-    message:
-      storyBlocks > 0
-        ? undefined
-        : 'Add at least one story block so players know what they are looking at.',
-    target: { section: 'stations', stationId: station.id, field: 'story' },
+  const target = (field: string) => ({
+    section: 'stations' as const,
+    stationId: station.id,
+    field,
   });
 
   const hasRiddleText = localized.riddleSection.length > 0;
@@ -80,27 +37,56 @@ export function getStationReadiness(
     riddleStatus = 'draft';
     riddleMessage = 'Answer is set but the riddle text is empty.';
   }
-  checks.push({
-    id: `${station.id}.riddle`,
-    label: 'Riddle & answer',
-    status: riddleStatus,
-    severity: riddleStatus === 'problem' ? 'error' : 'warning',
-    message: riddleMessage,
-    target: { section: 'stations', stationId: station.id, field: 'riddle' },
-  });
 
-  checks.push({
-    id: `${station.id}.success`,
-    label: 'Success message',
-    status:
-      localized.successSection.length > 0 ? 'ready' : 'missing',
-    severity: 'warning',
-    message:
-      localized.successSection.length > 0
-        ? undefined
-        : 'Tell players what they unlocked when they solve it.',
-    target: { section: 'stations', stationId: station.id, field: 'success' },
-  });
-
-  return checks;
+  return [
+    presenceCheck({
+      id: `${station.id}.title`,
+      label: 'Station name',
+      present: Boolean(localized.location.trim()),
+      missingMessage: 'Give this station a recognisable name.',
+      target: target('location'),
+    }),
+    presenceCheck({
+      id: `${station.id}.gps`,
+      label: 'GPS coordinates',
+      present: station.position_lat !== 0 || station.position_lng !== 0,
+      missingMessage: 'Drop or capture a pin for this station.',
+      severity: 'error',
+      target: target('gps'),
+    }),
+    presenceCheck({
+      id: `${station.id}.photo`,
+      label: 'Station photo',
+      present: Boolean(station.imageBlobId || station.imagePath),
+      missingMessage:
+        'A photo helps players recognise the spot on arrival.',
+      severity: 'info',
+      target: target('photo'),
+    }),
+    presenceCheck({
+      id: `${station.id}.story`,
+      label: 'Story blocks',
+      present:
+        localized.firstSection.length + localized.historySection.length > 0,
+      missingMessage:
+        'Add at least one story block so players know what they are looking at.',
+      target: target('story'),
+    }),
+    {
+      id: `${station.id}.riddle`,
+      label: 'Riddle & answer',
+      status: riddleStatus,
+      severity: riddleStatus === 'problem' ? 'error' : 'warning',
+      message: riddleMessage,
+      target: target('riddle'),
+    },
+    presenceCheck({
+      id: `${station.id}.success`,
+      label: 'Success message',
+      present: localized.successSection.length > 0,
+      missingMessage:
+        'Tell players what they unlocked when they solve it.',
+      target: target('success'),
+    }),
+  ];
 }

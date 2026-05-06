@@ -20,6 +20,7 @@ export const TourLocaleSchema = z.object({
   description: z.array(ContentBlockSchema),
   introSection: z.array(ContentBlockSchema),
   outroSection: z.array(ContentBlockSchema),
+  welcomeMessage: z.string().optional(),
 });
 
 export const TourEntrySchema = z.object({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Locale, TourDraft, TourLocaleContent } from '@/schema';
+import type { Locale, TourDraft } from '@/schema';
 import { CaptureButton } from '@/components/CaptureButton';
 import { EditPanel, type EditPayload } from '@/author/EditPanel';
 import { TourAiSidePanel, type TourAiPanelMode } from '@/author/TourAiSidePanel';
@@ -7,6 +7,7 @@ import { useAuthorSelection } from '@/author/useAuthorSelection';
 import { Icon } from '@/components/studio/Icon';
 import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
+import { useTourPatcher } from '@/hooks/useDraftPatchers';
 import { TourIntro } from '@/renderer/TourIntro';
 import { getTourLocationLabel, getTourTitleLabel } from '@/utils/localizedContent';
 
@@ -41,13 +42,7 @@ export function TourDetailScreen({
   const title = getTourTitleLabel(draft.tour, locale, 'Untitled tour');
   const location = getTourLocationLabel(draft.tour, locale, 'South Tyrol');
   const content = draft.tour[locale];
-
-  function patchLocale(patch: Partial<TourLocaleContent>) {
-    onChange((prev) => ({
-      ...prev,
-      tour: { ...prev.tour, [locale]: { ...prev.tour[locale], ...patch } },
-    }));
-  }
+  const { patchLocale } = useTourPatcher(onChange, locale);
 
   function setCoverBlob(blobId: string) {
     onChange((prev) => ({

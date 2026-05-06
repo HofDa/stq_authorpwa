@@ -5,26 +5,23 @@ import {
   useState,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLiveQuery } from 'dexie-react-hooks';
 import {
-  DEFAULT_LOCALE,
   createId,
   emptyStation,
   type Locale,
   type RiddleEntry,
   type TourDraft,
 } from '@/schema';
-import {
-  DraftExportValidationError,
-  downloadDraftExportZip,
-} from '@/export/tourExport';
 import { StudioHeader } from './StudioHeader';
-import { useToast } from '@/components/ui/FeedbackProvider';
+import { useExportTour } from '@/hooks/useExportTour';
+import { useEditorLanguage } from '@/i18n/editorLanguage';
+import { listDrafts } from '@/storage';
 import type { StudioWorkflowSection } from './workflow/workflowTypes';
 import { PlanWorkspace } from './workspaces/PlanWorkspace';
 import { StoryWorkspace } from './workspaces/StoryWorkspace';
-import { StationsWorkspace } from './workspaces/StationsWorkspace';
+import { MapPreviewWorkspace } from './workspaces/MapPreviewWorkspace';
 import { RouteWorkspace } from './workspaces/RouteWorkspace';
-import { PreviewWorkspace } from './workspaces/PreviewWorkspace';
 import { StudioSidebar } from './sidebar/StudioSidebar';
 
 interface Props {
@@ -32,22 +29,42 @@ interface Props {
   onChange: (
     patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
   ) => void;
+  onCreateTour?: () => void | Promise<void>;
+  onSelectDraft?: (draftId: string) => void;
 }
 
-export function Studio({ draft, onChange }: Props) {
+export function Studio({
+  draft,
+  onChange,
+  onCreateTour,
+  onSelectDraft,
+}: Props) {
   const navigate = useNavigate();
-  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const { editorLanguage, setEditorLanguage, t } = useEditorLanguage();
+  const [locale, setLocale] = useState<Locale>(editorLanguage);
   const [activeSection, setActiveSection] = useState<StudioWorkflowSection>(
-    'stations',
+    'plan',
   );
   const [selectedId, setSelectedId] = useState<string | null>(
     draft.stations[0]?.id ?? null,
   );
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
-  const toast = useToast();
+  const { exportingDraftId, exportError, runExport } = useExportTour();
+  const exporting = exportingDraftId === draft.draftId;
+  const drafts = useLiveQuery(() => listDrafts(), []);
+
+  useEffect(() => {
+    setLocale(editorLanguage);
+  }, [editorLanguage]);
+
+  const changeLanguage = useCallback(
+    (nextLocale: Locale) => {
+      setLocale(nextLocale);
+      setEditorLanguage(nextLocale);
+    },
+    [setEditorLanguage],
+  );
 
   useEffect(() => {
     if (!selectedId && draft.stations.length > 0) {
@@ -78,11 +95,14 @@ export function Studio({ draft, onChange }: Props) {
   );
 
   const addStation = useCallback(() => {
+    const stationId = createId('stn');
     onChange((prev) => {
       const number = prev.stations.length + 1;
-      const station = emptyStation(createId('stn'), number);
+      const station = emptyStation(stationId, number);
       return { ...prev, stations: [...prev.stations, station] };
     });
+    setSelectedId(stationId);
+    setActiveSection('stations');
   }, [onChange]);
 
   const reorderStations = useCallback(
@@ -145,33 +165,20 @@ export function Studio({ draft, onChange }: Props) {
     return () => window.removeEventListener('keydown', handler);
   }, [activeSection, jumpOpen, selectByDelta]);
 
-  async function onExport() {
-    setExportError(null);
-    setExporting(true);
-    try {
-      const result = await downloadDraftExportZip(draft, { locale });
-      const notice = formatSuccessfulExport(result);
-      toast({
-        title: `Export complete (${result.fileName})`,
-        message: notice ?? 'ZIP file downloaded successfully.',
-        tone: notice ? 'warning' : 'success',
-        durationMs: notice ? 9000 : 5200,
-      });
-    } catch (error) {
-      setExportError(formatExportError(error));
-    } finally {
-      setExporting(false);
-    }
+  function onExport() {
+    runExport(draft, { locale });
   }
 
   return (
     <div
+      className="stq-author-tool-shell"
       style={{
         height: '100vh',
         width: '100%',
         display: 'grid',
-        gridTemplateRows: '56px minmax(0, 1fr)',
-        background: 'transparent',
+        gridTemplateColumns: '280px minmax(0, 1fr)',
+        background:
+          'radial-gradient(circle at 20% 0%, #2c2724 0%, #16130f 60%)',
         overflow: 'hidden',
       }}
     >
@@ -180,9 +187,27 @@ export function Studio({ draft, onChange }: Props) {
         locale={locale}
         view={activeSection}
         exporting={exporting}
+        drafts={drafts ?? [draft]}
         onBack={() => navigate('/tours')}
-        onLocaleChange={setLocale}
+        onSelectTour={(draftId) => {
+          if (draftId !== draft.draftId) {
+            navigate(`/tours/${draftId}`);
+          }
+        }}
+        onLocaleChange={changeLanguage}
         onViewChange={setActiveSection}
+        selectedStationId={selectedId}
+        reorderMode={reorderMode}
+        onSelectStation={(stationId) => {
+          setSelectedId(stationId);
+          setActiveSection('stations');
+        }}
+        onAddStation={addStation}
+        onReorderStations={reorderStations}
+        onToggleReorder={() => {
+          setActiveSection('stations');
+          setReorderMode((value) => !value);
+        }}
         onExport={onExport}
         onEnterField={() =>
           navigate(`/tours/${draft.draftId}/field`, {
@@ -196,20 +221,19 @@ export function Studio({ draft, onChange }: Props) {
           role="alert"
           style={{
             position: 'absolute',
-            top: 64,
-            left: '50%',
-            transform: 'translateX(-50%)',
+            top: 24,
+            left: 304,
             maxWidth: 720,
-            width: 'calc(100% - 32px)',
-            background: 'white',
+            width: 'calc(100% - 328px)',
+            background: '#1f1a17',
             border: '1px solid var(--stq-error)',
-            borderRadius: 12,
+            borderRadius: 8,
             padding: '10px 14px',
             fontSize: 12,
             color: 'var(--stq-error)',
             whiteSpace: 'pre-wrap',
             zIndex: 40,
-            boxShadow: 'var(--stq-shadow-card)',
+            boxShadow: 'none',
           }}
         >
           {exportError}
@@ -217,15 +241,21 @@ export function Studio({ draft, onChange }: Props) {
       )}
 
       <div
+        className="stq-author-tool-canvas"
         style={{
-          padding: '12px 16px 16px',
+          padding: '56px 32px 80px',
           minHeight: 0,
           minWidth: 0,
           width: '100%',
           height: '100%',
           overflow: 'hidden',
+          position: 'relative',
         }}
       >
+        <div className="stq-author-canvas-hint">
+          <span className="stq-author-canvas-hint__dot" aria-hidden />
+          {t('studio.canvasHint')}
+        </div>
         {renderWorkspace({
           activeSection,
           draft,
@@ -234,7 +264,7 @@ export function Studio({ draft, onChange }: Props) {
           selectedId,
           reorderMode,
           onChange,
-          onLocaleChange: setLocale,
+          onLocaleChange: changeLanguage,
           onSelectStation: setSelectedId,
           onSelectPrev: () => selectByDelta(-1),
           onSelectNext: () => selectByDelta(1),
@@ -243,6 +273,10 @@ export function Studio({ draft, onChange }: Props) {
           onToggleReorder: () => setReorderMode((v) => !v),
           onOpenFullEditor: (stationId) =>
             navigate(`/tours/${draft.draftId}/stations/${stationId}`),
+          onCreateTour,
+          onSelectDraft,
+          drafts,
+          onSelectTourOverview: () => setActiveSection('plan'),
         })}
       </div>
       {jumpOpen && (
@@ -278,29 +312,37 @@ interface RenderWorkspaceArgs {
   onReorderStations: (sourceId: string, targetId: string) => void;
   onToggleReorder: () => void;
   onOpenFullEditor: (stationId: string) => void;
+  onCreateTour?: () => void | Promise<void>;
+  onSelectDraft?: (draftId: string) => void;
+  drafts?: TourDraft[];
+  onSelectTourOverview: () => void;
 }
 
 function renderWorkspace(args: RenderWorkspaceArgs) {
-  // The Stations workspace ships its own three-column layout (LeftRail +
-  // map/swimlane + RightPreview), so we render it raw. The other four
-  // workspaces are paired with the contextual `StudioSidebar` here.
+  // Top-level mockup views ship their own full-canvas layout.
   if (args.activeSection === 'stations') {
     return (
-      <StationsWorkspace
+      <MapPreviewWorkspace
         draft={args.draft}
         locale={args.locale}
-        selected={args.selected}
         selectedId={args.selectedId}
-        reorderMode={args.reorderMode}
-        onChange={args.onChange}
         onSelectStation={args.onSelectStation}
-        onSelectPrev={args.onSelectPrev}
-        onSelectNext={args.onSelectNext}
         onAddStation={args.onAddStation}
-        onReorderStations={args.onReorderStations}
-        onToggleReorder={args.onToggleReorder}
-        onOpenFullEditor={args.onOpenFullEditor}
+        onChange={args.onChange}
       />
+    );
+  }
+
+  if (
+    args.activeSection === 'plan' ||
+    args.activeSection === 'story' ||
+    args.activeSection === 'route' ||
+    args.activeSection === 'outro'
+  ) {
+    return (
+      <div style={{ minWidth: 0, minHeight: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
+        {renderWorkspaceBody(args)}
+      </div>
     );
   }
 
@@ -339,6 +381,9 @@ function renderWorkspaceBody(args: RenderWorkspaceArgs) {
           draft={args.draft}
           locale={args.locale}
           onChange={args.onChange}
+          onCreateTour={args.onCreateTour}
+          drafts={args.drafts}
+          onSelectDraft={args.onSelectDraft}
         />
       );
     case 'story':
@@ -347,6 +392,17 @@ function renderWorkspaceBody(args: RenderWorkspaceArgs) {
           draft={args.draft}
           locale={args.locale}
           onChange={args.onChange}
+          onSelectTourOverview={args.onSelectTourOverview}
+        />
+      );
+    case 'outro':
+      return (
+        <StoryWorkspace
+          draft={args.draft}
+          locale={args.locale}
+          onChange={args.onChange}
+          mode="outro"
+          onSelectTourOverview={args.onSelectTourOverview}
         />
       );
     case 'route':
@@ -354,15 +410,6 @@ function renderWorkspaceBody(args: RenderWorkspaceArgs) {
         <RouteWorkspace
           draft={args.draft}
           locale={args.locale}
-          onChange={args.onChange}
-        />
-      );
-    case 'preview':
-      return (
-        <PreviewWorkspace
-          draft={args.draft}
-          locale={args.locale}
-          onLocaleChange={args.onLocaleChange}
           onChange={args.onChange}
         />
       );
@@ -497,43 +544,4 @@ function summarize(station: RiddleEntry, locale: Locale): string {
     (b) => b.type === 'paragraph' || b.type === 'heading' || b.type === 'line',
   ) as { text?: string } | undefined;
   return (first?.text ?? '').trim();
-}
-
-function formatExportError(error: unknown): string {
-  if (error instanceof DraftExportValidationError) {
-    const lines = error.errors
-      .slice(0, 8)
-      .map((e) => `• ${e.path}: ${e.message}`);
-    const extra =
-      error.errors.length > 8 ? `\n…and ${error.errors.length - 8} more` : '';
-    return `Cannot export — please fix:\n${lines.join('\n')}${extra}`;
-  }
-  return error instanceof Error ? error.message : 'Could not export this draft.';
-}
-
-function formatSuccessfulExport(result: Awaited<ReturnType<typeof downloadDraftExportZip>>) {
-  const notes: string[] = [];
-
-  if (result.missingBlobIds.length > 0) {
-    notes.push(
-      `${result.missingBlobIds.length} image(s) were missing in local storage and kept as existing imagePath values.`,
-    );
-  }
-
-  if (result.validationWarnings.length > 0) {
-    const lines = result.validationWarnings
-      .slice(0, 4)
-      .map((warning) => `• ${warning.message}`);
-    const extra =
-      result.validationWarnings.length > 4
-        ? `\n…and ${result.validationWarnings.length - 4} more warning(s)`
-        : '';
-    notes.push(`Warnings:\n${lines.join('\n')}${extra}`);
-  }
-
-  if (notes.length === 0) {
-    return null;
-  }
-
-  return notes.join('\n\n');
 }

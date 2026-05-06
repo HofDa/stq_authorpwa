@@ -26,7 +26,7 @@ export function StorylineTopBar({
         </div>
         <div
           style={{
-            fontFamily: 'Lato, Georgia, serif',
+            fontFamily: 'var(--stq-font-ui)',
             fontSize: 15,
             fontWeight: 700,
             lineHeight: 1.2,

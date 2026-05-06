@@ -1,25 +1,21 @@
 import { Suspense, lazy, useState } from 'react';
-import type { Locale, RiddleEntry, TourDraft } from '@/schema';
+import type { RiddleEntry } from '@/schema';
 import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
 import { Icon } from '../Icon';
 import { LeftRail } from '../LeftRail';
 import { RightPreview } from '../RightPreview';
 import { Swimlane } from '../Swimlane';
+import type { BaseWorkspaceProps } from './workspaceTypes';
 
 const LiveRoutePlannerPanel = lazy(async () => {
   const module = await import('@/components/map/LiveRoutePlannerPanel');
   return { default: module.LiveRoutePlannerPanel };
 });
 
-interface Props {
-  draft: TourDraft;
-  locale: Locale;
+interface Props extends BaseWorkspaceProps {
   selected: RiddleEntry | null;
   selectedId: string | null;
   reorderMode: boolean;
-  onChange: (
-    patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
-  ) => void;
   onSelectStation: (id: string) => void;
   onSelectPrev: () => void;
   onSelectNext: () => void;
@@ -63,6 +59,7 @@ export function StationsWorkspace({
 
   return (
     <div
+      className="stq-author-stations-workspace"
       style={{
         display: 'grid',
         gridTemplateColumns: previewCollapsed
@@ -106,11 +103,11 @@ export function StationsWorkspace({
         {mode === 'map' ? (
           <div
             style={{
-              borderRadius: 20,
+              borderRadius: 10,
               overflow: 'hidden',
               position: 'relative',
               border: '1px solid var(--stq-border)',
-              boxShadow: 'var(--stq-shadow-card)',
+              boxShadow: 'none',
               minHeight: 0,
             }}
           >
@@ -129,11 +126,11 @@ export function StationsWorkspace({
           >
             <div
               style={{
-                borderRadius: 16,
+                borderRadius: 10,
                 overflow: 'hidden',
                 position: 'relative',
                 border: '1px solid var(--stq-border)',
-                boxShadow: 'var(--stq-shadow-soft)',
+                boxShadow: 'none',
               }}
             >
               <Suspense fallback={<MapFallback />}>
@@ -142,14 +139,15 @@ export function StationsWorkspace({
             </div>
             <div
               style={{
-                borderRadius: 16,
-                background: 'white',
+                borderRadius: 10,
+                background: 'var(--stq-author-surface, white)',
                 border: '1px solid var(--stq-border)',
-                boxShadow: 'var(--stq-shadow-soft)',
+                boxShadow: 'none',
                 overflow: 'hidden',
                 minHeight: 0,
                 display: 'flex',
                 flexDirection: 'column',
+                color: 'var(--stq-text)',
               }}
             >
               <div
@@ -166,7 +164,7 @@ export function StationsWorkspace({
                   <div style={eyebrowStyle}>Stations · edit</div>
                   <h2
                     style={{
-                      fontFamily: 'Lato, Georgia, serif',
+                      fontFamily: 'var(--stq-font-ui)',
                       fontSize: 15,
                       fontWeight: 700,
                       margin: '2px 0 0',
@@ -225,10 +223,10 @@ export function StationsWorkspace({
 
         <div
           style={{
-            borderRadius: 20,
-            background: 'white',
+            borderRadius: 10,
+            background: 'var(--stq-author-surface, white)',
             border: '1px solid var(--stq-border)',
-            boxShadow: 'var(--stq-shadow-card)',
+            boxShadow: 'none',
             overflow: 'hidden',
             minWidth: 0,
           }}

@@ -19,7 +19,7 @@ export function AssistantPromptCard({ stationTitle }: AssistantPromptCardProps) 
       </div>
       <h3
         style={{
-          fontFamily: 'Lato, Georgia, serif',
+          fontFamily: 'var(--stq-font-ui)',
           fontSize: 22,
           fontWeight: 700,
           margin: '8px 0 6px',

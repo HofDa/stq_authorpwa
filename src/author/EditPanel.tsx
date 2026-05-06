@@ -5,7 +5,7 @@ import {
   parseAcceptedAnswersInput,
 } from '@/schema';
 import { ImageCapture } from '@/components/ImageCapture';
-import { splitHeading } from '@/renderer/ContentSectionRenderer';
+import { splitHeading } from '@/renderer/splitHeading';
 
 type EditableTextBlockType = 'paragraph' | 'paragraph_styled' | 'line';
 type EditableTextBlock = Extract<ContentBlock, { type: EditableTextBlockType }>;

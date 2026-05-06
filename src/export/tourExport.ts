@@ -25,12 +25,10 @@ import {
   validateDraftForPublishing,
   type DraftPublishingValidationIssue,
   type DraftPublishingValidationResult,
-} from './validateDraftForPublishing';
-import {
   type ExportValidationError,
-} from './validateDraftForExport';
+} from './validateDraftForPublishing';
 
-export type { ExportValidationError } from './validateDraftForExport';
+export type { ExportValidationError } from './validateDraftForPublishing';
 
 export interface DraftExportReport {
   fileName: string;

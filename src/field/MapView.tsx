@@ -1,4 +1,4 @@
-import type { Locale, RiddleEntry } from '@/schema';
+import type { Locale, RecordedRoutePoint, RiddleEntry } from '@/schema';
 import { AuthorMap } from '@/components/map/AuthorMap';
 import {
   AUTHOR_MAP_CURRENT_POSITION_STYLE_FIELD,
@@ -7,10 +7,12 @@ import {
   toAuthorMapCoordinate,
 } from '@/components/map/mapTypes';
 import { hasUsableStationCoordinate } from '@/utils/coordinates';
-import { normalizeStationVisualChoice } from '@/stations/visuals';
+import {
+  hasSelectedStationIcon,
+  normalizeStationVisualChoice,
+} from '@/stations/visuals';
 import type { CurrentGps } from '@/components/studio/field/types';
 import { getStationLocationLabel } from '@/utils/localizedContent';
-import { StationMarker } from './StationMarker';
 
 interface Props {
   stations: RiddleEntry[];
@@ -19,10 +21,22 @@ interface Props {
   gps: CurrentGps | null;
   gpsLive: boolean;
   basemap: AuthorMapBasemapKey;
+  recordedRoute?: RecordedRoutePoint[];
+  routeEditActive?: boolean;
+  stationEditActive?: boolean;
+  selectedRouteSegment?: {
+    from: AuthorMapCoordinate;
+    to: AuthorMapCoordinate;
+  } | null;
   onSelectStation: (stationId: string) => void;
+  onMapClick?: (coordinate: AuthorMapCoordinate) => void;
   draggableStationIds?: string[];
   onStationCoordinateChange?: (
     stationId: string,
+    coordinate: { lat: number; lng: number },
+  ) => void;
+  onRoutePointCoordinateChange?: (
+    routePointId: string,
     coordinate: { lat: number; lng: number },
   ) => void;
   navigationSegment?: {
@@ -34,6 +48,9 @@ interface Props {
 }
 
 const DEFAULT_CENTER = { lat: 46.6703, lng: 11.1594 };
+const FIELD_ROUTE_COLOR = '#2196f3';
+const ROUTE_STATION_SNAP_METERS = 20;
+const EARTH_RADIUS_METERS = 6_371_000;
 
 export function MapView({
   stations,
@@ -42,9 +59,15 @@ export function MapView({
   gps,
   gpsLive,
   basemap,
+  recordedRoute = [],
+  routeEditActive = false,
+  stationEditActive = false,
+  selectedRouteSegment = null,
   onSelectStation,
+  onMapClick,
   draggableStationIds = [],
   onStationCoordinateChange,
+  onRoutePointCoordinateChange,
   navigationSegment = null,
 }: Props) {
   const stationsWithCoordinates = stations.filter(hasUsableStationCoordinate);
@@ -67,56 +90,32 @@ export function MapView({
         navigationSegment.progress,
       )
     : [];
-
-  if (stationsWithCoordinates.length === 0 && !gps) {
-    return (
-      <div className="stq-field-placeholder-map">
-        <div className="stq-field-placeholder-current" />
-        {stations.map((station, index) => (
-          <StationMarker
-            key={station.id}
-            station={station}
-            selected={station.id === selectedStationId}
-            onSelect={() => onSelectStation(station.id)}
-            style={{
-              position: 'absolute',
-              left: `${24 + (index % 3) * 26}%`,
-              top: `${30 + Math.floor(index / 3) * 18}%`,
-            }}
-          />
-        ))}
-      </div>
-    );
-  }
+  const routeLayers = buildRouteLayers({
+    recordedRoute: normalizeRouteStationAnchors(recordedRoute, stationsWithCoordinates),
+    routeEditActive,
+    selectedRouteSegment,
+    navigationRoutePoints,
+  });
+  const routePointMarkers = buildRoutePointMarkers({
+    recordedRoute,
+    stationsWithCoordinates,
+    routeEditActive,
+  });
+  const mapStations = buildMapStations({
+    stationsWithCoordinates,
+    selected,
+    selectedStationId,
+    center,
+    locale,
+  });
 
   return (
     <AuthorMap
-      stations={stationsWithCoordinates.map((station) => ({
-        id: station.id,
-        number: station.number,
-        coordinate: {
-          lat: station.position_lat,
-          lng: station.position_lng,
-        },
-        visual: normalizeStationVisualChoice(station),
-        label: getStationLocationLabel(station, locale),
-      }))}
+      className="stq-field-author-map"
+      stations={mapStations}
       selectedStationId={selectedStationId}
-      routes={
-        navigationRoutePoints.length >= 2
-          ? [
-              {
-                id: 'field-app-navigation-route',
-                points: navigationRoutePoints,
-                style: {
-                  color: '#2196f3',
-                  weight: 7,
-                  opacity: 0.98,
-                },
-              },
-            ]
-          : []
-      }
+      routes={routeLayers}
+      routePointMarkers={routePointMarkers}
       currentPosition={
         gps
           ? {
@@ -128,8 +127,10 @@ export function MapView({
       currentPositionStyle={AUTHOR_MAP_CURRENT_POSITION_STYLE_FIELD}
       basemap={basemap}
       onSelectStation={onSelectStation}
+      onMapClick={routeEditActive || stationEditActive ? onMapClick : undefined}
       draggableStationIds={draggableStationIds}
       onStationCoordinateChange={onStationCoordinateChange}
+      onRoutePointCoordinateChange={onRoutePointCoordinateChange}
       viewport={{
         center,
         zoom: 15,
@@ -146,6 +147,161 @@ export function MapView({
       zoomControl={false}
       style={{ height: '100%', width: '100%' }}
     />
+  );
+}
+
+function buildMapStations({
+  stationsWithCoordinates,
+  selected,
+  selectedStationId,
+  center,
+  locale,
+}: {
+  stationsWithCoordinates: RiddleEntry[];
+  selected: RiddleEntry | null;
+  selectedStationId: string | null;
+  center: AuthorMapCoordinate;
+  locale: Locale;
+}) {
+  const positioned = stationsWithCoordinates.map((station) =>
+    toMapStation(station, {
+      lat: station.position_lat,
+      lng: station.position_lng,
+    }, locale),
+  );
+
+  if (
+    selected &&
+    selected.id === selectedStationId &&
+    !hasUsableStationCoordinate(selected) &&
+    !positioned.some((station) => station.id === selected.id)
+  ) {
+    positioned.push(toMapStation(selected, center, locale));
+  }
+
+  return positioned;
+}
+
+function toMapStation(
+  station: RiddleEntry,
+  coordinate: AuthorMapCoordinate,
+  locale: Locale,
+) {
+  return {
+    id: station.id,
+    number: station.number,
+    coordinate,
+    visual: normalizeStationVisualChoice(station),
+    hasSelectedIcon: hasSelectedStationIcon(station),
+    label: getStationLocationLabel(station, locale),
+  };
+}
+
+function buildRouteLayers({
+  recordedRoute,
+  routeEditActive,
+  selectedRouteSegment,
+  navigationRoutePoints,
+}: {
+  recordedRoute: RecordedRoutePoint[];
+  routeEditActive: boolean;
+  selectedRouteSegment: { from: AuthorMapCoordinate; to: AuthorMapCoordinate } | null;
+  navigationRoutePoints: AuthorMapCoordinate[];
+}) {
+  const routes = [];
+
+  if (routeEditActive && selectedRouteSegment) {
+    routes.push({
+      id: 'field-selected-route-guide',
+      points: [selectedRouteSegment.from, selectedRouteSegment.to],
+      style: {
+        color: FIELD_ROUTE_COLOR,
+        weight: 5,
+        opacity: 0.8,
+        dashArray: '6 7',
+      },
+    });
+  }
+
+  if (recordedRoute.length >= 2) {
+    routes.push({
+      id: 'field-recorded-route',
+      points: recordedRoute.map(toAuthorMapCoordinate),
+      style: {
+        color: FIELD_ROUTE_COLOR,
+        weight: routeEditActive ? 6 : 4,
+        opacity: routeEditActive ? 0.95 : 0.7,
+      },
+    });
+  }
+
+  if (navigationRoutePoints.length >= 2) {
+    routes.push({
+      id: 'field-app-navigation-route',
+      points: navigationRoutePoints,
+      style: {
+        color: FIELD_ROUTE_COLOR,
+        weight: 7,
+        opacity: 0.98,
+      },
+    });
+  }
+
+  return routes;
+}
+
+function normalizeRouteStationAnchors(
+  recordedRoute: RecordedRoutePoint[],
+  stationsWithCoordinates: RiddleEntry[],
+) {
+  return recordedRoute.map((point) => {
+    const station = findNearbyStation(point, stationsWithCoordinates);
+    return station
+      ? {
+          ...point,
+          lat: station.position_lat,
+          lng: station.position_lng,
+        }
+      : point;
+  });
+}
+
+function buildRoutePointMarkers({
+  recordedRoute,
+  stationsWithCoordinates,
+  routeEditActive,
+}: {
+  recordedRoute: RecordedRoutePoint[];
+  stationsWithCoordinates: RiddleEntry[];
+  routeEditActive: boolean;
+}) {
+  if (!routeEditActive) {
+    return [];
+  }
+
+  return recordedRoute
+    .map((point, index) => ({ point, index }))
+    .filter(({ point }) => !findNearbyStation(point, stationsWithCoordinates))
+    .map(({ point, index }) => ({
+      id: String(index),
+      coordinate: toAuthorMapCoordinate(point),
+      color: FIELD_ROUTE_COLOR,
+      draggable: true,
+    }));
+}
+
+function findNearbyStation(
+  point: { lat: number; lng: number },
+  stationsWithCoordinates: RiddleEntry[],
+) {
+  return (
+    stationsWithCoordinates.find(
+      (station) =>
+        distanceMeters(point, {
+          lat: station.position_lat,
+          lng: station.position_lng,
+        }) <= ROUTE_STATION_SNAP_METERS,
+    ) ?? null
   );
 }
 
@@ -219,4 +375,18 @@ function interpolateCoordinate(
     lat: from.lat + (to.lat - from.lat) * ratio,
     lng: from.lng + (to.lng - from.lng) * ratio,
   };
+}
+
+function distanceMeters(
+  left: { lat: number; lng: number },
+  right: { lat: number; lng: number },
+) {
+  const lat1 = left.lat * (Math.PI / 180);
+  const lat2 = right.lat * (Math.PI / 180);
+  const deltaLat = (right.lat - left.lat) * (Math.PI / 180);
+  const deltaLng = (right.lng - left.lng) * (Math.PI / 180);
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

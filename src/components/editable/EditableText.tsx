@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Icon } from '@/components/studio/Icon';
 
 interface Props {
   value: string;
@@ -74,15 +75,27 @@ export function EditableText({
   const Tag = as as keyof JSX.IntrinsicElements;
   const displayText = value || placeholder || '';
   const displayClass = [
-    'cursor-text rounded-sm px-1 -mx-1',
-    'hover:bg-primary/5',
+    'stq-editable cursor-text',
     value ? '' : 'italic text-disabled',
     className,
   ].join(' ');
 
   return (
-    <Tag onClick={() => setEditing(true)} className={displayClass}>
-      {displayText || '\u00A0'}
-    </Tag>
+    <span className="stq-editable-wrap">
+      <Tag onClick={() => setEditing(true)} className={displayClass}>
+        {displayText || '\u00A0'}
+      </Tag>
+      <button
+        type="button"
+        className="stq-editable-pencil"
+        aria-label="Edit"
+        onClick={(e) => {
+          e.stopPropagation();
+          setEditing(true);
+        }}
+      >
+        <Icon name="edit" size={12} />
+      </button>
+    </span>
   );
 }

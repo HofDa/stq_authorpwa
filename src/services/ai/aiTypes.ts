@@ -7,7 +7,6 @@ export type AiAgentId =
   | 'story'
   | 'station'
   | 'route'
-  | 'preview'
   | 'translation';
 
 /**
@@ -27,7 +26,6 @@ export type AiActionId =
   | 'station.createRiddle'
   | 'station.shortenText'
   | 'route.reviewRoute'
-  | 'preview.runQA'
   | 'translation.checkCompleteness';
 
 export interface AiRequest {

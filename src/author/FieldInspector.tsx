@@ -4,12 +4,17 @@ import type {
   ContentBlock,
   Locale,
   RiddleEntry,
-  RiddleLocaleContent,
   TourDraft,
 } from '@/schema';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
+import { useStationPatcher } from '@/hooks/useDraftPatchers';
 import { getStationLocationLabel } from '@/utils/localizedContent';
-import { RiddleScreen, type RendererSectionKey } from '@/renderer/RiddleScreen';
+import { RiddleScreen } from '@/renderer/RiddleScreen';
+import {
+  STATION_SECTION_FALLBACK_TITLES,
+  STATION_SECTION_KEYS,
+  type RendererSectionKey,
+} from '@/renderer/stationSections';
 import { AuthorOverlay } from './AuthorOverlay';
 import { AgentPanel } from './AgentPanel';
 import { EditPanel, type EditPayload } from './EditPanel';
@@ -18,7 +23,10 @@ import { Icon } from '@/components/studio/Icon';
 import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
 import { CaptureButton } from '@/components/CaptureButton';
 import { StationVisualPicker } from '@/components/stations/StationVisualPicker';
-import { normalizeStationVisualChoice } from '@/stations/visuals';
+import {
+  hasSelectedStationIcon,
+  normalizeStationVisualChoice,
+} from '@/stations/visuals';
 import { RiddleAiSidePanel, type RiddleAiPanelMode } from './RiddleAiSidePanel';
 
 interface Props {
@@ -39,16 +47,12 @@ interface Props {
   onChange: (recipe: (prev: TourDraft) => TourDraft) => void;
 }
 
-const SECTION_META: Array<{
-  key: RendererSectionKey;
-  label: string;
-  fallbackTitle: string;
-}> = [
-  { key: 'firstSection', label: 'Story', fallbackTitle: 'Story' },
-  { key: 'historySection', label: 'Mehr Infos', fallbackTitle: 'Background' },
-  { key: 'riddleSection', label: 'Riddle', fallbackTitle: 'Riddle' },
-  { key: 'successSection', label: 'Success', fallbackTitle: 'Success' },
-];
+const SECTION_LABELS: Record<RendererSectionKey, string> = {
+  firstSection: 'Story',
+  historySection: 'Mehr Infos',
+  riddleSection: 'Riddle',
+  successSection: 'Success',
+};
 
 export function FieldInspector({
   draft,
@@ -80,32 +84,16 @@ export function FieldInspector({
   const imageUrl = heroBlobUrl ?? resolveAssetPath(station.imagePath);
   const sections = useMemo(
     () =>
-      SECTION_META.map((section) => ({
-        ...section,
-        blocks: content[section.key],
+      STATION_SECTION_KEYS.map((key) => ({
+        key,
+        label: SECTION_LABELS[key],
+        fallbackTitle: STATION_SECTION_FALLBACK_TITLES[key],
+        blocks: content[key],
       })),
     [content],
   );
 
-  function patchStation(patch: Partial<RiddleEntry>) {
-    onChange((prev) => ({
-      ...prev,
-      stations: prev.stations.map((entry) =>
-        entry.id === station.id ? { ...entry, ...patch } : entry,
-      ),
-    }));
-  }
-
-  function patchLocale(patch: Partial<RiddleLocaleContent>) {
-    onChange((prev) => ({
-      ...prev,
-      stations: prev.stations.map((entry) =>
-        entry.id === station.id
-          ? { ...entry, [locale]: { ...entry[locale], ...patch } }
-          : entry,
-      ),
-    }));
-  }
+  const { patchStation, patchLocale } = useStationPatcher(onChange, station.id, locale);
 
   function setStationImageBlob(blobId: string) {
     patchStation({
@@ -285,8 +273,12 @@ export function FieldInspector({
         stationNumber={station.number}
         totalStations={draft.stations.length}
         imageUrl={imageUrl}
-        iconPath={station.iconPath}
-        stationVisual={normalizeStationVisualChoice(station)}
+        iconPath={hasSelectedStationIcon(station) ? station.iconPath : undefined}
+        stationVisual={
+          hasSelectedStationIcon(station)
+            ? normalizeStationVisualChoice(station)
+            : undefined
+        }
         sections={sections}
         acceptedAnswers={station.acceptedAnswers[locale]}
         hints={content.hints}
@@ -552,10 +544,7 @@ function sectionOverlay(
 }
 
 function sectionFromTarget(targetPath: string): RendererSectionKey | null {
-  for (const section of SECTION_META) {
-    if (targetPath.endsWith(section.key)) return section.key;
-  }
-  return null;
+  return STATION_SECTION_KEYS.find((key) => targetPath.endsWith(key)) ?? null;
 }
 
 function resolveAssetPath(path: string | undefined): string | undefined {

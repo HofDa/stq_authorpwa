@@ -1,7 +1,7 @@
 /**
- * Design tokens mirrored from the SouthTyrolQuests Flutter theme.
+ * Design tokens aligned to the SouthTyrolQuests Author Tool mockup.
  *
- * Source of truth lives in the Flutter repo:
+ * Native source of truth still lives in the Flutter repo:
  *   - lib/theme/colors.dart
  *   - lib/theme/text_styles.dart
  *
@@ -9,18 +9,18 @@
  */
 export const tokens = {
   colors: {
-    primary: 'rgb(144, 74, 72)',
-    background: 'rgb(255, 248, 247)',
-    border: 'rgb(216, 193, 192)',
-    text: 'rgb(35, 25, 25)',
-    error: 'rgb(186, 26, 26)',
-    success: 'rgb(65, 104, 52)',
-    disabled: 'rgb(112, 112, 112)',
+    primary: '#a0463d',
+    background: '#f8efe8',
+    border: '#e7ddd3',
+    text: '#1a1a1a',
+    error: '#c84a3a',
+    success: '#4a8a4a',
+    disabled: '#8a807a',
     route: '#2196f3',
   },
   fonts: {
     ui: '"Open Sans", system-ui, sans-serif',
-    body: 'Lato, Georgia, serif',
+    body: '"Open Sans", system-ui, sans-serif',
   },
   textStyles: {
     h3: { fontFamily: 'ui', fontSize: 20.8, fontWeight: 700 },

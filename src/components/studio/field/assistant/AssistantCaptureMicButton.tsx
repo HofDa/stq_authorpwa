@@ -68,7 +68,7 @@ export function AssistantCaptureMicButton({
           </div>
           <p
             style={{
-              fontFamily: 'Lato, Georgia, serif',
+              fontFamily: 'var(--stq-font-ui)',
               fontSize: 14,
               lineHeight: 1.5,
               margin: 0,

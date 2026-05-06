@@ -94,7 +94,7 @@ function Header({ tour }: { tour: TourEntry }) {
         <div style={eyebrowStyle}>Tour Meta</div>
         <h2
           style={{
-            fontFamily: 'Lato, Georgia, serif',
+            fontFamily: 'var(--stq-font-ui)',
             fontSize: 18,
             fontWeight: 700,
             margin: '2px 0 0',
@@ -177,10 +177,11 @@ const panelStyle: CSSProperties = {
   flexDirection: 'column',
   gap: 12,
   padding: 16,
-  background: 'white',
+  background: 'var(--stq-author-surface, white)',
   border: '1px solid var(--stq-border)',
-  borderRadius: 20,
-  boxShadow: 'var(--stq-shadow-soft)',
+  borderRadius: 10,
+  boxShadow: 'none',
+  color: 'var(--stq-text)',
 };
 
 const eyebrowStyle: CSSProperties = {

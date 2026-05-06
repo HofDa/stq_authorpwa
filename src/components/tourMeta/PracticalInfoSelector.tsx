@@ -89,9 +89,11 @@ function SegButton({
         padding: '3px 10px',
         fontSize: 11,
         fontWeight: 700,
-        borderRadius: 999,
+        borderRadius: 7,
         border: `1px solid ${active ? 'var(--stq-primary)' : 'var(--stq-border)'}`,
-        background: active ? 'var(--stq-primary)' : 'white',
+        background: active
+          ? 'var(--stq-primary)'
+          : 'var(--stq-author-surface-raised, white)',
         color: active ? 'white' : 'var(--stq-text-mute)',
         cursor: 'pointer',
       }}
@@ -113,7 +115,7 @@ const rowStyle: CSSProperties = {
   gap: 12,
   padding: '4px 8px',
   borderRadius: 8,
-  background: 'var(--stq-bg)',
+  background: 'var(--stq-author-surface-raised, var(--stq-bg))',
   border: '1px solid var(--stq-border-soft)',
 };
 

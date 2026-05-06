@@ -5,7 +5,7 @@ import {
   type TourDraft,
 } from '@/schema';
 import { getStationReadiness } from './stationReadiness';
-import { getWorstStatus, type LocalCheck } from './readinessTypes';
+import { getWorstStatus, presenceCheck, type LocalCheck } from './readinessTypes';
 
 /**
  * Returns the tour-level local checks: title, intro, outro, station count,
@@ -18,74 +18,52 @@ export function getTourReadiness(
 ): LocalCheck[] {
   const tour = draft.tour;
   const localized = tour[locale];
-  const checks: LocalCheck[] = [];
-
-  checks.push({
-    id: 'tour.title',
-    label: 'Tour title',
-    status: localized.title.trim() ? 'ready' : 'missing',
-    severity: 'error',
-    message: localized.title.trim()
-      ? undefined
-      : 'A tour title is required before you can export.',
-    target: { section: 'plan', field: 'title' },
-  });
-
-  checks.push({
-    id: 'tour.stations',
-    label: 'Stations',
-    status: draft.stations.length > 0 ? 'ready' : 'missing',
-    severity: 'error',
-    message:
-      draft.stations.length > 0
-        ? undefined
-        : 'Add at least one station to this tour.',
-    target: { section: 'stations' },
-  });
-
-  checks.push({
-    id: 'tour.intro',
-    label: 'Intro',
-    status: localized.introSection.length > 0 ? 'ready' : 'missing',
-    severity: 'warning',
-    message:
-      localized.introSection.length > 0
-        ? undefined
-        : 'Set the scene with a short intro for the tour.',
-    target: { section: 'story', field: 'intro' },
-  });
-
-  checks.push({
-    id: 'tour.outro',
-    label: 'Outro',
-    status: localized.outroSection.length > 0 ? 'ready' : 'missing',
-    severity: 'warning',
-    message:
-      localized.outroSection.length > 0
-        ? undefined
-        : 'Wrap things up with a short outro for the end of the tour.',
-    target: { section: 'story', field: 'outro' },
-  });
-
   const missingLocales = LOCALES.filter((l) => !tour[l].title.trim());
-  if (missingLocales.length > 0) {
-    checks.push({
+
+  const checks: LocalCheck[] = [
+    presenceCheck({
+      id: 'tour.title',
+      label: 'Tour title',
+      present: Boolean(localized.title.trim()),
+      missingMessage: 'A tour title is required before you can export.',
+      severity: 'error',
+      target: { section: 'plan', field: 'title' },
+    }),
+    presenceCheck({
+      id: 'tour.stations',
+      label: 'Stations',
+      present: draft.stations.length > 0,
+      missingMessage: 'Add at least one station to this tour.',
+      severity: 'error',
+      target: { section: 'stations' },
+    }),
+    presenceCheck({
+      id: 'tour.intro',
+      label: 'Intro',
+      present: localized.introSection.length > 0,
+      missingMessage: 'Set the scene with a short intro for the tour.',
+      target: { section: 'story', field: 'intro' },
+    }),
+    presenceCheck({
+      id: 'tour.outro',
+      label: 'Outro',
+      present: localized.outroSection.length > 0,
+      missingMessage:
+        'Wrap things up with a short outro for the end of the tour.',
+      target: { section: 'story', field: 'outro' },
+    }),
+    {
       id: 'tour.languages',
       label: 'Language coverage',
-      status: 'draft',
+      status: missingLocales.length > 0 ? 'draft' : 'ready',
       severity: 'info',
-      message: `Title missing in: ${missingLocales.join(', ')}`,
+      message:
+        missingLocales.length > 0
+          ? `Title missing in: ${missingLocales.join(', ')}`
+          : undefined,
       target: { section: 'plan', field: 'languages' },
-    });
-  } else {
-    checks.push({
-      id: 'tour.languages',
-      label: 'Language coverage',
-      status: 'ready',
-      severity: 'info',
-      target: { section: 'plan', field: 'languages' },
-    });
-  }
+    },
+  ];
 
   return checks;
 }

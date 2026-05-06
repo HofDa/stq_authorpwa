@@ -403,9 +403,9 @@ function omit<T extends object, K extends keyof T>(value: T, key: K): T {
 
 const fieldsetStyle: CSSProperties = {
   border: '1px solid var(--stq-border-soft)',
-  borderRadius: 12,
+  borderRadius: 8,
   padding: '8px 10px 10px',
-  background: 'var(--stq-bg)',
+  background: 'var(--stq-author-surface-raised, var(--stq-bg))',
   display: 'grid',
   gap: 6,
 };
@@ -436,7 +436,7 @@ const inputStyle: CSSProperties = {
   padding: '6px 10px',
   borderRadius: 8,
   border: '1px solid var(--stq-border)',
-  background: 'white',
+  background: 'var(--stq-author-surface-raised, white)',
   color: 'var(--stq-text)',
   width: '100%',
   fontFamily: 'inherit',

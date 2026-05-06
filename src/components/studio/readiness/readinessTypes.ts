@@ -50,3 +50,52 @@ export function countByStatus(
   for (const check of checks) totals[check.status] += 1;
   return totals;
 }
+
+/**
+ * Build a `ready ↔ missing` check from a boolean predicate. The missing
+ * message is only attached when `present` is false; severity defaults to
+ * `warning` since most presence checks are non-blocking.
+ */
+export function presenceCheck(args: {
+  id: string;
+  label: string;
+  present: boolean;
+  missingMessage: string;
+  severity?: LocalCheckSeverity;
+  target?: LocalCheck['target'];
+}): LocalCheck {
+  return {
+    id: args.id,
+    label: args.label,
+    status: args.present ? 'ready' : 'missing',
+    severity: args.severity ?? 'warning',
+    message: args.present ? undefined : args.missingMessage,
+    target: args.target,
+  };
+}
+
+/**
+ * Build an error-severity blocker with a pluralised "N stations missing X"
+ * message. Returns `null` when `count` is 0, so callers can spread the
+ * result into a list with `flatMap`/filter.
+ */
+export function pluralBlocker(args: {
+  id: string;
+  label: string;
+  count: number;
+  noun: string;
+  missingWhat: string;
+  status?: Extract<ReadinessStatus, 'missing' | 'problem'>;
+  target?: LocalCheck['target'];
+}): LocalCheck | null {
+  if (args.count <= 0) return null;
+  const plural = args.count === 1 ? args.noun : `${args.noun}s`;
+  return {
+    id: args.id,
+    label: args.label,
+    status: args.status ?? 'missing',
+    severity: 'error',
+    message: `${args.count} ${plural} ${args.missingWhat}.`,
+    target: args.target,
+  };
+}

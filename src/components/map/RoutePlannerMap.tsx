@@ -1,5 +1,8 @@
 import type { RecordedRoutePoint, RiddleEntry } from '@/schema';
-import { normalizeStationVisualChoice } from '@/stations/visuals';
+import {
+  hasSelectedStationIcon,
+  normalizeStationVisualChoice,
+} from '@/stations/visuals';
 import { hasUsableStationCoordinate } from '@/utils/coordinates';
 import { AuthorMap } from './AuthorMap';
 import {
@@ -39,6 +42,7 @@ export function RoutePlannerMap({
     },
     tooltip: `Station ${station.number}`,
     visual: normalizeStationVisualChoice(station),
+    hasSelectedIcon: hasSelectedStationIcon(station),
   }));
   const mapPoints = collectMapPoints(
     recordedRoute,
@@ -65,9 +69,9 @@ export function RoutePlannerMap({
             id: 'recorded-route',
             points: recordedRoute.map(toAuthorMapCoordinate),
             style: {
-              color: '#cc7a00',
+              color: '#2196f3',
               weight: 4,
-              opacity: 0.65,
+              opacity: 0.45,
               dashArray: '8 10',
             },
           },
@@ -75,8 +79,8 @@ export function RoutePlannerMap({
             id: 'optimized-route',
             points: optimizedRoute.map(toAuthorMapCoordinate),
             style: {
-              color: '#2196f3',
-              weight: 5,
+              color: '#0d7fe8',
+              weight: 6,
               opacity: 0.95,
             },
           },
@@ -132,4 +136,3 @@ function collectMapPoints(
 
   return points;
 }
-

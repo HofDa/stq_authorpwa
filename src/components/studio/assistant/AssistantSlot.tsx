@@ -58,7 +58,7 @@ export function AssistantSlot({
           <div style={eyebrow}>Assistant</div>
           <div
             style={{
-              fontFamily: 'Lato, Georgia, serif',
+              fontFamily: 'var(--stq-font-ui)',
               fontSize: 15,
               fontWeight: 700,
               lineHeight: 1.2,
@@ -158,11 +158,12 @@ function Block({
 }
 
 const containerStyle: CSSProperties = {
-  background: 'white',
+  background: 'var(--stq-author-surface, white)',
   border: '1px solid var(--stq-border)',
-  borderRadius: 18,
+  borderRadius: 10,
   padding: 16,
-  boxShadow: 'var(--stq-shadow-soft)',
+  boxShadow: 'none',
+  color: 'var(--stq-text)',
   display: 'flex',
   flexDirection: 'column',
   gap: 12,

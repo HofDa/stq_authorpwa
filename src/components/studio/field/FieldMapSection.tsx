@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { RiddleEntry } from '@/schema';
+import type { Locale, RiddleEntry } from '@/schema';
 import { hasUsableStationCoordinate } from '@/utils/coordinates';
-import { normalizeStationVisualChoice } from '@/stations/visuals';
+import {
+  hasSelectedStationIcon,
+  normalizeStationVisualChoice,
+} from '@/stations/visuals';
 import { AuthorMap } from '@/components/map/AuthorMap';
 import {
   AUTHOR_MAP_BASEMAPS,
@@ -21,6 +24,7 @@ interface Props {
   gpsLive: boolean;
   gpsError: string | null;
   tourLabel: string;
+  locale: Locale;
   basemap: AuthorMapBasemapKey;
   onSelectStation: (id: string) => void;
   onToggleGps: () => void;
@@ -29,6 +33,7 @@ interface Props {
   onPhotoCaptured: (blobId: string) => void;
   onAddStationAt: (coordinate: { lat: number; lng: number }) => void;
   onChangeBasemap: (key: AuthorMapBasemapKey) => void;
+  hideSelectedCard?: boolean;
 }
 
 const DEFAULT_CENTER = { lat: 46.6703, lng: 11.1594 };
@@ -41,6 +46,7 @@ export function FieldMapSection({
   gpsLive,
   gpsError,
   tourLabel,
+  locale,
   basemap,
   onSelectStation,
   onToggleGps,
@@ -49,6 +55,7 @@ export function FieldMapSection({
   onPhotoCaptured,
   onAddStationAt,
   onChangeBasemap,
+  hideSelectedCard = false,
 }: Props) {
   const [layersOpen, setLayersOpen] = useState(false);
   const layersRef = useRef<HTMLDivElement | null>(null);
@@ -105,6 +112,7 @@ export function FieldMapSection({
       lng: station.position_lng,
     },
     visual: normalizeStationVisualChoice(station),
+    hasSelectedIcon: hasSelectedStationIcon(station),
   }));
   const mapCurrentPosition = gps
     ? {
@@ -302,7 +310,7 @@ export function FieldMapSection({
         </div>
       )}
 
-      {selected && (
+      {selected && !hideSelectedCard && (
         <div className="stq-field-floating-card">
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <div
@@ -313,14 +321,14 @@ export function FieldMapSection({
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700 }}>
-                {selected.en.location || 'Unnamed station'}
+                {selected[locale].location || 'Unnamed station'}
               </div>
               <div
                 style={{
                   fontSize: 11,
                   color: 'var(--stq-text-mute)',
                   marginTop: 2,
-                  fontFamily: 'ui-monospace, "JetBrains Mono", monospace',
+                  fontFamily: 'var(--stq-font-ui)',
                 }}
               >
                 {hasUsableStationCoordinate(selected)

@@ -1,7 +1,10 @@
 import type { Locale, RiddleEntry } from '@/schema';
 import { getStationLocationLabel } from '@/utils/localizedContent';
 import { Icon } from '@/components/studio/Icon';
-import { normalizeStationVisualChoice } from '@/stations/visuals';
+import {
+  hasSelectedStationIcon,
+  normalizeStationVisualChoice,
+} from '@/stations/visuals';
 import { CenterIcon } from '@/renderer/CenterIcon';
 
 interface Props {
@@ -39,9 +42,13 @@ export function StationPillBar({
           aria-label={getStationLocationLabel(station, locale)}
         >
           <CenterIcon
-            iconPath={station.iconPath}
+            iconPath={hasSelectedStationIcon(station) ? station.iconPath : undefined}
             fallback={station.number}
-            visual={normalizeStationVisualChoice(station)}
+            visual={
+              hasSelectedStationIcon(station)
+                ? normalizeStationVisualChoice(station)
+                : undefined
+            }
           />
         </button>
       ))}

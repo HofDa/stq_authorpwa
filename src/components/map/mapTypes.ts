@@ -12,6 +12,7 @@ export interface AuthorMapStation {
   coordinate: AuthorMapCoordinate;
   tooltip?: string;
   visual: StationVisualChoice;
+  hasSelectedIcon?: boolean;
 }
 
 export interface AuthorMapRouteStyle {
@@ -25,6 +26,14 @@ export interface AuthorMapRoute {
   id: string;
   points: AuthorMapCoordinate[];
   style: AuthorMapRouteStyle;
+  endpointMarkers?: boolean;
+}
+
+export interface AuthorMapRoutePointMarker {
+  id: string;
+  coordinate: AuthorMapCoordinate;
+  color: string;
+  draggable?: boolean;
 }
 
 export interface AuthorMapCurrentPosition {
@@ -119,6 +128,7 @@ export interface AuthorMapProps {
   style?: CSSProperties;
   zoomControl?: boolean;
   routes?: AuthorMapRoute[];
+  routePointMarkers?: AuthorMapRoutePointMarker[];
   selectedStationId?: string | null;
   currentPosition?: AuthorMapCurrentPosition | null;
   selectionStyle?: AuthorMapSelectionStyle | null;
@@ -126,8 +136,15 @@ export interface AuthorMapProps {
   basemap?: AuthorMapBasemapKey;
   onSelectStation?: (stationId: string) => void;
   draggableStationIds?: string[];
+  deletableStationIds?: string[];
+  onDeleteStation?: (stationId: string) => void;
   onStationCoordinateChange?: (stationId: string, coordinate: AuthorMapCoordinate) => void;
+  onRoutePointCoordinateChange?: (
+    routePointId: string,
+    coordinate: AuthorMapCoordinate,
+  ) => void;
   onViewportCenterChange?: (center: AuthorMapCoordinate) => void;
+  onMapClick?: (coordinate: AuthorMapCoordinate) => void;
 }
 
 export const AUTHOR_MAP_SELECTION_STYLE_PLANNER: AuthorMapSelectionStyle = {
@@ -207,6 +224,9 @@ export function sanitizeAuthorMapProps(props: AuthorMapProps): AuthorMapProps {
       ...route,
       points: route.points.filter(isUsableAuthorMapCoordinate),
     })),
+    routePointMarkers: props.routePointMarkers?.filter((marker) =>
+      isUsableAuthorMapCoordinate(marker.coordinate),
+    ),
     selectedStationId,
     currentPosition:
       props.currentPosition &&

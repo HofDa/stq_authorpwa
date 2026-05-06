@@ -5,6 +5,7 @@ import { EditableContentSection } from './EditableContentSection';
 import { ImageCapture } from '@/components/ImageCapture';
 import { CaptureButton } from '@/components/CaptureButton';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
+import { useTourPatcher } from '@/hooks/useDraftPatchers';
 
 interface Props {
   draft: TourDraft;
@@ -30,13 +31,7 @@ export function InlineTourIntro({ draft, locale, onChange, initialTab = 'intro' 
   const [tab, setTab] = useState<TourTab>(initialTab);
   const content = draft.tour[locale];
   const coverUrl = useBlobUrl(draft.tour.coverBlobId);
-
-  function patchLocale(patch: Partial<TourLocaleContent>) {
-    onChange((prev) => ({
-      ...prev,
-      tour: { ...prev.tour, [locale]: { ...prev.tour[locale], ...patch } },
-    }));
-  }
+  const { patchLocale } = useTourPatcher(onChange, locale);
 
   function setCoverBlob(blobId: string) {
     onChange((prev) => ({

@@ -60,8 +60,8 @@ const navStyle: CSSProperties = {
   display: 'flex',
   gap: 6,
   flexWrap: 'wrap',
-  background: 'var(--stq-bg)',
-  borderRadius: 999,
+  background: 'var(--stq-author-surface-raised, var(--stq-bg))',
+  borderRadius: 8,
   padding: 4,
   border: '1px solid var(--stq-border)',
 };
@@ -72,11 +72,11 @@ function chipStyle(active: boolean): CSSProperties {
     fontSize: 12,
     fontWeight: 700,
     letterSpacing: '0.04em',
-    borderRadius: 999,
+    borderRadius: 6,
     border: 'none',
     cursor: 'pointer',
-    background: active ? 'white' : 'transparent',
-    color: active ? 'var(--stq-primary)' : 'var(--stq-text-mute)',
-    boxShadow: active ? 'var(--stq-shadow-soft)' : 'none',
+    background: active ? 'var(--stq-primary)' : 'transparent',
+    color: active ? 'white' : 'var(--stq-text-mute)',
+    boxShadow: 'none',
   };
 }

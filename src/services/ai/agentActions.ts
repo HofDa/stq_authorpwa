@@ -68,16 +68,9 @@ export const AI_AGENT_ACTIONS = [
     description: 'Review route flow and long-segment risks.',
   },
   {
-    id: 'preview.runQA',
-    agentId: 'preview',
-    section: 'preview',
-    label: 'Run QA',
-    description: 'Suggest preview checks before export.',
-  },
-  {
     id: 'translation.checkCompleteness',
     agentId: 'translation',
-    section: 'preview',
+    section: 'plan',
     label: 'Check translations',
     description: 'Find missing localized content across languages.',
   },
