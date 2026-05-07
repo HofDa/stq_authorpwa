@@ -213,7 +213,7 @@ export function StudioHeader({
           <SidebarNavItem
             icon="map-pin"
             label={t('studio.map')}
-            active={view === 'stations'}
+            active={view === 'stations' && !selectedStationId}
             status={viewStatus?.stations}
             onClick={() => onViewChange('stations')}
           />
@@ -251,7 +251,7 @@ export function StudioHeader({
         </div>
         <div className="stq-author-station-nav" aria-label={t('studio.stations')}>
           {draft.stations.map((station) => {
-            const active = station.id === selectedStationId;
+            const active = view === 'stations' && station.id === selectedStationId;
             const dragging = draggingStationId === station.id;
             const dropTarget =
               dropTargetStationId === station.id && draggingStationId !== station.id;

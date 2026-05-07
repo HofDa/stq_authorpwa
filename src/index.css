@@ -143,14 +143,14 @@
    measures the same box on every zoom event. Keep the root absolutely
    positioned: MapLibre's marker class relies on absolute positioning and
    transform updates; putting marker roots in normal layout flow makes all
-   but the first marker drift while zooming. Width 40 / height 44 keeps the
-   SVG's 63×70 viewBox ratio (44 ≈ 40 * 70/63), and the JS offset in
+   but the first marker drift while zooming. Width 50 / height 56 keeps close
+   to the SVG's 63×70 viewBox ratio, and the JS offset in
    `MapLibreAuthorMap.tsx` (`STATION_MARKER_TIP_OFFSET_PX`) anchors the
    pin's tip — not the bottom edge — to the geographic point. */
 .stq-station-marker {
   position: absolute;
-  width: 40px;
-  height: 44px;
+  width: 50px;
+  height: 56px;
   line-height: 0;
 }
 
@@ -189,7 +189,9 @@
   line-height: 1;
   box-shadow: 0 2px 6px rgba(42, 25, 17, 0.22);
   cursor: pointer;
-  z-index: 4;
+  pointer-events: auto;
+  touch-action: manipulation;
+  z-index: 20;
 }
 
 .stq-station-marker--selected svg {
@@ -1074,7 +1076,7 @@
     opacity 120ms ease,
     transform 120ms ease;
   pointer-events: none;
-  z-index: 60;
+  z-index: 9999;
 }
 
 .stq-editable-region:hover .stq-editable-pen,
@@ -2474,7 +2476,8 @@
   pointer-events: none;
 }
 
-.stq-tour-card-canvas .stq-ios-device__status {
+.stq-tour-card-canvas .stq-ios-device__status,
+.stq-ios-device:has(.stq-phone-map-workspace) .stq-ios-device__status {
   background: #f5ece1;
 }
 
@@ -2502,6 +2505,16 @@
 .stq-ios-device__content {
   height: 100%;
   overflow: auto;
+}
+
+.stq-ios-device__content:has(.stq-phone-map-workspace) {
+  overflow: hidden;
+}
+
+.stq-ios-device__content--map {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .stq-ios-device__content::-webkit-scrollbar {
@@ -3499,7 +3512,7 @@
 
 .stq-riddle-center-icon span {
   color: var(--riddle-primary);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
 }
 
@@ -4088,6 +4101,19 @@
   position: relative;
 }
 
+.stq-story-lorem {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--riddle-ink);
+}
+
+.stq-story-lorem p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
 .stq-riddle-heading {
   margin: 0 0 22px;
   color: var(--riddle-ink);
@@ -4275,6 +4301,7 @@
   align-items: center;
   justify-content: space-between;
   flex: 1;
+  gap: 12px;
   min-width: 0;
   min-height: 64px;
   padding: 0 0 0 58px;
@@ -4282,9 +4309,11 @@
   background: transparent;
   color: var(--riddle-ink);
   font-family: var(--stq-font-ui);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   text-align: left;
+  transform: translateY(0);
+  transition: transform 140ms ease;
 }
 
 .stq-riddle-history-actions {
@@ -4298,6 +4327,7 @@
 }
 
 .stq-riddle-history-icon {
+  flex: 0 0 44px;
   display: grid;
   place-items: center;
   width: 44px;
@@ -4306,14 +4336,24 @@
   background: var(--riddle-primary);
   color: white;
   transform: rotate(90deg);
+  transform-origin: center;
+  transition: transform 140ms ease;
 }
 
 .stq-riddle-history-trigger[aria-expanded="true"] .stq-riddle-history-icon {
   transform: rotate(270deg);
 }
 
+.stq-riddle-history-trigger[aria-expanded="true"] {
+  transform: translateY(8px);
+}
+
 .stq-riddle-history-body {
-  padding: 6px 22px 28px;
+  padding: 18px 22px 30px;
+}
+
+.stq-riddle-history-body .stq-riddle-heading {
+  margin-bottom: 18px;
 }
 
 .stq-riddle-answer {
@@ -4334,7 +4374,7 @@
   border: 1.5px solid rgba(26, 26, 26, 0.55);
   border-radius: 5px;
   color: var(--riddle-ink);
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 800;
 }
 
@@ -5112,7 +5152,11 @@
 }
 
 .stq-field-map-topbar {
-  gap: 10px;
+  left: 10px;
+  right: 10px;
+  top: max(62px, calc(env(safe-area-inset-top) + 62px));
+  justify-content: center;
+  gap: 8px;
 }
 
 .stq-field-detail-actions {
@@ -5144,16 +5188,38 @@
 .stq-field-map-title-pill {
   flex: 1;
   min-width: 0;
-  justify-content: flex-start !important;
-  padding-right: 16px !important;
+  max-width: 620px;
+  min-height: 78px !important;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  justify-content: stretch !important;
+  align-items: center;
+  padding: 10px 16px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.74) !important;
+  box-shadow: 0 12px 24px rgba(35, 28, 24, 0.2) !important;
 }
 
 .stq-field-map-title-pill span {
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
+  white-space: normal;
+  color: #241b1d;
+  font-size: clamp(18px, 5.4vw, 30px);
+  font-weight: 900;
+  line-height: 1.18;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.stq-field-map-title-pill svg {
+  justify-self: start;
+  width: 26px;
+  height: 26px;
+  color: #565157;
 }
 
 .stq-field-detail-topbar button.active,
@@ -5164,7 +5230,12 @@
 }
 
 .stq-field-map-topbar .stq-field-map-tool-toggle {
-  min-width: 42px;
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 2px;
+  min-width: 44px;
+  width: 44px;
+  min-height: 44px;
   padding: 0 12px;
   transition:
     background 160ms ease,
@@ -5192,13 +5263,90 @@
 
 .stq-field-map-topbar .stq-field-map-edit-toggle,
 .stq-field-detail-topbar .stq-field-map-edit-toggle {
-  position: relative;
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 2px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
   border: 2px solid rgba(160, 70, 61, 0.72);
   background: rgba(255, 250, 249, 0.74);
   color: var(--stq-primary);
   box-shadow:
     0 4px 14px rgba(70, 40, 30, 0.08),
     0 0 0 3px rgba(255, 250, 249, 0.9);
+}
+
+.stq-field-map-topbar .stq-field-map-tool-toggle + .stq-field-map-edit-toggle {
+  top: calc(100% + 66px);
+}
+
+.stq-field-map-controls {
+  position: absolute;
+  top: max(152px, calc(env(safe-area-inset-top) + 152px));
+  left: 16px;
+  right: auto;
+  bottom: auto;
+  z-index: 1120;
+  display: grid;
+  gap: 10px;
+}
+
+.stq-field-map-controls button,
+.stq-field-map-zoom button {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(231, 221, 211, 0.72);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1a1a1a;
+  padding: 0;
+  font: inherit;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(70, 40, 30, 0.14);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+.stq-field-map-controls button {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 0;
+  box-shadow: 0 8px 20px rgba(35, 28, 24, 0.18);
+}
+
+.stq-field-map-controls button.active {
+  background: var(--stq-primary);
+  border-color: rgba(255, 255, 255, 0.84);
+  color: white;
+}
+
+.stq-field-map-zoom {
+  position: absolute;
+  right: 16px;
+  bottom: max(104px, calc(env(safe-area-inset-bottom) + 104px));
+  z-index: 1120;
+  display: grid;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 22px rgba(70, 40, 30, 0.16);
+}
+
+.stq-field-map-zoom button {
+  width: 30px;
+  height: 27px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.stq-field-map-zoom button + button {
+  border-top: 1px solid rgba(231, 221, 211, 0.74);
 }
 
 .stq-field-map-topbar .stq-field-map-edit-toggle.active,
@@ -5711,6 +5859,38 @@
   height: 100%;
   overflow: hidden;
   background: #e8dfdb;
+  touch-action: none;
+}
+
+.stq-phone-author-map {
+  position: absolute !important;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.stq-phone-author-map > div,
+.stq-phone-author-map .maplibregl-map,
+.stq-phone-author-map .maplibregl-canvas-container,
+.stq-phone-author-map .maplibregl-canvas {
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.stq-phone-author-map .maplibregl-canvas {
+  cursor: grab;
+}
+
+.stq-phone-author-map .maplibregl-canvas:active {
+  cursor: grabbing;
+}
+
+.stq-phone-author-map .stq-station-marker {
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .stq-phone-map-workspace .stq-map-shell,
@@ -5737,7 +5917,7 @@
 
 .stq-phone-map-title-pill {
   position: absolute;
-  top: 88px;
+  top: max(7.6dvh, calc(env(safe-area-inset-top) + 7.6dvh));
   left: 16px;
   right: 16px;
   z-index: 20;
@@ -5793,7 +5973,7 @@
 
 .stq-phone-map-edit-pill {
   position: absolute;
-  top: 162px;
+  top: max(15.4dvh, calc(env(safe-area-inset-top) + 15.4dvh));
   right: 16px;
   z-index: 20;
 }
@@ -5801,8 +5981,8 @@
 .stq-phone-map-edit-pill button {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   border: 0;
   border-radius: 999px;
   background: #a0463d;
@@ -5822,11 +6002,30 @@
 
 .stq-phone-map-tools {
   position: absolute;
-  top: 374px;
-  right: 16px;
+  top: max(15.4dvh, calc(env(safe-area-inset-top) + 15.4dvh));
+  left: 16px;
+  right: auto;
   z-index: 20;
   display: grid;
   gap: 8px;
+}
+
+.stq-phone-map-tools button {
+  width: 42px;
+  height: 42px;
+}
+
+.stq-phone-map-tools button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.stq-phone-map-tools button.is-active {
+  background: #a0463d;
+  color: white;
+  box-shadow:
+    0 2px 6px rgba(42, 25, 17, 0.22),
+    0 0 0 4px rgba(160, 70, 61, 0.18);
 }
 
 .stq-phone-map-layers {
@@ -5836,7 +6035,8 @@
 .stq-phone-map-layers-menu {
   position: absolute;
   top: 0;
-  right: 40px;
+  left: 40px;
+  right: auto;
   display: grid;
   min-width: 126px;
   gap: 4px;
@@ -5900,7 +6100,7 @@
   bottom: 42px;
   z-index: 24;
   min-height: 66px;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.96);
   padding: 12px 12px;
@@ -5919,7 +6119,7 @@
   width: calc(100% - 40px);
   min-height: 42px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   scrollbar-width: none;
 }
 
@@ -5947,6 +6147,21 @@
   font-weight: 900;
 }
 
+.stq-phone-map-progress-select {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  overflow: visible;
+}
+
 .stq-phone-map-dock-info {
   width: 28px;
   height: 28px;
@@ -5962,6 +6177,7 @@
 }
 
 .stq-phone-map-progress-icon {
+  position: relative;
   display: grid;
   place-items: center;
   width: 24px;
@@ -5970,12 +6186,15 @@
   font-size: 16px;
   line-height: 1;
   transform: translateY(0);
+  z-index: 1;
 }
 
 .stq-phone-map-progress-number {
   position: absolute;
-  top: -3px;
-  right: -1px;
+  top: auto;
+  right: auto;
+  bottom: 2%;
+  left: 2%;
   display: grid;
   place-items: center;
   min-width: 15px;
@@ -5986,7 +6205,9 @@
   padding: 0 4px;
   font-size: 9px;
   font-weight: 900;
-  z-index: 2;
+  transform: none;
+  pointer-events: none;
+  z-index: 20;
 }
 
 .stq-phone-map-progress-item.is-active {
@@ -6005,22 +6226,349 @@
 
 .stq-phone-map-progress-delete {
   position: absolute;
-  top: -7px;
-  right: -7px;
+  top: 0;
+  right: 0;
   display: grid;
   place-items: center;
-  width: 17px;
-  height: 17px;
+  width: 22px;
+  height: 22px;
   border: 2px solid #f8efe8;
   border-radius: 999px;
   background: #a0463d;
   color: white;
   padding: 0;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 1;
   box-shadow: 0 2px 6px rgba(42, 25, 17, 0.22);
+  cursor: pointer;
   z-index: 5;
+}
+
+.stq-phone-map-workspace .stq-station-marker-delete {
+  top: -9px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
+.stq-phone-station-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 26;
+  height: calc(100% - 110px);
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: #f8efe8;
+  box-shadow: 0 -16px 34px rgba(70, 40, 30, 0.22);
+}
+
+.stq-phone-station-sheet-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-height: 37px;
+  background: rgba(248, 239, 232, 0.96);
+  padding: 7px 14px 5px;
+}
+
+.stq-phone-station-sheet-handle {
+  width: 28px;
+  height: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(26, 26, 26, 0.2);
+  padding: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.stq-phone-station-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.stq-phone-station-sheet-hint {
+  color: rgba(70, 40, 30, 0.42);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stq-phone-station-sheet-scroll {
+  height: calc(100% - 37px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.stq-phone-station-sheet-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay {
+  position: relative;
+  min-height: 100%;
+  overflow: visible;
+  background: transparent;
+}
+
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay .stq-riddle-floating-title,
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay .stq-riddle-author-top-actions {
+  display: none;
+}
+
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay .stq-riddle-sheet {
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 16px 96px;
+}
+
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay .stq-riddle-sheet-handle {
+  display: none;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-hero {
+  margin: 0 0 10px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-image {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #fffaf9;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-image img,
+.stq-phone-station-sheet .stq-riddle-map-card-image-placeholder {
+  aspect-ratio: 16 / 9.6;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-actions {
+  top: 8px;
+  right: 8px;
+  left: auto;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-action {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-action--image,
+.stq-phone-station-sheet .stq-riddle-map-card-action--danger {
+  background: #a0463d;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-icon {
+  top: 10px;
+  right: 28px;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-icon .stq-riddle-center-icon img,
+.stq-phone-station-sheet .stq-riddle-map-card-icon > img {
+  width: 24px;
+  height: 24px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-icon-action--icon {
+  right: -16px;
+  bottom: auto;
+  top: -12px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-icon-action::before {
+  width: 21px;
+  height: 21px;
+  background: #a0463d;
+}
+
+.stq-phone-station-sheet .stq-riddle-heading {
+  margin-bottom: 10px;
+  font-size: 19px;
+  line-height: 1.14;
+}
+
+.stq-phone-station-sheet .stq-riddle-heading-row--with-action .stq-riddle-heading {
+  padding-left: 0;
+  padding-right: 38px;
+}
+
+.stq-phone-station-sheet .stq-riddle-heading-actions {
+  right: 0;
+  left: auto;
+}
+
+.stq-phone-station-sheet .stq-riddle-heading-action {
+  width: 26px;
+  height: 26px;
+  background: #a0463d;
+}
+
+.stq-phone-station-sheet .stq-riddle-copy p {
+  margin: 0 0 11px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stq-phone-station-sheet .stq-riddle-section {
+  padding-bottom: 18px;
+}
+
+.stq-phone-station-sheet .stq-riddle-history-trigger {
+  min-height: 34px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.stq-map-preview-station-screen {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+}
+
+.stq-phone-station-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 20%),
+    #e8dfdb;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 100%;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(248, 239, 232, 0.2), rgba(248, 239, 232, 0.7)),
+    #e8dfdb;
+  pointer-events: auto;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-floating-title {
+  position: absolute;
+  top: 43px;
+  right: 14px;
+  bottom: auto;
+  left: 14px;
+  min-height: 45px;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  padding: 8px 10px;
+  z-index: 24;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-floating-title h1 {
+  font-size: 12px;
+  line-height: 1.16;
+}
+
+.stq-phone-station-screen .stq-riddle-title-back {
+  width: 30px;
+  height: 30px;
+}
+
+.stq-phone-station-screen .stq-riddle-author-top-actions {
+  position: absolute;
+  top: 94px;
+  right: 16px;
+  bottom: auto;
+  z-index: 26;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-sheet {
+  position: absolute;
+  top: 110px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-height: none;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: 12px 12px 0 0;
+  background: #f8efe8;
+  box-shadow: 0 -16px 34px rgba(70, 40, 30, 0.22);
+  padding: 14px 16px 96px;
+  pointer-events: auto;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-sheet-handle {
+  width: 28px;
+  height: 4px;
+  margin: 0 auto 16px;
+  background: rgba(26, 26, 26, 0.2);
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-hero {
+  margin: 0 0 10px;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-image {
+  border-radius: 8px;
+  background: #fffaf9;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-image img,
+.stq-phone-station-screen .stq-riddle-map-card-image-placeholder {
+  aspect-ratio: 16 / 9.6;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-icon {
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-icon .stq-riddle-center-icon img,
+.stq-phone-station-screen .stq-riddle-map-card-icon > img {
+  width: 24px;
+  height: 24px;
+}
+
+.stq-phone-station-screen .stq-riddle-heading {
+  margin-bottom: 10px;
+  font-size: 19px;
+  line-height: 1.14;
+}
+
+.stq-phone-station-screen .stq-riddle-copy p {
+  margin: 0 0 11px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stq-phone-station-screen .stq-riddle-section {
+  padding-bottom: 18px;
+}
+
+.stq-phone-station-screen .stq-riddle-history-trigger {
+  min-height: 34px;
+  border-radius: 7px;
+  font-size: 12px;
 }
 
 .stq-phone-map-dock-info {
@@ -6095,19 +6643,21 @@
 .stq-station-pillbar {
   position: absolute;
   left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
+  bottom: max(38px, calc(env(safe-area-inset-bottom) + 18px));
   z-index: 1100;
   display: flex;
   align-items: center;
-  max-width: calc(100% - 30px);
-  min-height: 92px;
-  gap: 14px;
+  width: calc(100% - 30px);
+  max-width: 620px;
+  min-height: 88px;
+  justify-content: space-between;
+  gap: 18px;
   overflow-x: auto;
   border: 1px solid rgba(231, 221, 211, 0.64);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.94);
-  padding: 12px 18px;
-  box-shadow: 0 16px 34px rgba(70, 40, 30, 0.22);
+  background: rgba(255, 255, 255, 0.96);
+  padding: 12px 24px;
+  box-shadow: 0 12px 28px rgba(35, 28, 24, 0.2);
   backdrop-filter: blur(14px);
   transform: translateX(-50%);
   scrollbar-width: none;
@@ -6120,8 +6670,8 @@
 .stq-station-pillbar button {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: 56px;
+  height: 56px;
   flex: none;
   border: 0;
   border-radius: 9999px;
@@ -6131,39 +6681,39 @@
 
 .stq-station-pillbar button.active {
   background: white;
-  box-shadow: 0 0 0 5px var(--stq-primary), 0 10px 22px rgba(70, 40, 30, 0.14);
+  box-shadow: 0 0 0 5px var(--stq-primary), 0 8px 18px rgba(70, 40, 30, 0.14);
 }
 
 .stq-station-pillbar .stq-riddle-center-icon {
   position: static;
-  width: 54px;
-  height: 54px;
+  width: 50px;
+  height: 50px;
   transform: none;
   box-shadow: none;
   background: transparent;
 }
 
 .stq-station-pillbar .stq-riddle-center-icon img {
-  max-width: 44px;
-  max-height: 44px;
+  max-width: 47px;
+  max-height: 47px;
 }
 
 .stq-station-pillbar .stq-riddle-center-icon span {
-  font-size: 18px;
+  font-size: 19px;
 }
 
 .stq-station-pillbar .stq-station-pillbar-info {
-  width: 58px;
-  height: 58px;
+  width: 46px;
+  height: 46px;
   background: var(--stq-primary);
   color: white;
   font-family: var(--stq-font-ui);
-  font-size: 34px;
+  font-size: 28px;
   font-weight: 800;
 }
 
 .stq-station-pillbar .stq-station-pillbar-next {
-  width: 48px;
+  width: 42px;
   color: var(--stq-text);
 }
 
@@ -7144,6 +7694,71 @@
   color: #8a807a;
 }
 
+.stq-station-icon-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--stq-border);
+  border-radius: 12px;
+  background: #fffaf9;
+  font-size: 13px;
+  color: var(--stq-text);
+}
+
+.stq-station-icon-current__preview {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.94);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(70, 40, 30, 0.10);
+}
+
+.stq-station-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.stq-station-icon-tile {
+  display: grid;
+  place-items: center;
+  height: 70px;
+  border: 1px solid var(--stq-border);
+  border-radius: 14px;
+  background: #fffaf9;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+.stq-station-icon-tile:hover:not(:disabled) {
+  border-color: rgba(160, 70, 61, 0.45);
+  transform: translateY(-1px);
+}
+
+.stq-station-icon-tile.is-active {
+  border-color: var(--stq-primary);
+  background: rgba(160, 70, 61, 0.08);
+}
+
+.stq-station-icon-tile--add {
+  color: var(--stq-text-mute);
+  border-style: dashed;
+  background: transparent;
+}
+
+.stq-station-icon-tile--add:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .stq-stats-panel {
   display: flex;
   flex-direction: column;
@@ -7247,4 +7862,347 @@
   text-align: center;
   white-space: pre-line;
   line-height: 1.2;
+}
+
+.stq-phone-map-route-stats {
+  position: absolute;
+  bottom: 124px;
+  left: 16px;
+  z-index: 19;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 148px;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
+  border: 1px solid #e7ddd3;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(70, 40, 30, 0.12);
+}
+
+.stq-phone-map-route-stats span {
+  color: #a0463d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.stq-phone-map-route-stats strong {
+  color: #1a1a1a;
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.stq-phone-map-route-stats small {
+  color: #5a5350;
+  font-size: 12px;
+}
+
+.stq-phone-map-progress-item.is-static {
+  cursor: default;
+}
+
+.stq-phone-map-progress-item.is-static .stq-phone-map-progress-select {
+  cursor: default;
+  pointer-events: none;
+}
+
+.stq-phone-map-segment-arrow {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 28px;
+  margin: 0 -2px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #2196f3;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    transform 120ms ease;
+}
+
+.stq-phone-map-segment-arrow:hover {
+  background: rgba(33, 150, 243, 0.1);
+}
+
+.stq-phone-map-segment-arrow.is-active {
+  background: #2196f3;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(33, 150, 243, 0.32);
+  transform: translateY(-1px);
+}
+
+/* ───── Map workspace station sheet (slides up over the map) ───── */
+.stq-map-station-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 26;
+  display: flex;
+  flex-direction: column;
+  background: #f8efe8;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -14px 32px rgba(70, 40, 30, 0.28);
+  overflow: hidden;
+  transition: height 220ms ease;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.stq-map-station-sheet--collapsed {
+  height: 116px;
+}
+
+.stq-map-station-sheet--expanded {
+  height: 78%;
+}
+
+.stq-map-station-sheet-handle {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.stq-map-station-sheet-handle span {
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 8px auto 0;
+  border-radius: 9999px;
+  background: rgba(26, 26, 26, 0.28);
+}
+
+.stq-map-station-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.stq-map-station-sheet-collapsed {
+  flex: 1;
+  cursor: pointer;
+  padding: 4px 14px 12px;
+  display: flex;
+  align-items: center;
+}
+
+.stq-map-station-sheet-collapsed-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.stq-map-station-sheet-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(70, 40, 30, 0.12);
+}
+
+.stq-map-station-sheet-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fffaf9;
+  flex-shrink: 0;
+}
+
+.stq-map-station-sheet-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.stq-map-station-sheet-thumb-empty {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(144, 74, 72, 0.08) 0 6px,
+      rgba(144, 74, 72, 0.04) 6px 12px
+    );
+}
+
+.stq-map-station-sheet-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.stq-map-station-sheet-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(70, 40, 30, 0.6);
+}
+
+.stq-map-station-sheet-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2a1c14;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stq-map-station-sheet-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-screen--map-overlay {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  max-height: none;
+  overflow: visible;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-screen--map-overlay .stq-riddle-floating-title {
+  display: none;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-screen--map-overlay .stq-riddle-author-top-actions {
+  position: static;
+  margin: 0 14px 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-screen--map-overlay .stq-riddle-sheet {
+  position: relative;
+  inset: auto;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 14px 24px;
+  background: transparent;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-screen--map-overlay .stq-riddle-sheet-handle {
+  display: none;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-map-card-hero {
+  margin: 0 0 14px;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-heading {
+  font-size: 21px;
+  margin: 0 0 10px;
+  line-height: 1.22;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-history-header {
+  min-height: 0;
+  padding: 10px 14px;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-history-trigger {
+  min-height: 0;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1.22;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-history-trigger[aria-expanded="true"] {
+  transform: translateY(5px);
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-history-icon {
+  flex-basis: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-history-body {
+  padding: 12px 14px 16px;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-history-body .stq-riddle-heading {
+  margin-bottom: 14px;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-screen--map-overlay .stq-riddle-copy {
+  font-size: 14.5px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-screen--map-overlay .stq-riddle-copy p {
+  margin: 0 0 12px;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-heading-row--with-action .stq-riddle-heading {
+  padding-left: 0;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-settings-cog {
+  position: absolute;
+  top: -10px;
+  right: 22px;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid #f8efe8;
+  background: #a0463d;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  padding: 0;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(42, 25, 17, 0.22);
+  transform: scale(0.9);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    filter 120ms ease;
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-section:hover .stq-riddle-settings-cog,
+.stq-map-station-sheet-scroll .stq-riddle-settings-cog:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.stq-map-station-sheet-scroll .stq-riddle-settings-cog:hover,
+.stq-map-station-sheet-scroll .stq-riddle-settings-cog.is-active {
+  filter: brightness(1.05);
+  transform: scale(1.05);
 }

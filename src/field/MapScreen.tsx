@@ -1,7 +1,11 @@
 import type { Locale, RecordedRoutePoint, RiddleEntry, TourDraft } from '@/schema';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { AuthorMapBasemapKey } from '@/components/map/mapTypes';
-import type { AuthorMapCoordinate } from '@/components/map/mapTypes';
+import type {
+  AuthorMapBasemapKey,
+  AuthorMapControlAction,
+  AuthorMapCoordinate,
+} from '@/components/map/mapTypes';
+import { AUTHOR_MAP_BASEMAPS } from '@/components/map/mapTypes';
 import type { CurrentGps } from '@/components/studio/field/types';
 import { Icon } from '@/components/studio/Icon';
 import { calculateRouteLengthMeters } from '@/map/routePlanning';
@@ -40,6 +44,7 @@ interface Props {
   onPrev: () => void;
   onNext: () => void;
   onToggleGps: () => void;
+  onBasemapChange: (basemap: AuthorMapBasemapKey) => void;
   onChange: (recipe: (prev: TourDraft) => TourDraft) => void;
 }
 
@@ -65,9 +70,12 @@ export function MapScreen({
   onPrev,
   onNext,
   onToggleGps,
+  onBasemapChange,
   onChange,
 }: Props) {
   const [editTool, setEditTool] = useState<FieldMapEditTool>('station');
+  const [mapControlAction, setMapControlAction] =
+    useState<AuthorMapControlAction | null>(null);
   const [navigationSegment, setNavigationSegment] = useState<{
     from: AuthorMapCoordinate;
     to: AuthorMapCoordinate;
@@ -282,6 +290,19 @@ export function MapScreen({
     onChange((prev) => ({ ...prev, recordedRoute: [] }));
   }
 
+  function dispatchMapControl(type: AuthorMapControlAction['type']) {
+    setMapControlAction({ type, nonce: Date.now() });
+    if (type === 'recenter' && !gpsLive) {
+      onToggleGps();
+    }
+  }
+
+  function cycleBasemap() {
+    const keys = Object.keys(AUTHOR_MAP_BASEMAPS) as AuthorMapBasemapKey[];
+    const currentIndex = keys.indexOf(basemap);
+    onBasemapChange(keys[(currentIndex + 1) % keys.length] ?? keys[0]);
+  }
+
   function toggleEditTool() {
     setEditTool((current) => {
       const next = current === 'station' ? 'route' : 'station';
@@ -395,6 +416,7 @@ export function MapScreen({
         onStationCoordinateChange={changeStationCoordinate}
         onRoutePointCoordinateChange={changeRoutePointCoordinate}
         navigationSegment={navigationSegment}
+        controlAction={mapControlAction}
       />
       <div className="stq-field-map-topbar">
         <button
@@ -405,15 +427,6 @@ export function MapScreen({
         >
           <Icon name="chevron-left" size={20} />
           <span>{tourTitle}</span>
-        </button>
-        <button
-          type="button"
-          className={gpsLive ? 'active' : ''}
-          onClick={onToggleGps}
-          aria-pressed={gpsLive}
-        >
-          <Icon name="map-pin" size={16} />
-          {gpsLive && gps ? `GPS ±${Math.round(gps.accuracy)}m` : 'GPS'}
         </button>
         {authorMode && (
           <button
@@ -442,6 +455,41 @@ export function MapScreen({
           aria-pressed={authorMode}
         >
           <Icon name="edit" size={16} />
+        </button>
+      </div>
+      {authorMode && (
+        <div className="stq-field-map-controls" aria-label="Map controls">
+          <button
+            type="button"
+            onClick={() => dispatchMapControl('zoomIn')}
+            aria-label="Zoom in"
+          >
+            <Icon name="plus" size={18} stroke={2.2} />
+          </button>
+          <button
+            type="button"
+            onClick={cycleBasemap}
+            aria-label="Change map layer"
+            title={`Basemap: ${AUTHOR_MAP_BASEMAPS[basemap].label}`}
+          >
+            <Icon name="layers" size={16} />
+          </button>
+        </div>
+      )}
+      <div className="stq-field-map-zoom" aria-label="Zoom controls">
+        <button
+          type="button"
+          onClick={() => dispatchMapControl('zoomIn')}
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={() => dispatchMapControl('zoomOut')}
+          aria-label="Zoom out"
+        >
+          -
         </button>
       </div>
       {gpsError && <div className="stq-field-map-error">{gpsError}</div>}

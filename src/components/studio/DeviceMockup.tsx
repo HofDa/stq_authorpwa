@@ -6,6 +6,7 @@ interface Props {
   detail?: string;
   width?: number;
   height?: number;
+  contentClassName?: string;
 }
 
 export function DeviceMockup({
@@ -14,6 +15,7 @@ export function DeviceMockup({
   detail,
   width = 402,
   height = 870,
+  contentClassName,
 }: Props) {
   return (
     <div className="stq-device-mockup">
@@ -50,7 +52,15 @@ export function DeviceMockup({
             </svg>
           </div>
         </div>
-        <div className="stq-ios-device__content">{children}</div>
+        <div
+          className={
+            contentClassName
+              ? `stq-ios-device__content ${contentClassName}`
+              : 'stq-ios-device__content'
+          }
+        >
+          {children}
+        </div>
         <div className="stq-ios-device__home" aria-hidden />
       </div>
     </div>

@@ -81,6 +81,20 @@ type EditorTextKey =
   | 'studio.welcomeMessagePlaceholder'
   | 'studio.tourCover'
   | 'studio.tourImage'
+  | 'studio.stationImage'
+  | 'studio.stationIcon'
+  | 'studio.iconSelected'
+  | 'studio.addIcon'
+  | 'studio.stationTitle'
+  | 'studio.stationName'
+  | 'studio.storyHeading'
+  | 'studio.storyHeadingPlaceholder'
+  | 'studio.iconLabel'
+  | 'studio.storyParagraphsTitle'
+  | 'studio.paragraphPlaceholder'
+  | 'studio.historySectionTitle'
+  | 'studio.riddleSettings'
+  | 'studio.riddleSettingsHint'
   | 'studio.takePhoto'
   | 'studio.upload'
   | 'studio.imageSelected'
@@ -262,6 +276,20 @@ const TEXT: Record<Locale, EditorText> = {
     'studio.welcomeMessagePlaceholder': 'Pick a tour and start your adventure.',
     'studio.tourCover': 'Tour cover',
     'studio.tourImage': 'Tour image',
+    'studio.stationImage': 'Station image',
+    'studio.stationIcon': 'Station icon (map & corner)',
+    'studio.iconSelected': 'Icon selected',
+    'studio.addIcon': 'Add icon',
+    'studio.stationTitle': 'Station title',
+    'studio.stationName': 'Station name',
+    'studio.storyHeading': 'Story heading',
+    'studio.storyHeadingPlaceholder': 'e.g. The sweet secret',
+    'studio.iconLabel': 'Icon label',
+    'studio.storyParagraphsTitle': 'Story paragraphs',
+    'studio.paragraphPlaceholder': 'Paragraph text…',
+    'studio.historySectionTitle': 'Background information',
+    'studio.riddleSettings': 'Riddle settings',
+    'studio.riddleSettingsHint': 'Riddle type and behavior settings will live here.',
     'studio.takePhoto': 'Take photo',
     'studio.upload': 'Upload',
     'studio.imageSelected': 'Image selected',
@@ -443,6 +471,20 @@ const TEXT: Record<Locale, EditorText> = {
     'studio.welcomeMessagePlaceholder': 'Wähle eine Tour und starte dein Abenteuer.',
     'studio.tourCover': 'Tour-Cover',
     'studio.tourImage': 'Tour-Bild',
+    'studio.stationImage': 'Stationsbild',
+    'studio.stationIcon': 'Stations-Icon (Karte & Ecke)',
+    'studio.iconSelected': 'Icon ausgewählt',
+    'studio.addIcon': 'Icon hinzufügen',
+    'studio.stationTitle': 'Stations-Titel',
+    'studio.stationName': 'Stationsname',
+    'studio.storyHeading': 'Story-Überschrift',
+    'studio.storyHeadingPlaceholder': 'z. B. Das süße Geheimnis',
+    'studio.iconLabel': 'Icon-Label',
+    'studio.storyParagraphsTitle': 'Story-Absätze',
+    'studio.paragraphPlaceholder': 'Absatztext…',
+    'studio.historySectionTitle': 'Hintergrundinformationen',
+    'studio.riddleSettings': 'Rätsel-Einstellungen',
+    'studio.riddleSettingsHint': 'Hier kommen Rätsel-Typ und Verhaltens-Einstellungen.',
     'studio.takePhoto': 'Foto machen',
     'studio.upload': 'Hochladen',
     'studio.imageSelected': 'Bild ausgewählt',
@@ -624,6 +666,20 @@ const TEXT: Record<Locale, EditorText> = {
     'studio.welcomeMessagePlaceholder': 'Scegli un tour e inizia la tua avventura.',
     'studio.tourCover': 'Copertina tour',
     'studio.tourImage': 'Immagine tour',
+    'studio.stationImage': 'Immagine stazione',
+    'studio.stationIcon': 'Icona stazione (mappa e angolo)',
+    'studio.iconSelected': 'Icona selezionata',
+    'studio.addIcon': 'Aggiungi icona',
+    'studio.stationTitle': 'Titolo stazione',
+    'studio.stationName': 'Nome stazione',
+    'studio.storyHeading': 'Titolo della storia',
+    'studio.storyHeadingPlaceholder': 'es. Il dolce segreto',
+    'studio.iconLabel': 'Etichetta icona',
+    'studio.storyParagraphsTitle': 'Paragrafi della storia',
+    'studio.paragraphPlaceholder': 'Testo paragrafo…',
+    'studio.historySectionTitle': 'Informazioni di contesto',
+    'studio.riddleSettings': 'Impostazioni indovinello',
+    'studio.riddleSettingsHint': 'Qui andranno tipo di indovinello e impostazioni di comportamento.',
     'studio.takePhoto': 'Scatta foto',
     'studio.upload': 'Carica',
     'studio.imageSelected': 'Immagine selezionata',

@@ -3,6 +3,7 @@ import { AuthorMap } from '@/components/map/AuthorMap';
 import {
   AUTHOR_MAP_CURRENT_POSITION_STYLE_FIELD,
   type AuthorMapBasemapKey,
+  type AuthorMapControlAction,
   type AuthorMapCoordinate,
   toAuthorMapCoordinate,
 } from '@/components/map/mapTypes';
@@ -45,6 +46,7 @@ interface Props {
     progress: number;
     trigger: string;
   } | null;
+  controlAction?: AuthorMapControlAction | null;
 }
 
 const DEFAULT_CENTER = { lat: 46.6703, lng: 11.1594 };
@@ -69,6 +71,7 @@ export function MapView({
   onStationCoordinateChange,
   onRoutePointCoordinateChange,
   navigationSegment = null,
+  controlAction = null,
 }: Props) {
   const stationsWithCoordinates = stations.filter(hasUsableStationCoordinate);
   const selected = stations.find((station) => station.id === selectedStationId) ?? null;
@@ -124,6 +127,7 @@ export function MapView({
             }
           : null
       }
+      controlAction={controlAction}
       currentPositionStyle={AUTHOR_MAP_CURRENT_POSITION_STYLE_FIELD}
       basemap={basemap}
       onSelectStation={onSelectStation}

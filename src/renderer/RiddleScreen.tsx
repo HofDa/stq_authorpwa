@@ -48,6 +48,16 @@ interface Props {
   historyHeadingAction?: ReactNode;
   riddleHeadingAction?: ReactNode;
   successHeadingAction?: ReactNode;
+  editableRegions?: Partial<
+    Record<
+      'hero' | 'title' | 'story' | 'history' | 'riddle' | 'answers',
+      {
+        label: string;
+        active?: boolean;
+        onEdit: () => void;
+      }
+    >
+  >;
 }
 
 export function RiddleScreen({
@@ -79,6 +89,7 @@ export function RiddleScreen({
   historyHeadingAction,
   riddleHeadingAction,
   successHeadingAction,
+  editableRegions,
 }: Props) {
   const isMapOverlay = presentation === 'mapOverlay';
   const solvedView = solved && !authorMode;
@@ -132,26 +143,28 @@ export function RiddleScreen({
       <main className="stq-riddle-sheet">
         <div className="stq-riddle-sheet-handle" />
         {isMapOverlay && !solvedView && (
-          <div className="stq-riddle-map-card-hero">
-            <div className="stq-riddle-map-card-image">
-              {imageUrl ? (
-                <img src={imageUrl} alt="" />
-              ) : (
-                <div className="stq-riddle-map-card-image-placeholder">
-                  Bild hinzufügen
+          <EditableRegion config={editableRegions?.hero}>
+            <div className="stq-riddle-map-card-hero">
+              <div className="stq-riddle-map-card-image">
+                {imageUrl ? (
+                  <img src={imageUrl} alt="" />
+                ) : (
+                  <div className="stq-riddle-map-card-image-placeholder">
+                    Bild hinzufügen
+                  </div>
+                )}
+                <div className="stq-riddle-map-card-icon">
+                  <CenterIcon
+                    iconPath={iconPath}
+                    fallback={stationNumber}
+                    visual={stationVisual}
+                  />
+                  {mapIconAction}
                 </div>
-              )}
-              <div className="stq-riddle-map-card-icon">
-                <CenterIcon
-                  iconPath={iconPath}
-                  fallback={stationNumber}
-                  visual={stationVisual}
-                />
-                {mapIconAction}
+                {mapHeroAction}
               </div>
-              {mapHeroAction}
             </div>
-          </div>
+          </EditableRegion>
         )}
 
         {solvedView ? (
@@ -175,84 +188,104 @@ export function RiddleScreen({
           <>
             <div className="stq-render-target">
               {overlays?.firstSection}
-              <StoryText
-                blocks={story.blocks}
-                fallbackTitle={story.fallbackTitle}
-                leadImageUrl={isMapOverlay ? undefined : imageUrl}
-                leadImagePlaceholder={!isMapOverlay}
-                headingAction={isMapOverlay ? storyHeadingAction : undefined}
-              />
+              {editableRegions?.title ? (
+                <StoryText
+                  blocks={story.blocks}
+                  fallbackTitle={story.fallbackTitle}
+                  leadImageUrl={isMapOverlay ? undefined : imageUrl}
+                  leadImagePlaceholder={!isMapOverlay}
+                  headingAction={isMapOverlay ? storyHeadingAction : undefined}
+                  headingEditable={editableRegions.title}
+                  bodyEditable={editableRegions.story}
+                />
+              ) : (
+                <EditableRegion config={editableRegions?.story}>
+                  <StoryText
+                    blocks={story.blocks}
+                    fallbackTitle={story.fallbackTitle}
+                    leadImageUrl={isMapOverlay ? undefined : imageUrl}
+                    leadImagePlaceholder={!isMapOverlay}
+                    headingAction={isMapOverlay ? storyHeadingAction : undefined}
+                  />
+                </EditableRegion>
+              )}
             </div>
 
             <div className="stq-render-target">
               {overlays?.historySection}
-              <HistoryPanel
-                blocks={history.blocks}
-                fallbackTitle={history.fallbackTitle}
-                open={historyOpen}
-                onToggle={onHistoryToggle}
-                headingAction={isMapOverlay ? historyHeadingAction : undefined}
-              />
+              <EditableRegion config={editableRegions?.history}>
+                <HistoryPanel
+                  blocks={history.blocks}
+                  fallbackTitle={history.fallbackTitle}
+                  open={historyOpen}
+                  onToggle={onHistoryToggle}
+                  headingAction={isMapOverlay ? historyHeadingAction : undefined}
+                />
+              </EditableRegion>
             </div>
 
             <div className="stq-render-target">
               {overlays?.riddleSection}
-              <StoryText
-                blocks={riddle.blocks}
-                fallbackTitle={riddle.fallbackTitle}
-                centeredLines
-                headingAction={isMapOverlay ? riddleHeadingAction : undefined}
-              />
+              <EditableRegion config={editableRegions?.riddle}>
+                <StoryText
+                  blocks={riddle.blocks}
+                  fallbackTitle={riddle.fallbackTitle}
+                  centeredLines
+                  headingAction={isMapOverlay ? riddleHeadingAction : undefined}
+                />
+              </EditableRegion>
             </div>
 
-            <section className="stq-riddle-answer stq-riddle-section stq-render-target">
-              {overlays?.answers}
-              {isMapOverlay ? (
-                <div className="stq-riddle-choice-grid" aria-label="Antwortauswahl">
-                  {[0, 1, 2].map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      className={`stq-riddle-choice${
-                        selectedChoice === slot ? ' stq-riddle-choice--selected' : ''
-                      }`}
-                      aria-label={`Antwort ${slot + 1}`}
-                      aria-pressed={selectedChoice === slot}
-                      disabled={authorMode}
-                      onClick={() => setSelectedChoice(slot)}
-                    >
-                      <span className="stq-riddle-choice-arrow stq-riddle-choice-arrow--up" />
-                      <span
-                        className={`stq-riddle-choice-image stq-riddle-choice-image--${slot + 1}`}
-                      />
-                      <span className="stq-riddle-choice-arrow stq-riddle-choice-arrow--down" />
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  className="stq-riddle-answer-field"
-                  value={answerDraft}
-                  onChange={(event) => setAnswerDraft(event.target.value)}
-                  placeholder="Lösung"
-                  disabled={authorMode}
-                />
-              )}
-              <button
-                type="button"
-                className="stq-riddle-submit"
-                disabled={!canSubmit}
-                onClick={() => {
-                  if (authorMode) return;
-                  if (answerIsCorrect) setSuccessOpen(true);
-                }}
-              >
-                Lösung einreichen
-              </button>
-              <button type="button" className="stq-riddle-hint" disabled>
-                {hints.length > 0 ? 'Hinweis anzeigen' : 'Kein Hinweis'}
-              </button>
-            </section>
+            <EditableRegion config={editableRegions?.answers}>
+              <section className="stq-riddle-answer stq-riddle-section stq-render-target">
+                {overlays?.answers}
+                {isMapOverlay ? (
+                  <div className="stq-riddle-choice-grid" aria-label="Antwortauswahl">
+                    {[0, 1, 2].map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`stq-riddle-choice${
+                          selectedChoice === slot ? ' stq-riddle-choice--selected' : ''
+                        }`}
+                        aria-label={`Antwort ${slot + 1}`}
+                        aria-pressed={selectedChoice === slot}
+                        disabled={authorMode}
+                        onClick={() => setSelectedChoice(slot)}
+                      >
+                        <span className="stq-riddle-choice-arrow stq-riddle-choice-arrow--up" />
+                        <span
+                          className={`stq-riddle-choice-image stq-riddle-choice-image--${slot + 1}`}
+                        />
+                        <span className="stq-riddle-choice-arrow stq-riddle-choice-arrow--down" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <input
+                    className="stq-riddle-answer-field"
+                    value={answerDraft}
+                    onChange={(event) => setAnswerDraft(event.target.value)}
+                    placeholder="Lösung"
+                    disabled={authorMode}
+                  />
+                )}
+                <button
+                  type="button"
+                  className="stq-riddle-submit"
+                  disabled={!canSubmit}
+                  onClick={() => {
+                    if (authorMode) return;
+                    if (answerIsCorrect) setSuccessOpen(true);
+                  }}
+                >
+                  Lösung einreichen
+                </button>
+                <button type="button" className="stq-riddle-hint" disabled>
+                  {hints.length > 0 ? 'Hinweis anzeigen' : 'Kein Hinweis'}
+                </button>
+              </section>
+            </EditableRegion>
           </>
         )}
 
@@ -314,6 +347,37 @@ export function RiddleScreen({
           nextDisabled={isLast}
         />
       )}
+    </div>
+  );
+}
+
+function EditableRegion({
+  config,
+  children,
+}: {
+  config?: { label: string; active?: boolean; onEdit: () => void };
+  children: ReactNode;
+}) {
+  if (!config) return <>{children}</>;
+
+  return (
+    <div
+      className={`stq-editable-region${config.active ? ' stq-editable-region--active' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-label={config.label}
+      onClick={config.onEdit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          config.onEdit();
+        }
+      }}
+    >
+      {children}
+      <span className="stq-editable-pen" aria-hidden>
+        <Icon name="pen" size={12} />
+      </span>
     </div>
   );
 }

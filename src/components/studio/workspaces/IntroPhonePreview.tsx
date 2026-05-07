@@ -7,6 +7,7 @@ import { ContentSectionRenderer } from '@/renderer/ContentSectionRenderer';
 import { getTourTitleLabel } from '@/utils/localizedContent';
 import { EditPanel, type EditPanelField } from '../EditPanel';
 import { Icon } from '../Icon';
+import { TextBodyPanel } from './TextBodyPanel';
 
 interface Props {
   draft: TourDraft;
@@ -447,111 +448,6 @@ function PreStartHintsPanel({
   );
 }
 
-function TextBodyPanel({
-  blocks,
-  onChange,
-  placeholder,
-}: {
-  blocks: ContentBlock[];
-  onChange: (blocks: ContentBlock[]) => void;
-  placeholder: string;
-}) {
-  const { t } = useEditorLanguage();
-  const [entries, setEntries] = useState(() => {
-    const textEntries = blocksToTextEntries(blocks);
-    return textEntries.length > 0 ? textEntries : [''];
-  });
-
-  useEffect(() => {
-    const textEntries = blocksToTextEntries(blocks);
-    setEntries(textEntries.length > 0 ? textEntries : ['']);
-  }, [blocks]);
-
-  function commit(nextEntries: string[]) {
-    setEntries(nextEntries.length > 0 ? nextEntries : ['']);
-    onChange(
-      nextEntries
-        .map((text) => text.trim())
-        .filter(Boolean)
-        .map((text) => ({ type: 'paragraph', text })),
-    );
-  }
-
-  function setEntry(index: number, value: string) {
-    const next = entries.slice();
-    next[index] = value;
-    commit(next);
-  }
-
-  function addEntry() {
-    setEntries([...entries, '']);
-  }
-
-  function deleteEntry(index: number) {
-    commit(entries.filter((_, i) => i !== index));
-  }
-
-  function moveEntry(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= entries.length) return;
-    const next = entries.slice();
-    [next[index], next[target]] = [next[target], next[index]];
-    commit(next);
-  }
-
-  return (
-    <div className="stq-textbody-panel">
-      <div className="stq-textbody-panel-heading">
-        {t('studio.paragraphsOnePerEntry')}
-      </div>
-      <div className="stq-textbody-list">
-        {entries.map((entry, index) => (
-          <div className="stq-textbody-row" key={`${index}-${entries.length}`}>
-            <div className="stq-textbody-index">{index + 1}</div>
-            <textarea
-              className="stq-textbody-textarea"
-              value={entry}
-              placeholder={placeholder}
-              rows={3}
-              onChange={(e) => setEntry(index, e.target.value)}
-            />
-            <div className="stq-textbody-actions">
-              <button
-                type="button"
-                aria-label={t('studio.moveUp')}
-                disabled={index === 0}
-                onClick={() => moveEntry(index, -1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                aria-label={t('studio.moveDown')}
-                disabled={index === entries.length - 1}
-                onClick={() => moveEntry(index, 1)}
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                aria-label={t('studio.deleteEntry')}
-                disabled={entries.length === 1 && !entry.trim()}
-                onClick={() => deleteEntry(index)}
-              >
-                <Icon name="trash" size={13} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button type="button" className="stq-textbody-add" onClick={addEntry}>
-        <Icon name="plus" size={13} />
-        {t('studio.addEntry')}
-      </button>
-    </div>
-  );
-}
-
 function LinesPanel({
   blocks,
   selectedTheme,
@@ -726,14 +622,6 @@ function Editable({
       </span>
     </div>
   );
-}
-
-function blocksToTextEntries(blocks: ContentBlock[]): string[] {
-  return blocks
-    .filter((block) => block.type !== 'line')
-    .map((block) => ('text' in block ? block.text : ''))
-    .filter(Boolean)
-    .map((text) => text.trim());
 }
 
 function blocksToLineEntries(blocks: ContentBlock[]): string[] {

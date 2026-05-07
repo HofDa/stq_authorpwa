@@ -45,9 +45,7 @@ export function Studio({
   const [activeSection, setActiveSection] = useState<StudioWorkflowSection>(
     'plan',
   );
-  const [selectedId, setSelectedId] = useState<string | null>(
-    draft.stations[0]?.id ?? null,
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
   const { exportingDraftId, exportError, runExport } = useExportTour();
@@ -67,14 +65,11 @@ export function Studio({
   );
 
   useEffect(() => {
-    if (!selectedId && draft.stations.length > 0) {
-      setSelectedId(draft.stations[0].id);
-    }
     if (
       selectedId &&
       !draft.stations.some((s) => s.id === selectedId)
     ) {
-      setSelectedId(draft.stations[0]?.id ?? null);
+      setSelectedId(null);
     }
   }, [draft.stations, selectedId]);
 
@@ -195,7 +190,12 @@ export function Studio({
           }
         }}
         onLocaleChange={changeLanguage}
-        onViewChange={setActiveSection}
+        onViewChange={(next) => {
+          setActiveSection(next);
+          if (next === 'stations') {
+            setSelectedId(null);
+          }
+        }}
         selectedStationId={selectedId}
         reorderMode={reorderMode}
         onSelectStation={(stationId) => {
@@ -410,6 +410,8 @@ function renderWorkspaceBody(args: RenderWorkspaceArgs) {
         <RouteWorkspace
           draft={args.draft}
           locale={args.locale}
+          selectedId={args.selectedId}
+          onSelectStation={args.onSelectStation}
           onChange={args.onChange}
         />
       );

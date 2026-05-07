@@ -73,6 +73,13 @@ export interface AuthorMapViewport {
   currentPositionFlyToMaxZoom?: number;
 }
 
+export type AuthorMapControlActionType = 'zoomIn' | 'zoomOut' | 'recenter';
+
+export interface AuthorMapControlAction {
+  type: AuthorMapControlActionType;
+  nonce: number;
+}
+
 export type AuthorMapBasemapKey = 'streets' | 'outdoors' | 'satellite';
 
 export interface AuthorMapBasemap {
@@ -131,6 +138,9 @@ export interface AuthorMapProps {
   routePointMarkers?: AuthorMapRoutePointMarker[];
   selectedStationId?: string | null;
   currentPosition?: AuthorMapCurrentPosition | null;
+  controlAction?: AuthorMapControlAction | null;
+  controlZoomStep?: number;
+  manualDragPan?: boolean;
   selectionStyle?: AuthorMapSelectionStyle | null;
   currentPositionStyle?: AuthorMapCurrentPositionStyle;
   basemap?: AuthorMapBasemapKey;

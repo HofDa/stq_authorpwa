@@ -39,7 +39,9 @@ export function FieldApp({
   const [authorMode, setAuthorMode] = useState(false);
   const [bottomSheetState, setBottomSheetState] =
     useState<BottomSheetState>('closed');
-  const [basemap] = useState<AuthorMapBasemapKey>(DEFAULT_AUTHOR_MAP_BASEMAP);
+  const [basemap, setBasemap] = useState<AuthorMapBasemapKey>(
+    DEFAULT_AUTHOR_MAP_BASEMAP,
+  );
   const [solvedStationIds, setSolvedStationIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -161,6 +163,7 @@ export function FieldApp({
       onPrev={() => step(-1)}
       onNext={() => step(1)}
       onToggleGps={toggleGps}
+      onBasemapChange={setBasemap}
       onChange={(recipe) => onChange(selectedDraft.draftId, recipe)}
     />
   );

@@ -30,16 +30,18 @@ interface MapLibreErrorEvent {
 
 const SELECTION_SOURCE_ID = 'stq-author-map-selection-source';
 const SELECTION_LAYER_ID = 'stq-author-map-selection-layer';
+const FAST_CAMERA_DURATION_MS = 120;
+const FAST_WHEEL_ZOOM_RATE = 1 / 50;
 
 /* Station marker geometry — must stay in lockstep with `.stq-station-marker`
    in `src/index.css`. The marker SVG (`buildStationMarkerSvg`) uses a 63×70
    viewBox where the pin's tip sits at y≈68.7. With a CSS box of 40×44 px
    the tip is at y ≈ 44 * (68.7/70) ≈ 43.2 px from the top, so the marker's
-   center sits ~21 px above its tip. We anchor at `center` and shift the
-   marker UP by 21 px (negative y in MapLibre's pixel space) so the tip
+   center sits ~27 px above its tip. We anchor at `center` and shift the
+   marker UP by 27 px (negative y in MapLibre's pixel space) so the tip
    lands on the geographic point — and we don't rely on `anchor: 'bottom'`,
    which forces MapLibre to re-measure the DOM box on every zoom. */
-const STATION_MARKER_TIP_OFFSET_PX: [number, number] = [0, -21];
+const STATION_MARKER_TIP_OFFSET_PX: [number, number] = [0, -27];
 
 export function MapLibreAuthorMap({
   stations,
@@ -54,6 +56,9 @@ export function MapLibreAuthorMap({
   currentPositionStyle = AUTHOR_MAP_CURRENT_POSITION_STYLE_PLANNER,
   routePointMarkers = [],
   basemap = DEFAULT_AUTHOR_MAP_BASEMAP,
+  controlAction = null,
+  controlZoomStep = 1,
+  manualDragPan = false,
   onSelectStation,
   draggableStationIds = [],
   deletableStationIds = [],
@@ -69,6 +74,7 @@ export function MapLibreAuthorMap({
   const initialCenterRef = useRef(viewport.center);
   const initialZoomRef = useRef(viewport.zoom);
   const initialZoomControlRef = useRef(zoomControl);
+  const initialManualDragPanRef = useRef(manualDragPan);
   const [styleReady, setStyleReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const stationMarkersRef = useRef<maplibregl.Marker[]>([]);
@@ -112,8 +118,27 @@ export function MapLibreAuthorMap({
       style: resolveMapLibreStyle(initialBasemapRef.current),
       center: toLngLat(initialCenterRef.current),
       zoom: initialZoomRef.current,
+      interactive: true,
+      dragPan: !initialManualDragPanRef.current,
+      scrollZoom: true,
+      boxZoom: true,
+      keyboard: true,
+      doubleClickZoom: true,
+      touchZoomRotate: true,
       attributionControl: false,
     });
+
+    if (initialManualDragPanRef.current) {
+      map.dragPan.disable();
+    } else {
+      map.dragPan.enable();
+    }
+    map.scrollZoom.enable();
+    map.scrollZoom.setWheelZoomRate(FAST_WHEEL_ZOOM_RATE);
+    map.boxZoom.enable();
+    map.keyboard.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoomRotate.enable();
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }));
     if (initialZoomControlRef.current) {
@@ -213,30 +238,23 @@ export function MapLibreAuthorMap({
     const nextStyle = resolveMapLibreStyle(basemap, null);
     setStyleReady(false);
     setMapError(null);
-    // DOM markers survive style changes, while style layers/sources do not.
-    // Remove everything explicitly before swapping styles so the effects can
-    // re-add a clean map state once the new style is ready.
-    removeStationMarkers(stationMarkersRef.current);
-    removeCurrentPositionMarker(currentPositionMarkerRef.current);
-    removeStationMarkers(routeEndpointMarkersRef.current);
-    removeStationMarkers(routePointMarkersRef.current);
-    currentPositionMarkerRef.current = null;
+    // DOM markers survive style changes. Only style-backed layers/sources need
+    // removal; otherwise a fast style swap can remove markers before React sees
+    // `styleReady=false`, leaving nothing to re-add them.
     removeRouteLayers(map, routeLayersRef.current);
     removeLayerAndSource(map, SELECTION_LAYER_ID, SELECTION_SOURCE_ID);
     routeLayersRef.current = [];
-    routeEndpointMarkersRef.current = [];
-    routePointMarkersRef.current = [];
     previousSelectedStationIdRef.current = null;
     map.setStyle(nextStyle);
-    const handleStyleData = () => {
+    const handleStyleLoad = () => {
       if (!map.isStyleLoaded()) return;
       setStyleReady(true);
       window.requestAnimationFrame(() => map.resize());
-      map.off('styledata', handleStyleData);
+      map.off('style.load', handleStyleLoad);
     };
-    map.on('styledata', handleStyleData);
+    map.on('style.load', handleStyleLoad);
     return () => {
-      map.off('styledata', handleStyleData);
+      map.off('style.load', handleStyleLoad);
     };
   }, [basemap]);
 
@@ -261,7 +279,7 @@ export function MapLibreAuthorMap({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !styleReady) {
+    if (!map) {
       return;
     }
 
@@ -310,8 +328,18 @@ export function MapLibreAuthorMap({
         deleteButton.className = 'stq-station-marker-delete';
         deleteButton.setAttribute('aria-label', `Delete station ${station.number}`);
         deleteButton.textContent = '×';
-        deleteButton.addEventListener('click', (event) => {
+        const stopDeleteInteraction = (event: Event) => {
+          event.preventDefault();
           event.stopPropagation();
+          event.stopImmediatePropagation();
+        };
+        deleteButton.addEventListener('pointerdown', stopDeleteInteraction);
+        deleteButton.addEventListener('mousedown', stopDeleteInteraction);
+        deleteButton.addEventListener('touchstart', stopDeleteInteraction, {
+          passive: false,
+        });
+        deleteButton.addEventListener('click', (event) => {
+          stopDeleteInteraction(event);
           onDeleteStationRef.current?.(station.id);
         });
         element.appendChild(deleteButton);
@@ -333,23 +361,28 @@ export function MapLibreAuthorMap({
         element,
         anchor: 'center',
         offset: STATION_MARKER_TIP_OFFSET_PX,
-        draggable,
+        draggable: false,
       })
         .setLngLat(toLngLat(station.coordinate))
         .addTo(map);
 
       if (draggable) {
-        marker.on('dragstart', () => {
-          handledDrag = true;
-          element.style.cursor = 'grabbing';
-        });
-        marker.on('dragend', () => {
-          element.style.cursor = 'grab';
-          const next = marker.getLngLat();
-          onStationCoordinateChangeRef.current?.(station.id, {
-            lat: next.lat,
-            lng: next.lng,
-          });
+        attachLiveStationMarkerDrag({
+          element,
+          map,
+          marker,
+          onDragStart: () => {
+            handledDrag = true;
+            element.style.cursor = 'grabbing';
+          },
+          onDragEnd: () => {
+            element.style.cursor = 'grab';
+            const next = marker.getLngLat();
+            onStationCoordinateChangeRef.current?.(station.id, {
+              lat: next.lat,
+              lng: next.lng,
+            });
+          },
         });
       }
 
@@ -357,7 +390,7 @@ export function MapLibreAuthorMap({
     });
 
     stationMarkersRef.current = markers;
-  }, [deletableStationIds, draggableStationIds, stations, selectedStationId, styleReady]);
+  }, [deletableStationIds, draggableStationIds, stations, selectedStationId]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -550,9 +583,11 @@ export function MapLibreAuthorMap({
     }
 
     if (viewport.fitToCoordinates.length === 1) {
+      map.stop();
       map.easeTo({
         center: toLngLat(viewport.fitToCoordinates[0]),
         zoom: viewport.fitMaxZoom ?? viewport.zoom,
+        duration: FAST_CAMERA_DURATION_MS,
       });
       return;
     }
@@ -562,9 +597,11 @@ export function MapLibreAuthorMap({
       bounds.extend(toLngLat(coordinate));
     }
 
+    map.stop();
     map.fitBounds(bounds, {
       padding: toPaddingOptions(viewport.fitPadding ?? [28, 28]),
       maxZoom: viewport.fitMaxZoom ?? 17,
+      duration: FAST_CAMERA_DURATION_MS,
     });
   }, [
     viewport.fitMaxZoom,
@@ -595,8 +632,10 @@ export function MapLibreAuthorMap({
     }
 
     previousSelectedStationIdRef.current = selectedStation.id;
+    map.stop();
     map.easeTo({
       center: toLngLat(selectedStation.coordinate),
+      duration: FAST_CAMERA_DURATION_MS,
     });
   }, [selectedStationId, stations, styleReady, viewport.panToSelectedStation]);
 
@@ -620,6 +659,160 @@ export function MapLibreAuthorMap({
     viewport.currentPositionFlyToMaxZoom,
     viewport.flyToCurrentPositionOnActivate,
   ]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady || !controlAction) {
+      return;
+    }
+
+    const zoomStep = Math.max(0.25, controlZoomStep);
+    if (controlAction.type === 'zoomIn') {
+      map.stop();
+      map.jumpTo({
+        zoom: Math.min(map.getMaxZoom(), map.getZoom() + zoomStep),
+      });
+      return;
+    }
+
+    if (controlAction.type === 'zoomOut') {
+      map.stop();
+      map.jumpTo({
+        zoom: Math.max(map.getMinZoom(), map.getZoom() - zoomStep),
+      });
+      return;
+    }
+
+    if (controlAction.type === 'recenter' && currentPosition) {
+      map.flyTo({
+        center: toLngLat(currentPosition.coordinate),
+        zoom: viewport.currentPositionFlyToMaxZoom ?? Math.max(map.getZoom(), 16),
+      });
+    }
+  }, [
+    controlAction,
+    controlZoomStep,
+    currentPosition,
+    styleReady,
+    viewport.currentPositionFlyToMaxZoom,
+  ]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const container = containerRef.current;
+    if (!map || !container) {
+      return;
+    }
+
+    if (!manualDragPan) {
+      map.dragPan.enable();
+      return;
+    }
+
+    map.dragPan.disable();
+
+    let activePointerId: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+    let downX = 0;
+    let downY = 0;
+    let didMove = false;
+    const TAP_SLOP_PX = 4;
+
+    const shouldIgnorePointer = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) {
+        return true;
+      }
+
+      return Boolean(
+        target.closest(
+          [
+            'button',
+            'a',
+            'input',
+            'textarea',
+            'select',
+            '[role="button"]',
+            '.maplibregl-marker',
+            '.stq-station-marker',
+            '.maplibregl-ctrl',
+          ].join(','),
+        ),
+      );
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.button !== 0 || shouldIgnorePointer(event.target)) {
+        return;
+      }
+
+      activePointerId = event.pointerId;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      downX = event.clientX;
+      downY = event.clientY;
+      didMove = false;
+      // Capture is taken lazily once we cross the tap-slop threshold,
+      // otherwise MapLibre's synthesized click never reaches onMapClick.
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) {
+        return;
+      }
+
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      if (!didMove) {
+        const totalDx = event.clientX - downX;
+        const totalDy = event.clientY - downY;
+        if (Math.hypot(totalDx, totalDy) > TAP_SLOP_PX) {
+          didMove = true;
+          try {
+            container.setPointerCapture(event.pointerId);
+          } catch {
+            /* capture can fail if the pointer was already released */
+          }
+        }
+      }
+
+      if (didMove && (deltaX !== 0 || deltaY !== 0)) {
+        map.panBy([-deltaX, -deltaY], { animate: false });
+        event.preventDefault();
+      }
+    };
+
+    const handlePointerEnd = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) {
+        return;
+      }
+
+      if (container.hasPointerCapture(event.pointerId)) {
+        container.releasePointerCapture(event.pointerId);
+      }
+      activePointerId = null;
+      // Only suppress default after a real drag, so taps still produce a
+      // click event for `onMapClick` consumers.
+      if (didMove) {
+        event.preventDefault();
+      }
+    };
+
+    container.addEventListener('pointerdown', handlePointerDown, true);
+    container.addEventListener('pointermove', handlePointerMove, true);
+    container.addEventListener('pointerup', handlePointerEnd, true);
+    container.addEventListener('pointercancel', handlePointerEnd, true);
+
+    return () => {
+      container.removeEventListener('pointerdown', handlePointerDown, true);
+      container.removeEventListener('pointermove', handlePointerMove, true);
+      container.removeEventListener('pointerup', handlePointerEnd, true);
+      container.removeEventListener('pointercancel', handlePointerEnd, true);
+    };
+  }, [manualDragPan, styleReady]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -656,6 +849,141 @@ function removeStationMarkers(markers: maplibregl.Marker[]) {
     marker.remove();
   }
   markers.length = 0;
+}
+
+function attachLiveStationMarkerDrag({
+  element,
+  map,
+  marker,
+  onDragStart,
+  onDragEnd,
+}: {
+  element: HTMLElement;
+  map: maplibregl.Map;
+  marker: maplibregl.Marker;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}) {
+  let active = false;
+  let moved = false;
+  let dragOffset = { x: 0, y: 0 };
+
+  const stop = (event: Event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+  };
+
+  const start = (clientX: number, clientY: number) => {
+    map.stop();
+    const pointerPoint = getMapClientPoint(map, clientX, clientY);
+    const markerPoint = map.project(marker.getLngLat());
+    dragOffset = {
+      x: pointerPoint.x - markerPoint.x,
+      y: pointerPoint.y - markerPoint.y,
+    };
+    active = true;
+    moved = false;
+    onDragStart();
+  };
+
+  const move = (clientX: number, clientY: number) => {
+    if (!active) return;
+    const pointerPoint = getMapClientPoint(map, clientX, clientY);
+    marker.setLngLat(
+      map.unproject([
+        pointerPoint.x - dragOffset.x,
+        pointerPoint.y - dragOffset.y,
+      ]),
+    );
+    moved = true;
+  };
+
+  const finish = () => {
+    if (!active) return;
+    active = false;
+    window.removeEventListener('mousemove', handleMouseMove, true);
+    window.removeEventListener('mouseup', handleMouseUp, true);
+    window.removeEventListener('touchmove', handleTouchMove, true);
+    window.removeEventListener('touchend', handleTouchEnd, true);
+    window.removeEventListener('touchcancel', handleTouchEnd, true);
+    onDragEnd();
+  };
+
+  const handleMouseMove = (event: MouseEvent) => {
+    move(event.clientX, event.clientY);
+    stop(event);
+  };
+
+  const handleMouseUp = (event: MouseEvent) => {
+    finish();
+    stop(event);
+  };
+
+  const handleTouchMove = (event: TouchEvent) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    move(touch.clientX, touch.clientY);
+    stop(event);
+  };
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    finish();
+    stop(event);
+  };
+
+  element.addEventListener(
+    'mousedown',
+    (event) => {
+      if (event.button !== 0) return;
+      if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
+        return;
+      }
+      start(event.clientX, event.clientY);
+      window.addEventListener('mousemove', handleMouseMove, true);
+      window.addEventListener('mouseup', handleMouseUp, true);
+      stop(event);
+    },
+    true,
+  );
+
+  element.addEventListener(
+    'touchstart',
+    (event) => {
+      if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
+        return;
+      }
+      const touch = event.touches[0];
+      if (!touch) return;
+      start(touch.clientX, touch.clientY);
+      window.addEventListener('touchmove', handleTouchMove, {
+        capture: true,
+        passive: false,
+      });
+      window.addEventListener('touchend', handleTouchEnd, true);
+      window.addEventListener('touchcancel', handleTouchEnd, true);
+      stop(event);
+    },
+    { capture: true, passive: false },
+  );
+
+  element.addEventListener(
+    'click',
+    (event) => {
+      if (!moved) return;
+      moved = false;
+      stop(event);
+    },
+    true,
+  );
+}
+
+function getMapClientPoint(map: maplibregl.Map, clientX: number, clientY: number) {
+  const rect = map.getCanvasContainer().getBoundingClientRect();
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+  };
 }
 
 function removeCurrentPositionMarker(marker: maplibregl.Marker | null) {
