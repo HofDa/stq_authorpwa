@@ -4,7 +4,7 @@
     {
       "id": "gps_enter_1",
       "type": "gps_enter",
-      "label": "Enter GPS radius",
+      "label": "Ort erreichen",
       "config": {
         "lat": 46.4983,
         "lng": 11.3548,
@@ -14,7 +14,7 @@
     {
       "id": "face_direction_1",
       "type": "compass_align",
-      "label": "Face direction",
+      "label": "Richtung finden",
       "config": {
         "targetDegrees": 180,
         "tolerance": 20

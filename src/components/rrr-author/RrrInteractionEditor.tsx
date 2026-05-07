@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RrrInteractionSchema } from '@/schema';
 import {
   RRR_MODULE_TYPES,
   RRR_MODULE_PRESETS,
+  buildFlatCondition,
+  conditionToFlatModuleIds,
   createRrrModuleFromPreset,
   getRrrWarnings,
+  isFlatCondition,
   repairRrrCondition,
   type RrrCondition,
+  type RrrFlatConditionType,
   type RrrModule,
   type RrrModuleType,
 } from '@/rrr';
@@ -14,16 +18,17 @@ import { RrrInteractionJsonEditor } from './RrrInteractionJsonEditor';
 import { RrrMockPreview } from './RrrMockPreview';
 import { RrrTemplatePicker } from './RrrTemplatePicker';
 import { RrrWarningsPanel } from './RrrWarningsPanel';
+import { Icon, type IconName } from '@/components/studio/Icon';
 import type { RrrInteractionEditorProps } from './types';
 
-type FlatConditionType = 'none' | RrrCondition['type'];
+type FlatConditionType = RrrFlatConditionType;
 
 const CONDITION_TYPE_LABELS: Record<FlatConditionType, string> = {
-  none: 'No condition',
-  module: 'Single module',
-  sequence: 'Sequence',
-  all_of: 'All of',
-  any_of: 'Any of',
+  none: 'Keine Lösungsregel',
+  module: 'Einzelner Baustein',
+  sequence: 'Nacheinander',
+  all_of: 'Alles muss erfüllt sein',
+  any_of: 'Eine Lösung reicht',
 };
 
 export function RrrInteractionEditor({
@@ -32,8 +37,9 @@ export function RrrInteractionEditor({
 }: RrrInteractionEditorProps) {
   const [moduleTypeToAdd, setModuleTypeToAdd] =
     useState<RrrModuleType>('text_answer');
+  const [expertMode, setExpertMode] = useState(false);
   const moduleCount = interaction.modules.length;
-  const conditionType = interaction.condition?.type ?? 'None';
+  const conditionType = interaction.condition?.type ?? 'none';
   const validation = RrrInteractionSchema.safeParse(interaction);
   const validationMessages = validation.success
     ? []
@@ -79,34 +85,45 @@ export function RrrInteractionEditor({
   }
 
   return (
-    <section className="stq-rrr-editor" aria-label="Reactive Riddle Runtime">
+    <section className="stq-rrr-editor" aria-label="Modulares Rätsel">
       <div className="stq-rrr-editor__header">
-        <h3>Reactive Riddle Runtime</h3>
-        <p>
-          Authoring shell for modular sensor-based riddles. Runtime evaluation
-          will live outside React.
-        </p>
+        <div>
+          <h3>Modulares Rätsel</h3>
+          <p>
+            Baue ein Rätsel aus mehreren Bausteinen und lege fest, wann es
+            gelöst ist.
+          </p>
+        </div>
+        <label className="stq-rrr-expert-toggle">
+          <input
+            type="checkbox"
+            checked={expertMode}
+            onChange={(event) => setExpertMode(event.target.checked)}
+          />
+          <span>Expertenmodus</span>
+        </label>
       </div>
 
       <dl className="stq-rrr-editor__summary">
         <div>
-          <dt>Modules</dt>
+          <dt>Bausteine</dt>
           <dd>{moduleCount}</dd>
         </div>
         <div>
-          <dt>Condition</dt>
-          <dd>{conditionType}</dd>
+          <dt>Lösungsregel</dt>
+          <dd>{CONDITION_TYPE_LABELS[conditionType]}</dd>
         </div>
       </dl>
 
       <RrrTemplatePicker
         hasExistingInteraction={interaction.modules.length > 0}
+        variant={moduleCount === 0 ? 'wizard' : 'compact'}
         onApply={(nextInteraction) => onChange(nextInteraction)}
       />
 
       <div className="stq-rrr-editor__add">
         <label className="stq-edit-panel-label" htmlFor="rrr-module-type">
-          Add module
+          Baustein hinzufügen
         </label>
         <div className="stq-rrr-editor__add-row">
           <select
@@ -128,15 +145,14 @@ export function RrrInteractionEditor({
             className="stq-rrr-editor__button"
             onClick={addModule}
           >
-            Add
+            Hinzufügen
           </button>
         </div>
       </div>
 
       {moduleCount === 0 && (
         <div className="stq-rrr-editor__empty">
-          No modules yet. Module and condition editing will be added in a later
-          PR.
+          Noch keine Bausteine vorhanden.
         </div>
       )}
 
@@ -146,6 +162,7 @@ export function RrrInteractionEditor({
             <RrrModuleEditor
               key={module.id}
               module={module}
+              expertMode={expertMode}
               onChange={(nextModule) => updateModule(module.id, nextModule)}
               onRemove={() => removeModule(module.id)}
             />
@@ -156,6 +173,7 @@ export function RrrInteractionEditor({
       <RrrConditionEditor
         modules={interaction.modules}
         condition={interaction.condition}
+        expertMode={expertMode}
         onChange={(condition) =>
           onChange({
             ...interaction,
@@ -164,28 +182,32 @@ export function RrrInteractionEditor({
         }
       />
 
-      <RrrMockPreview interaction={interaction} />
+      <RrrMockPreview interaction={interaction} expertMode={expertMode} />
 
-      <RrrWarningsPanel warnings={warnings} />
+      <RrrWarningsPanel warnings={warnings} expertMode={expertMode} />
 
-      <div
-        className={`stq-rrr-validation ${
-          validation.success ? 'is-valid' : 'is-invalid'
-        }`}
-      >
-        <div className="stq-rrr-validation__header">
-          <strong>{validation.success ? 'Valid' : 'Invalid'}</strong>
+      {expertMode && (
+        <div
+          className={`stq-rrr-validation ${
+            validation.success ? 'is-valid' : 'is-invalid'
+          }`}
+        >
+          <div className="stq-rrr-validation__header">
+            <strong>{validation.success ? 'Gültig' : 'Ungültig'}</strong>
+          </div>
+          {!validation.success && (
+            <ul>
+              {validationMessages.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
+          )}
         </div>
-        {!validation.success && (
-          <ul>
-            {validationMessages.map((message) => (
-              <li key={message}>{message}</li>
-            ))}
-          </ul>
-        )}
-      </div>
+      )}
 
-      <RrrInteractionJsonEditor interaction={interaction} onApply={onChange} />
+      {expertMode && (
+        <RrrInteractionJsonEditor interaction={interaction} onApply={onChange} />
+      )}
     </section>
   );
 }
@@ -193,27 +215,44 @@ export function RrrInteractionEditor({
 function RrrConditionEditor({
   modules,
   condition,
+  expertMode,
   onChange,
 }: {
   modules: RrrModule[];
   condition: RrrCondition | undefined;
+  expertMode: boolean;
   onChange: (condition: RrrCondition | undefined) => void;
 }) {
-  const moduleIds = modules.map((module) => module.id);
-  const moduleIdSet = new Set(moduleIds);
+  const moduleIds = useMemo(
+    () => modules.map((module) => module.id),
+    [modules],
+  );
+  const moduleIdSet = useMemo(() => new Set(moduleIds), [moduleIds]);
   const conditionType: FlatConditionType = condition?.type ?? 'none';
-  const selectedIds = conditionToFlatModuleIds(condition).filter((moduleId) =>
+  const flatModuleIds = conditionToFlatModuleIds(condition);
+  const selectedIds = flatModuleIds.filter((moduleId) =>
     moduleIdSet.has(moduleId),
   );
-  const invalidIds = conditionToFlatModuleIds(condition).filter(
-    (moduleId) => !moduleIdSet.has(moduleId),
-  );
+  const invalidIds = flatModuleIds.filter((moduleId) => !moduleIdSet.has(moduleId));
+  const sequenceStepIds = conditionType === 'sequence' ? flatModuleIds : selectedIds;
   const unsupportedNestedCondition = condition
     ? !isFlatCondition(condition)
     : false;
+  const [moduleIdToAdd, setModuleIdToAdd] = useState(moduleIds[0] ?? '');
+
+  useEffect(() => {
+    if (!moduleIdToAdd || !moduleIdSet.has(moduleIdToAdd)) {
+      setModuleIdToAdd(moduleIds[0] ?? '');
+    }
+  }, [moduleIdSet, moduleIdToAdd, moduleIds]);
 
   function setConditionType(nextType: FlatConditionType) {
-    if (nextType === 'none' || moduleIds.length === 0) {
+    if (nextType === 'none') {
+      onChange(undefined);
+      return;
+    }
+
+    if (moduleIds.length === 0) {
       onChange(undefined);
       return;
     }
@@ -232,32 +271,41 @@ function RrrConditionEditor({
   }
 
   function setListModule(index: number, moduleId: string) {
-    const nextIds = [...selectedIds];
+    const nextIds = [...getEditableListIds()];
     nextIds[index] = moduleId;
     onChange(buildFlatCondition(conditionType, nextIds));
   }
 
   function addListModule() {
+    if (moduleIds.length === 0) {
+      return;
+    }
+
+    const currentIds = getEditableListIds();
     const nextModuleId =
-      moduleIds.find((moduleId) => !selectedIds.includes(moduleId)) ??
-      moduleIds[0];
+      moduleIdToAdd ||
+      (moduleIds.find((moduleId) => !currentIds.includes(moduleId)) ??
+        moduleIds[0]);
     if (!nextModuleId) {
       return;
     }
-    onChange(buildFlatCondition(conditionType, [...selectedIds, nextModuleId]));
+    onChange(buildFlatCondition(conditionType, [...currentIds, nextModuleId]));
   }
 
   function removeListModule(index: number) {
-    const nextIds = selectedIds.filter((_, currentIndex) => currentIndex !== index);
+    const nextIds = getEditableListIds().filter(
+      (_, currentIndex) => currentIndex !== index,
+    );
     onChange(buildFlatCondition(conditionType, nextIds));
   }
 
   function moveListModule(index: number, delta: -1 | 1) {
+    const currentIds = getEditableListIds();
     const nextIndex = index + delta;
-    if (nextIndex < 0 || nextIndex >= selectedIds.length) {
+    if (nextIndex < 0 || nextIndex >= currentIds.length) {
       return;
     }
-    const nextIds = [...selectedIds];
+    const nextIds = [...currentIds];
     const [moved] = nextIds.splice(index, 1);
     nextIds.splice(nextIndex, 0, moved);
     onChange(buildFlatCondition(conditionType, nextIds));
@@ -270,24 +318,32 @@ function RrrConditionEditor({
     onChange(buildFlatCondition(conditionType, nextIds));
   }
 
+  function resetCondition() {
+    onChange(undefined);
+  }
+
+  function getEditableListIds(): string[] {
+    return conditionType === 'sequence' ? sequenceStepIds : selectedIds;
+  }
+
   return (
     <section className="stq-rrr-condition">
       <div className="stq-rrr-condition__header">
         <div>
-          <strong>Condition</strong>
-          <span>Choose how authored modules are combined.</span>
+          <strong>Lösungsregel</strong>
+          <span>Lege fest, wie die Bausteine zum Lösen kombiniert werden.</span>
         </div>
       </div>
 
       <label className="stq-rrr-field">
-        <span>Condition type</span>
+        <span>Art der Lösungsregel</span>
         <select
           className="stq-rrr-editor__select"
           value={conditionType}
           onChange={(event) =>
             setConditionType(event.target.value as FlatConditionType)
           }
-          disabled={moduleIds.length === 0}
+          disabled={moduleIds.length === 0 || unsupportedNestedCondition}
         >
           {Object.entries(CONDITION_TYPE_LABELS).map(([type, label]) => (
             <option key={type} value={type}>
@@ -299,27 +355,39 @@ function RrrConditionEditor({
 
       {moduleIds.length === 0 && (
         <div className="stq-rrr-editor__empty">
-          Add at least one module before creating a condition.
+          Füge zuerst mindestens einen Baustein hinzu.
         </div>
       )}
 
       {unsupportedNestedCondition && (
         <div className="stq-rrr-condition__warning">
-          This condition contains nested logic. The MVP editor only supports flat
-          module IDs; choose a condition type above to replace it.
+          <span>
+            Diese Lösungsregel ist zu komplex für die aktuelle Eingabemaske.
+            Setze sie zurück, um sie wieder hier zu bearbeiten.
+          </span>
+          <button
+            type="button"
+            className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
+            onClick={resetCondition}
+          >
+            Lösungsregel zurücksetzen
+          </button>
         </div>
       )}
 
       {invalidIds.length > 0 && (
         <div className="stq-rrr-condition__warning">
-          Invalid module reference{invalidIds.length === 1 ? '' : 's'}:{' '}
-          {invalidIds.join(', ')}
+          {expertMode
+            ? `Ungültige Baustein-Referenz${
+                invalidIds.length === 1 ? '' : 'en'
+              }: ${invalidIds.join(', ')}`
+            : 'Die Lösungsregel enthält einen gelöschten Baustein.'}
         </div>
       )}
 
-      {conditionType === 'module' && moduleIds.length > 0 && (
+      {!unsupportedNestedCondition && conditionType === 'module' && moduleIds.length > 0 && (
         <label className="stq-rrr-field">
-          <span>Module</span>
+          <span>Baustein</span>
           <select
             className="stq-rrr-editor__select"
             value={selectedIds[0] ?? moduleIds[0]}
@@ -327,64 +395,91 @@ function RrrConditionEditor({
           >
             {modules.map((module) => (
               <option key={module.id} value={module.id}>
-                {module.label} ({module.id})
+                {formatModuleOption(module, expertMode)}
               </option>
             ))}
           </select>
         </label>
       )}
 
-      {conditionType === 'sequence' && moduleIds.length > 0 && (
+      {!unsupportedNestedCondition && conditionType === 'sequence' && moduleIds.length > 0 && (
         <div className="stq-rrr-condition__list">
-          {selectedIds.map((moduleId, index) => (
+          {sequenceStepIds.map((moduleId, index) => (
             <div key={`${moduleId}-${index}`} className="stq-rrr-condition__row">
-              <select
-                className="stq-rrr-editor__select"
-                value={moduleId}
-                onChange={(event) => setListModule(index, event.target.value)}
-              >
-                {modules.map((module) => (
-                  <option key={module.id} value={module.id}>
-                    {module.label} ({module.id})
-                  </option>
-                ))}
-              </select>
+              <div className="stq-rrr-condition__step">
+                <strong>
+                  Schritt {index + 1}:{' '}
+                  {getModuleDisplayLabel(moduleId, modules, expertMode)}
+                </strong>
+                {!moduleIdSet.has(moduleId) && (
+                  <span>Dieser Baustein fehlt oder wurde gelöscht.</span>
+                )}
+              </div>
+              {moduleIdSet.has(moduleId) && (
+                <select
+                  className="stq-rrr-editor__select"
+                  value={moduleId}
+                  aria-label={`Baustein für Schritt ${index + 1}`}
+                  onChange={(event) => setListModule(index, event.target.value)}
+                >
+                  {modules.map((module) => (
+                    <option key={module.id} value={module.id}>
+                      {formatModuleOption(module, expertMode)}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button
                 type="button"
                 className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
                 disabled={index === 0}
                 onClick={() => moveListModule(index, -1)}
               >
-                Up
+                Nach oben
               </button>
               <button
                 type="button"
                 className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
-                disabled={index === selectedIds.length - 1}
+                disabled={index === sequenceStepIds.length - 1}
                 onClick={() => moveListModule(index, 1)}
               >
-                Down
+                Nach unten
               </button>
               <button
                 type="button"
                 className="stq-rrr-editor__button stq-rrr-editor__button--danger"
                 onClick={() => removeListModule(index)}
               >
-                Remove
+                Entfernen
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            className="stq-rrr-editor__button"
-            onClick={addListModule}
-          >
-            Add step
-          </button>
+          <div className="stq-rrr-condition__add-step">
+            <select
+              className="stq-rrr-editor__select"
+              value={moduleIdToAdd}
+              aria-label="Baustein für neuen Schritt"
+              onChange={(event) => setModuleIdToAdd(event.target.value)}
+            >
+              {modules.map((module) => (
+                <option key={module.id} value={module.id}>
+                  {formatModuleOption(module, expertMode)}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="stq-rrr-editor__button"
+              onClick={addListModule}
+            >
+              Schritt hinzufügen
+            </button>
+          </div>
         </div>
       )}
 
-      {(conditionType === 'all_of' || conditionType === 'any_of') &&
+      {!unsupportedNestedCondition &&
+        (conditionType === 'all_of' || conditionType === 'any_of') &&
         moduleIds.length > 0 && (
           <div className="stq-rrr-condition__checks">
             {modules.map((module) => (
@@ -397,7 +492,7 @@ function RrrConditionEditor({
                   }
                 />
                 <span>
-                  {module.label} ({module.id})
+                  {formatModuleOption(module, expertMode)}
                 </span>
               </label>
             ))}
@@ -409,14 +504,19 @@ function RrrConditionEditor({
 
 function RrrModuleEditor({
   module,
+  expertMode,
   onChange,
   onRemove,
 }: {
   module: RrrModule;
+  expertMode: boolean;
   onChange: (module: RrrModule) => void;
   onRemove: () => void;
 }) {
   const config = module.config;
+  const [isEditing, setIsEditing] = useState(false);
+  const cardMeta = getModuleCardMeta(module);
+  const summary = getModuleSettingsSummary(module);
 
   function patchConfig(patch: Record<string, unknown>) {
     onChange({
@@ -431,86 +531,230 @@ function RrrModuleEditor({
   return (
     <article className="stq-rrr-module">
       <div className="stq-rrr-module__header">
-        <div>
-          <strong>{module.label}</strong>
-          <span>{module.id}</span>
+        <div className="stq-rrr-module__title-row">
+          <span className="stq-rrr-module__icon" aria-hidden="true">
+            <Icon name={cardMeta.icon} size={18} />
+          </span>
+          <div>
+            <strong>{cardMeta.title}</strong>
+            <span>{cardMeta.description}</span>
+            {expertMode && <code>{module.id}</code>}
+          </div>
         </div>
-        <button
-          type="button"
-          className="stq-rrr-editor__button stq-rrr-editor__button--danger"
-          onClick={onRemove}
-        >
-          Remove
-        </button>
+        <div className="stq-rrr-module__actions">
+          <button
+            type="button"
+            className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
+            onClick={() => setIsEditing((current) => !current)}
+            aria-expanded={isEditing}
+          >
+            <Icon name="edit" size={14} />
+            {isEditing ? 'Schließen' : 'Bearbeiten'}
+          </button>
+          <button
+            type="button"
+            className="stq-rrr-editor__button stq-rrr-editor__button--danger"
+            onClick={onRemove}
+          >
+            <Icon name="trash" size={14} />
+            Entfernen
+          </button>
+        </div>
       </div>
 
-      {module.type === 'text_answer' && (
-        <>
-          <label className="stq-rrr-field">
-            <span>Answer</span>
-            <input
-              type="text"
-              value={readString(config.answer)}
-              onChange={(event) => patchConfig({ answer: event.target.value })}
+      <dl className="stq-rrr-module__summary">
+        {summary.map((item) => (
+          <div key={item.label}>
+            <dt>{item.label}</dt>
+            <dd>{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {isEditing && (
+        <div className="stq-rrr-module__editor">
+          {module.type === 'text_answer' && (
+            <>
+              <label className="stq-rrr-field">
+                <span>Antwort</span>
+                <input
+                  type="text"
+                  value={readString(config.answer)}
+                  onChange={(event) =>
+                    patchConfig({ answer: event.target.value })
+                  }
+                />
+              </label>
+              <label className="stq-rrr-check">
+                <input
+                  type="checkbox"
+                  checked={Boolean(config.caseSensitive)}
+                  onChange={(event) =>
+                    patchConfig({ caseSensitive: event.target.checked })
+                  }
+                />
+                <span>Groß-/Kleinschreibung beachten</span>
+              </label>
+            </>
+          )}
+
+          {module.type === 'compass_align' && (
+            <div className="stq-rrr-field-grid">
+              <NumberField
+                label="Zielrichtung in Grad"
+                value={readNumber(config.targetDegrees)}
+                onChange={(value) => patchConfig({ targetDegrees: value })}
+              />
+              <NumberField
+                label="Toleranz"
+                value={readNumber(config.tolerance)}
+                onChange={(value) => patchConfig({ tolerance: value })}
+              />
+            </div>
+          )}
+
+          {module.type === 'hold_still' && (
+            <NumberField
+              label="Dauer in ms"
+              value={readNumber(config.durationMs)}
+              onChange={(value) => patchConfig({ durationMs: value })}
             />
-          </label>
-          <label className="stq-rrr-check">
-            <input
-              type="checkbox"
-              checked={Boolean(config.caseSensitive)}
-              onChange={(event) =>
-                patchConfig({ caseSensitive: event.target.checked })
-              }
-            />
-            <span>Case sensitive</span>
-          </label>
-        </>
-      )}
+          )}
 
-      {module.type === 'compass_align' && (
-        <div className="stq-rrr-field-grid">
-          <NumberField
-            label="Target degrees"
-            value={readNumber(config.targetDegrees)}
-            onChange={(value) => patchConfig({ targetDegrees: value })}
-          />
-          <NumberField
-            label="Tolerance"
-            value={readNumber(config.tolerance)}
-            onChange={(value) => patchConfig({ tolerance: value })}
-          />
-        </div>
-      )}
-
-      {module.type === 'hold_still' && (
-        <NumberField
-          label="Duration ms"
-          value={readNumber(config.durationMs)}
-          onChange={(value) => patchConfig({ durationMs: value })}
-        />
-      )}
-
-      {module.type === 'gps_enter' && (
-        <div className="stq-rrr-field-grid">
-          <NumberField
-            label="Latitude"
-            value={readNumber(config.lat)}
-            onChange={(value) => patchConfig({ lat: value })}
-          />
-          <NumberField
-            label="Longitude"
-            value={readNumber(config.lng)}
-            onChange={(value) => patchConfig({ lng: value })}
-          />
-          <NumberField
-            label="Radius meters"
-            value={readNumber(config.radiusMeters)}
-            onChange={(value) => patchConfig({ radiusMeters: value })}
-          />
+          {module.type === 'gps_enter' && (
+            <div className="stq-rrr-field-grid">
+              <NumberField
+                label="Breitengrad"
+                value={readNumber(config.lat)}
+                onChange={(value) => patchConfig({ lat: value })}
+              />
+              <NumberField
+                label="Längengrad"
+                value={readNumber(config.lng)}
+                onChange={(value) => patchConfig({ lng: value })}
+              />
+              <NumberField
+                label="Radius in Metern"
+                value={readNumber(config.radiusMeters)}
+                onChange={(value) => patchConfig({ radiusMeters: value })}
+              />
+            </div>
+          )}
         </div>
       )}
     </article>
   );
+}
+
+function getModuleCardMeta(module: RrrModule): {
+  title: string;
+  description: string;
+  icon: IconName;
+} {
+  switch (module.type) {
+    case 'text_answer':
+      return {
+        title: 'Antwort eingeben',
+        description: 'Spieler lösen den Schritt mit einer Texteingabe.',
+        icon: 'type',
+      };
+    case 'gps_enter':
+      return {
+        title: 'Am richtigen Ort stehen',
+        description: 'Der Schritt prüft eine simulierte Position am Zielort.',
+        icon: 'map-pin',
+      };
+    case 'compass_align':
+      return {
+        title: 'In eine Richtung schauen',
+        description: 'Der Schritt prüft die Blickrichtung per Kompasswert.',
+        icon: 'compass',
+      };
+    case 'hold_still':
+      return {
+        title: 'Handy ruhig halten',
+        description: 'Der Schritt wartet auf ruhiges Halten des Geräts.',
+        icon: 'hand',
+      };
+  }
+}
+
+function getModuleSettingsSummary(
+  module: RrrModule,
+): Array<{ label: string; value: string }> {
+  const config = module.config;
+  switch (module.type) {
+    case 'text_answer': {
+      const answer = readString(config.answer).trim();
+      return [
+        {
+          label: 'Antwort',
+          value: answer ? `"${answer}"` : 'Noch nicht festgelegt',
+        },
+        {
+          label: 'Schreibweise',
+          value: Boolean(config.caseSensitive)
+            ? 'Groß-/Kleinschreibung wichtig'
+            : 'Groß-/Kleinschreibung egal',
+        },
+      ];
+    }
+    case 'gps_enter':
+      return [
+        {
+          label: 'Zielort',
+          value: hasFiniteNumber(config.lat) && hasFiniteNumber(config.lng)
+            ? `${formatNumber(readNumber(config.lat), 5)}, ${formatNumber(
+                readNumber(config.lng),
+                5,
+              )}`
+            : 'Koordinaten fehlen',
+        },
+        {
+          label: 'Radius',
+          value: `${formatNumber(readNumber(config.radiusMeters), 0)} m`,
+        },
+      ];
+    case 'compass_align':
+      return [
+        {
+          label: 'Richtung',
+          value: `${formatNumber(readNumber(config.targetDegrees), 0)}°`,
+        },
+        {
+          label: 'Toleranz',
+          value: `±${formatNumber(readNumber(config.tolerance), 0)}°`,
+        },
+      ];
+    case 'hold_still': {
+      const durationMs = readNumber(config.durationMs);
+      return [
+        {
+          label: 'Dauer',
+          value:
+            durationMs >= 1000
+              ? `${formatNumber(durationMs / 1000, 1)} s`
+              : `${formatNumber(durationMs, 0)} ms`,
+        },
+      ];
+    }
+  }
+}
+
+function getModuleDisplayLabel(
+  moduleId: string,
+  modules: RrrModule[],
+  expertMode: boolean,
+): string {
+  const module = modules.find((entry) => entry.id === moduleId);
+  if (module) {
+    return module.label;
+  }
+  return expertMode ? `Fehlender Baustein (${moduleId})` : 'Fehlender Baustein';
+}
+
+function formatModuleOption(module: RrrModule, expertMode: boolean): string {
+  return expertMode ? `${module.label} (${module.id})` : module.label;
 }
 
 function NumberField({
@@ -522,79 +766,51 @@ function NumberField({
   value: number;
   onChange: (value: number) => void;
 }) {
+  const externalValue = Number.isFinite(value) ? String(value) : '';
+  const [inputValue, setInputValue] = useState(externalValue);
+  const parsedValue = Number(inputValue);
+  const invalid = inputValue.trim() !== '' && !Number.isFinite(parsedValue);
+
+  useEffect(() => {
+    setInputValue(externalValue);
+  }, [externalValue]);
+
+  function handleChange(nextValue: string) {
+    setInputValue(nextValue);
+    const parsed = Number(nextValue);
+    if (nextValue.trim() !== '' && Number.isFinite(parsed)) {
+      onChange(parsed);
+    }
+  }
+
   return (
     <label className="stq-rrr-field">
       <span>{label}</span>
       <input
         type="number"
-        value={Number.isFinite(value) ? String(value) : '0'}
-        onChange={(event) => onChange(readNumber(event.target.value))}
+        value={inputValue}
+        onChange={(event) => handleChange(event.target.value)}
+        aria-invalid={invalid || undefined}
       />
+      {invalid && (
+        <small className="stq-rrr-field__hint">Gib eine gültige Zahl ein.</small>
+      )}
     </label>
   );
 }
 
-function buildFlatCondition(
-  conditionType: FlatConditionType,
-  moduleIds: string[],
-): RrrCondition | undefined {
-  const cleanIds = moduleIds.filter(Boolean);
-  if (conditionType === 'none' || cleanIds.length === 0) {
-    return undefined;
-  }
-  if (conditionType === 'module') {
-    return {
-      type: 'module',
-      moduleId: cleanIds[0],
-    };
-  }
-  if (conditionType === 'sequence') {
-    return {
-      type: 'sequence',
-      children: cleanIds.map((moduleId) => ({
-        type: 'module',
-        moduleId,
-      })),
-    };
-  }
-  return {
-    type: conditionType,
-    children: cleanIds.map((moduleId) => ({
-      type: 'module',
-      moduleId,
-    })),
-  };
-}
-
-function conditionToFlatModuleIds(
-  condition: RrrCondition | undefined,
-): string[] {
-  if (!condition) {
-    return [];
-  }
-  if (condition.type === 'module') {
-    return [condition.moduleId];
-  }
-  return getConditionChildren(condition).flatMap((child) =>
-    child.type === 'module' ? [child.moduleId] : conditionToFlatModuleIds(child),
-  );
-}
-
-function isFlatCondition(condition: RrrCondition): boolean {
-  if (condition.type === 'module') {
-    return true;
-  }
-  return getConditionChildren(condition).every((child) => child.type === 'module');
-}
-
-function getConditionChildren(
-  condition: Exclude<RrrCondition, { type: 'module' }>,
-): RrrCondition[] {
-  return 'steps' in condition ? condition.steps : condition.children;
-}
-
 function readString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function hasFiniteNumber(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function formatNumber(value: number, maximumFractionDigits: number): string {
+  return new Intl.NumberFormat('de-DE', {
+    maximumFractionDigits,
+  }).format(value);
 }
 
 function readNumber(value: unknown): number {

@@ -5,10 +5,10 @@ import textAnswerExample from './examples/text-answer.example.json';
 
 export type RrrTemplateId =
   | 'simple_text_answer'
+  | 'gps_only'
   | 'compass_only'
   | 'compass_then_hold_still'
-  | 'gps_then_compass'
-  | 'any_text_or_compass';
+  | 'gps_then_compass';
 
 export interface RrrTemplate {
   id: RrrTemplateId;
@@ -23,69 +23,56 @@ const compassOnly: RrrInteraction = {
     {
       id: 'face_direction_1',
       type: 'compass_align',
-      label: 'Face direction',
+      label: 'Richtung finden',
       config: { targetDegrees: 0, tolerance: 15 },
     },
   ],
   condition: { type: 'module', moduleId: 'face_direction_1' },
 };
 
-const anyTextOrCompass: RrrInteraction = {
+const gpsOnly: RrrInteraction = {
   schemaVersion: 1,
   modules: [
     {
-      id: 'text_answer_1',
-      type: 'text_answer',
-      label: 'Text answer',
-      config: { answer: '', caseSensitive: false },
-    },
-    {
-      id: 'face_direction_1',
-      type: 'compass_align',
-      label: 'Face direction',
-      config: { targetDegrees: 0, tolerance: 15 },
+      id: 'gps_enter_1',
+      type: 'gps_enter',
+      label: 'Ort erreichen',
+      config: { lat: 0, lng: 0, radiusMeters: 20 },
     },
   ],
-  condition: {
-    type: 'any_of',
-    children: [
-      { type: 'module', moduleId: 'text_answer_1' },
-      { type: 'module', moduleId: 'face_direction_1' },
-    ],
-  },
+  condition: { type: 'module', moduleId: 'gps_enter_1' },
 };
 
 export const RRR_TEMPLATES: readonly RrrTemplate[] = [
   {
     id: 'simple_text_answer',
-    label: 'Simple text answer',
-    description: 'A single text-answer module is the only success condition.',
+    label: 'Frage mit Antwort',
+    description: 'Eine geschriebene Antwort löst das Rätsel.',
     interaction: textAnswerExample as RrrInteraction,
   },
   {
+    id: 'gps_only',
+    label: 'Am richtigen Ort stehen',
+    description: 'Der Zielbereich auf der Karte löst das Rätsel.',
+    interaction: gpsOnly,
+  },
+  {
     id: 'compass_only',
-    label: 'Compass only',
-    description: 'One compass module that succeeds near the target heading.',
+    label: 'In eine Richtung schauen',
+    description: 'Die Zielrichtung löst das Rätsel.',
     interaction: compassOnly,
   },
   {
     id: 'compass_then_hold_still',
-    label: 'Compass then hold still',
-    description: 'Face the right direction, then keep the device still.',
+    label: 'Richtung finden und Handy ruhig halten',
+    description: 'Richtung und Stillhalten müssen beide erfüllt sein.',
     interaction: compassHoldExample as RrrInteraction,
   },
   {
     id: 'gps_then_compass',
-    label: 'GPS then compass',
-    description: 'Reach the GPS radius first, then face the target direction.',
+    label: 'Ort erreichen, dann Richtung finden',
+    description: 'Erst den Zielbereich erreichen, dann die Zielrichtung finden.',
     interaction: gpsCompassSequenceExample as RrrInteraction,
-  },
-  {
-    id: 'any_text_or_compass',
-    label: 'Any of text answer or compass',
-    description:
-      'Either a text answer or facing the right direction satisfies the riddle.',
-    interaction: anyTextOrCompass,
   },
 ] as const;
 

@@ -29,6 +29,8 @@ interface Props {
   sections: RendererSection[];
   acceptedAnswers: string[];
   hints: string[];
+  showHintLabel?: string;
+  noHintLabel?: string;
   solved?: boolean;
   onSolved?: () => void;
   historyOpen: boolean;
@@ -50,10 +52,18 @@ interface Props {
   successHeadingAction?: ReactNode;
   editableRegions?: Partial<
     Record<
-      'hero' | 'title' | 'story' | 'history' | 'riddle' | 'answers',
+      | 'hero'
+      | 'title'
+      | 'story'
+      | 'history'
+      | 'riddle'
+      | 'riddleSettings'
+      | 'answers'
+      | 'successSection',
       {
         label: string;
         active?: boolean;
+        icon?: ReactNode;
         onEdit: () => void;
       }
     >
@@ -70,6 +80,8 @@ export function RiddleScreen({
   sections,
   acceptedAnswers,
   hints,
+  showHintLabel = 'Show hint',
+  noHintLabel = 'No hint',
   solved = false,
   onSolved,
   historyOpen,
@@ -95,11 +107,9 @@ export function RiddleScreen({
   const solvedView = solved && !authorMode;
   const [story, history, riddle, success] = sections;
   const [answerDraft, setAnswerDraft] = useState('');
-  const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const normalizedAnswers = acceptedAnswers.map(normalizeAnswer).filter(Boolean);
-  const submittedAnswer =
-    selectedChoice === null ? answerDraft : String(selectedChoice + 1);
+  const submittedAnswer = answerDraft;
   const canSubmit = authorMode || submittedAnswer.trim().length > 0;
   const answerIsCorrect =
     normalizedAnswers.length === 0 ||
@@ -236,40 +246,18 @@ export function RiddleScreen({
               </EditableRegion>
             </div>
 
-            <EditableRegion config={editableRegions?.answers}>
-              <section className="stq-riddle-answer stq-riddle-section stq-render-target">
-                {overlays?.answers}
-                {isMapOverlay ? (
-                  <div className="stq-riddle-choice-grid" aria-label="Antwortauswahl">
-                    {[0, 1, 2].map((slot) => (
-                      <button
-                        key={slot}
-                        type="button"
-                        className={`stq-riddle-choice${
-                          selectedChoice === slot ? ' stq-riddle-choice--selected' : ''
-                        }`}
-                        aria-label={`Antwort ${slot + 1}`}
-                        aria-pressed={selectedChoice === slot}
-                        disabled={authorMode}
-                        onClick={() => setSelectedChoice(slot)}
-                      >
-                        <span className="stq-riddle-choice-arrow stq-riddle-choice-arrow--up" />
-                        <span
-                          className={`stq-riddle-choice-image stq-riddle-choice-image--${slot + 1}`}
-                        />
-                        <span className="stq-riddle-choice-arrow stq-riddle-choice-arrow--down" />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <input
-                    className="stq-riddle-answer-field"
-                    value={answerDraft}
-                    onChange={(event) => setAnswerDraft(event.target.value)}
-                    placeholder="Lösung"
-                    disabled={authorMode}
-                  />
-                )}
+            <section className="stq-riddle-answer stq-riddle-section stq-render-target">
+              {overlays?.answers}
+              <EditableRegion
+                config={editableRegions?.riddleSettings}
+                className="stq-riddle-answer-edit-target"
+              >
+                <input
+                  className="stq-riddle-answer-field"
+                  value={answerDraft}
+                  onChange={(event) => setAnswerDraft(event.target.value)}
+                  disabled={authorMode}
+                />
                 <button
                   type="button"
                   className="stq-riddle-submit"
@@ -281,11 +269,16 @@ export function RiddleScreen({
                 >
                   Lösung einreichen
                 </button>
+              </EditableRegion>
+              <EditableRegion
+                config={editableRegions?.answers}
+                className="stq-riddle-hint-edit-target"
+              >
                 <button type="button" className="stq-riddle-hint" disabled>
-                  {hints.length > 0 ? 'Hinweis anzeigen' : 'Kein Hinweis'}
+                  {hints.length > 0 ? showHintLabel : noHintLabel}
                 </button>
-              </section>
-            </EditableRegion>
+              </EditableRegion>
+            </section>
           </>
         )}
 
@@ -301,7 +294,7 @@ export function RiddleScreen({
         )}
       </main>
 
-      {!authorMode && successOpen && (
+      {(successOpen || authorMode) && (
         <div className="stq-riddle-success-backdrop" role="presentation">
           <section
             className="stq-riddle-success-dialog"
@@ -320,7 +313,15 @@ export function RiddleScreen({
               </div>
             </div>
             <div className="stq-riddle-success-body">
-              <StoryText blocks={success.blocks} fallbackTitle={success.fallbackTitle} />
+              <EditableRegion
+                config={authorMode ? editableRegions?.successSection : undefined}
+                className="stq-riddle-success-edit-target"
+              >
+                <StoryText
+                  blocks={success.blocks}
+                  fallbackTitle={success.fallbackTitle}
+                />
+              </EditableRegion>
             </div>
             <div className="stq-riddle-success-footer">
               <button
@@ -353,16 +354,25 @@ export function RiddleScreen({
 
 function EditableRegion({
   config,
+  className,
   children,
 }: {
-  config?: { label: string; active?: boolean; onEdit: () => void };
+  config?: {
+    label: string;
+    active?: boolean;
+    icon?: ReactNode;
+    onEdit: () => void;
+  };
+  className?: string;
   children: ReactNode;
 }) {
   if (!config) return <>{children}</>;
 
   return (
     <div
-      className={`stq-editable-region${config.active ? ' stq-editable-region--active' : ''}`}
+      className={`stq-editable-region${config.active ? ' stq-editable-region--active' : ''}${
+        className ? ` ${className}` : ''
+      }`}
       role="button"
       tabIndex={0}
       aria-label={config.label}
@@ -376,7 +386,7 @@ function EditableRegion({
     >
       {children}
       <span className="stq-editable-pen" aria-hidden>
-        <Icon name="pen" size={12} />
+        {config.icon ?? <Icon name="pen" size={12} />}
       </span>
     </div>
   );

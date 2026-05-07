@@ -45,6 +45,16 @@ describe('getRrrWarnings', () => {
     expect(any).toContain('any_of_no_children');
   });
 
+  it('treats malformed composite conditions as empty instead of crashing', () => {
+    const result = codes({
+      schemaVersion: 1,
+      modules: [],
+      condition: { type: 'all_of' } as RrrInteraction['condition'],
+    });
+
+    expect(result).toContain('all_of_no_children');
+  });
+
   it('flags risky module configs', () => {
     const result = codes({
       schemaVersion: 1,

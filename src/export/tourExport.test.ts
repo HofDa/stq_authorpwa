@@ -187,6 +187,26 @@ describe('buildDraftExportZip', () => {
     expect(() => ExportRiddleEntrySchema.parse(station)).not.toThrow();
   });
 
+  it('reports a serialized validation error when a modular riddle has no interaction', async () => {
+    const draft = await draftWithAllBlobs();
+    draft.stations[0] = {
+      ...draft.stations[0],
+      riddleType: 'modular',
+      interaction: undefined,
+    };
+
+    const result = await buildDraftExportZip(draft);
+
+    expect(result.validationErrors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'stations.0.interaction',
+          message: 'Modular riddles require an interaction object for export.',
+        }),
+      ]),
+    );
+  });
+
   it('reports a serialized validation error for invalid modular interaction data', async () => {
     const draft = await draftWithAllBlobs();
     draft.stations[0] = {

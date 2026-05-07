@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
 import {
   createEmptyRrrInteraction,
-  formatAcceptedAnswersInput,
-  parseAcceptedAnswersInput,
   withRiddleType,
   type Locale,
   type RiddleEntry,
@@ -19,6 +17,7 @@ import { StationIconPreview } from '@/components/stations/StationVisualPreview';
 import { ImageAssetPanel } from '../ImageAssetPanel';
 import { Icon } from '../Icon';
 import type { EditPanelField } from '../EditPanel';
+import { EditableTextEntryList } from './EditableTextEntryList';
 import { TextBodyPanel } from './TextBodyPanel';
 
 export type StationEditPanelKey =
@@ -27,8 +26,11 @@ export type StationEditPanelKey =
   | 'story'
   | 'history'
   | 'riddle'
+  | 'successSection'
   | 'riddleSettings'
   | 'answers';
+
+const SECTION_SUCCESS_TITLE = 'Success';
 
 interface GetStationEditPanelArgs {
   panel: StationEditPanelKey;
@@ -56,7 +58,6 @@ export function getStationEditPanel({
   body?: ReactNode;
 } {
   const localized = station[locale];
-  const hints = [...localized.hints, '', '', ''].slice(0, 3);
 
   const panels: Record<
     StationEditPanelKey,
@@ -196,6 +197,41 @@ export function getStationEditPanel({
         />
       ),
     },
+    successSection: {
+      title: SECTION_SUCCESS_TITLE,
+      fields: [
+        {
+          id: 'station-success-heading',
+          label: t('studio.heading'),
+          type: 'text',
+          value: getFirstHeadingText(localized.successSection),
+          placeholder: SECTION_SUCCESS_TITLE,
+          onChange: (value) =>
+            onPatchLocale({
+              successSection: setFirstHeadingText(
+                localized.successSection,
+                value,
+              ),
+            }),
+        },
+      ],
+      body: (
+        <TextBodyPanel
+          blocks={localized.successSection.filter(
+            (block) => block.type !== 'heading',
+          )}
+          onChange={(nextParagraphs) => {
+            const headingBlocks = localized.successSection.filter(
+              (block) => block.type === 'heading',
+            );
+            onPatchLocale({
+              successSection: [...headingBlocks, ...nextParagraphs],
+            });
+          }}
+          placeholder={t('studio.paragraphPlaceholder')}
+        />
+      ),
+    },
     riddleSettings: {
       title: t('studio.riddleSettings'),
       fields: [],
@@ -205,47 +241,18 @@ export function getStationEditPanel({
       }),
     },
     answers: {
-      title: 'Answer and hints',
-      fields: [
-        {
-          id: 'station-answer',
-          label: t('studio.acceptedAnswers'),
-          type: 'text',
-          value: formatAcceptedAnswersInput(station.acceptedAnswers[locale]),
-          placeholder: t('studio.acceptedAnswersPlaceholder'),
-          onChange: (value) =>
-            onPatchStation({
-              acceptedAnswers: {
-                ...station.acceptedAnswers,
-                [locale]: parseAcceptedAnswersInput(value),
-              },
-            }),
-        },
-        {
-          id: 'station-hint-1',
-          label: t('studio.hint1'),
-          type: 'text',
-          value: hints[0],
-          placeholder: t('studio.hint1Placeholder'),
-          onChange: (value) => onPatchLocale({ hints: replaceHint(hints, 0, value) }),
-        },
-        {
-          id: 'station-hint-2',
-          label: t('studio.hint2'),
-          type: 'text',
-          value: hints[1],
-          placeholder: t('studio.hint2Placeholder'),
-          onChange: (value) => onPatchLocale({ hints: replaceHint(hints, 1, value) }),
-        },
-        {
-          id: 'station-hint-3',
-          label: t('studio.hint3'),
-          type: 'text',
-          value: hints[2],
-          placeholder: t('studio.hint3Placeholder'),
-          onChange: (value) => onPatchLocale({ hints: replaceHint(hints, 2, value) }),
-        },
-      ],
+      title: t('studio.hints'),
+      fields: [],
+      body: (
+        <EditableTextEntryList
+          sourceEntries={localized.hints}
+          onCommit={(hints) => onPatchLocale({ hints: hints.slice(0, 3) })}
+          heading={t('studio.hintLevels')}
+          placeholder={t('studio.hint1Placeholder')}
+          fixedEntryCount={3}
+          rows={2}
+        />
+      ),
     },
   };
 
@@ -289,7 +296,7 @@ function renderRiddleSettingsPanelBody({
           aria-pressed={isModular}
           onClick={() => onPatchStation(withRiddleType(station, 'modular'))}
         >
-          Modular / RRR
+          Modulares Rätsel
         </button>
       </div>
       {isModular && (
@@ -327,12 +334,6 @@ function setFirstHeadingText(
 
   if (!trimmed) return blocks;
   return [{ type: 'heading', text }, ...blocks];
-}
-
-function replaceHint(hints: string[], index: number, value: string): string[] {
-  const next = [...hints];
-  next[index] = value;
-  return next.map((hint) => hint.trim()).filter(Boolean).slice(0, 3);
 }
 
 function renderStationImageIconPanelBody({

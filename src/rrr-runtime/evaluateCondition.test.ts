@@ -104,6 +104,16 @@ describe('evaluateCondition', () => {
       ).status,
     ).toBe('failed');
   });
+
+  it('does not crash on malformed composite conditions from draft JSON', () => {
+    const malformedAllOf = { type: 'all_of' } as RrrCondition;
+    const malformedSequence = { type: 'sequence' } as RrrCondition;
+
+    expect(evaluateCondition(malformedAllOf, statuses({})).status).toBe('idle');
+    expect(evaluateCondition(malformedSequence, statuses({})).status).toBe(
+      'idle',
+    );
+  });
 });
 
 function statuses(

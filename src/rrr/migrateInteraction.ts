@@ -1,5 +1,4 @@
 import { RrrInteractionSchema, type RrrInteraction } from '@/schema';
-import { RRR_INTERACTION_VERSION } from './types';
 
 export const SUPPORTED_RRR_INTERACTION_VERSIONS = [1] as const;
 export type SupportedRrrInteractionVersion =
@@ -81,7 +80,8 @@ function resolveVersion(
   rawVersion: unknown,
 ): SupportedRrrInteractionVersion {
   if (rawVersion === undefined || rawVersion === null) {
-    return RRR_INTERACTION_VERSION;
+    // Unversioned legacy RRR interactions are always treated as V1.
+    return 1;
   }
   if (!isSupportedRrrInteractionVersion(rawVersion)) {
     throw new RrrInteractionMigrationError(

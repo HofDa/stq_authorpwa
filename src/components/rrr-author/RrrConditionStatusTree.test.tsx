@@ -7,14 +7,14 @@ import { RrrConditionStatusTree } from './RrrConditionStatusTree';
 const modules: Record<string, RrrModuleResult> = {
   module_1: {
     id: 'module_1',
-    label: 'Text answer',
+    label: 'Textantwort',
     type: 'text_answer',
     status: 'success',
     message: 'Answer matches',
   },
   hold_still_1: {
     id: 'hold_still_1',
-    label: 'Hold still',
+    label: 'Stillhalten',
     type: 'hold_still',
     status: 'running',
     message: 'Waiting for stillness',
@@ -35,9 +35,9 @@ describe('RrrConditionStatusTree', () => {
       <RrrConditionStatusTree condition={condition} modules={modules} />,
     );
 
-    expect(html).toContain('Step 2 of 2 is active');
-    expect(html).toContain('Active step');
-    expect(html).toContain('Hold still');
+    expect(html).toContain('Schritt 2 von 2 ist aktiv');
+    expect(html).toContain('Aktiver Schritt');
+    expect(html).toContain('Stillhalten');
   });
 
   it('shows missing module references', () => {
@@ -50,8 +50,8 @@ describe('RrrConditionStatusTree', () => {
       <RrrConditionStatusTree condition={condition} modules={modules} />,
     );
 
-    expect(html).toContain('Missing module deleted_module');
-    expect(html).toContain('failed');
+    expect(html).toContain('Fehlender Baustein deleted_module');
+    expect(html).toContain('Fehlgeschlagen');
   });
 
   it('explains all_of and any_of progress', () => {
@@ -74,11 +74,11 @@ describe('RrrConditionStatusTree', () => {
       renderToStaticMarkup(
         <RrrConditionStatusTree condition={allOf} modules={modules} />,
       ),
-    ).toContain('1 required item still missing');
+    ).toContain('1 nötiger Baustein fehlt noch');
     expect(
       renderToStaticMarkup(
         <RrrConditionStatusTree condition={anyOf} modules={modules} />,
       ),
-    ).toContain('Solved by option 2');
+    ).toContain('Gelöst durch Möglichkeit 2');
   });
 });

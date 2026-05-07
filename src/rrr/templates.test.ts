@@ -7,11 +7,14 @@ import {
 } from './templates';
 
 const REQUIRED_TEMPLATES: Array<{ id: RrrTemplateId; label: string }> = [
-  { id: 'simple_text_answer', label: 'Simple text answer' },
-  { id: 'compass_only', label: 'Compass only' },
-  { id: 'compass_then_hold_still', label: 'Compass then hold still' },
-  { id: 'gps_then_compass', label: 'GPS then compass' },
-  { id: 'any_text_or_compass', label: 'Any of text answer or compass' },
+  { id: 'simple_text_answer', label: 'Frage mit Antwort' },
+  { id: 'gps_only', label: 'Am richtigen Ort stehen' },
+  { id: 'compass_only', label: 'In eine Richtung schauen' },
+  {
+    id: 'compass_then_hold_still',
+    label: 'Richtung finden und Handy ruhig halten',
+  },
+  { id: 'gps_then_compass', label: 'Ort erreichen, dann Richtung finden' },
 ];
 
 describe('RRR_TEMPLATES', () => {
@@ -33,6 +36,17 @@ describe('RRR_TEMPLATES', () => {
       expect(result.success).toBe(true);
     },
   );
+
+  it('includes a GPS-only starter template', () => {
+    const template = getRrrTemplate('gps_only');
+
+    expect(template.interaction.modules).toHaveLength(1);
+    expect(template.interaction.modules[0].type).toBe('gps_enter');
+    expect(template.interaction.condition).toEqual({
+      type: 'module',
+      moduleId: template.interaction.modules[0].id,
+    });
+  });
 
   it('throws on unknown template ids', () => {
     expect(() => getRrrTemplate('nope' as RrrTemplateId)).toThrow();

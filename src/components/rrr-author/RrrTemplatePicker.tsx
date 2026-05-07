@@ -13,15 +13,17 @@ interface Props {
   hasExistingInteraction: boolean;
   /** Confirm prompt before overwriting; defaults to window.confirm. */
   confirmReplace?: (message: string) => boolean;
+  variant?: 'compact' | 'wizard';
   onApply: (interaction: RrrInteraction) => void;
 }
 
 const REPLACE_PROMPT =
-  'This replaces the current RRR modules and condition. Continue?';
+  'Das ersetzt die aktuellen Bausteine und die Lösungsregel. Fortfahren?';
 
 export function RrrTemplatePicker({
   hasExistingInteraction,
   confirmReplace,
+  variant = 'compact',
   onApply,
 }: Props) {
   const [selectedId, setSelectedId] = useState<RrrTemplateId>(
@@ -34,13 +36,14 @@ export function RrrTemplatePicker({
     [selectedId],
   );
 
-  function applySelected() {
+  function applyTemplate(template: RrrTemplate) {
     setError(null);
-    const validation = RrrInteractionSchema.safeParse(selected.interaction);
+    const validation = RrrInteractionSchema.safeParse(template.interaction);
     if (!validation.success) {
       setError(
-        `Template "${selected.label}" failed validation. ${
-          validation.error.issues[0]?.message ?? 'See JSON preview for details.'
+        `Vorlage "${template.label}" ist ungültig. ${
+          validation.error.issues[0]?.message ??
+          'Details stehen in der technischen Vorschau.'
         }`,
       );
       return;
@@ -55,10 +58,43 @@ export function RrrTemplatePicker({
     onApply(JSON.parse(JSON.stringify(validation.data)) as RrrInteraction);
   }
 
+  function applySelected() {
+    applyTemplate(selected);
+  }
+
+  if (variant === 'wizard') {
+    return (
+      <div className="stq-rrr-template-wizard">
+        <div className="stq-rrr-template-wizard__header">
+          <strong>Mit Vorlage starten</strong>
+          <span>Wähle einen einfachen Rätselablauf als Ausgangspunkt.</span>
+        </div>
+        <div className="stq-rrr-template-wizard__grid">
+          {RRR_TEMPLATES.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              className="stq-rrr-template-wizard__card"
+              onClick={() => applyTemplate(template)}
+            >
+              <strong>{template.label}</strong>
+              <span>{template.description}</span>
+            </button>
+          ))}
+        </div>
+        {error && (
+          <p className="stq-rrr-editor__template-error" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="stq-rrr-editor__template">
       <label className="stq-edit-panel-label" htmlFor="rrr-template-picker">
-        Start from template
+        Vorlage wählen
       </label>
       <div className="stq-rrr-editor__template-row">
         <select
@@ -81,7 +117,7 @@ export function RrrTemplatePicker({
           className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
           onClick={applySelected}
         >
-          Apply
+          Übernehmen
         </button>
       </div>
       <p className="stq-rrr-editor__template-description">

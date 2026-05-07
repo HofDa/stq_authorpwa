@@ -28,6 +28,6 @@ describe('RRR interaction templates', () => {
 
     first.modules[0].label = 'Changed';
 
-    expect(second.modules[0].label).toBe('Text answer');
+    expect(second.modules[0].label).toBe('Textantwort');
   });
 });

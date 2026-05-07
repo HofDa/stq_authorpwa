@@ -1,5 +1,9 @@
 import type { CSSProperties } from 'react';
-import type { RrrCondition } from '@/rrr';
+import {
+  getConditionChildren,
+  type RrrCondition,
+  type RrrConditionType,
+} from '@/rrr';
 import type { RrrModuleResult, RrrRuntimeStatus } from '@/rrr-runtime';
 
 interface RrrConditionStatusTreeProps {
@@ -15,8 +19,8 @@ export function RrrConditionStatusTree({
     return (
       <div className="stq-rrr-condition-status">
         <div className="stq-rrr-condition-status__header">
-          <strong>Condition tree</strong>
-          <span>No condition selected</span>
+          <strong>Lösungsregel-Ansicht</strong>
+          <span>Keine Lösungsregel gewählt</span>
         </div>
       </div>
     );
@@ -25,8 +29,8 @@ export function RrrConditionStatusTree({
   return (
     <div className="stq-rrr-condition-status">
       <div className="stq-rrr-condition-status__header">
-        <strong>Condition tree</strong>
-        <span>Debug view</span>
+        <strong>Lösungsregel-Ansicht</strong>
+        <span>Detailansicht</span>
       </div>
       <ConditionNode condition={condition} modules={modules} depth={0} />
     </div>
@@ -52,11 +56,11 @@ function ConditionNode({
         style={{ '--rrr-tree-depth': depth } as TreeDepthStyle}
       >
         <div>
-          <strong>module</strong>
+          <strong>Baustein</strong>
           <span>
             {module
               ? `${module.label} (${condition.moduleId})`
-              : `Missing module ${condition.moduleId}`}
+              : `Fehlender Baustein ${condition.moduleId}`}
           </span>
           {module && <small>{module.message}</small>}
         </div>
@@ -79,7 +83,7 @@ function ConditionNode({
         style={{ '--rrr-tree-depth': depth } as TreeDepthStyle}
       >
         <div>
-          <strong>{condition.type}</strong>
+          <strong>{getConditionTypeLabel(condition.type)}</strong>
           <span>{detail}</span>
         </div>
         <StatusBadge status={status} />
@@ -91,7 +95,7 @@ function ConditionNode({
               className="stq-rrr-condition-status__active"
               style={{ '--rrr-tree-depth': depth + 1 } as TreeDepthStyle}
             >
-              Active step
+              Aktiver Schritt
             </div>
           )}
           <ConditionNode condition={child} modules={modules} depth={depth + 1} />
@@ -140,19 +144,21 @@ function getConditionDetail(
   if (condition.type === 'sequence') {
     const activeStepIndex = getSequenceActiveStepIndex(children, modules);
     return activeStepIndex >= 0
-      ? `Step ${activeStepIndex + 1} of ${children.length} is active`
-      : `All ${children.length} steps complete`;
+      ? `Schritt ${activeStepIndex + 1} von ${children.length} ist aktiv`
+      : `Alle ${children.length} Schritte sind erfüllt`;
   }
   if (condition.type === 'all_of') {
     const missing = statuses.filter((status) => status !== 'success').length;
     return missing === 0
-      ? 'All required modules are complete'
-      : `${missing} required item${missing === 1 ? '' : 's'} still missing`;
+      ? 'Alle nötigen Bausteine sind erfüllt'
+      : `${missing} nötige${missing === 1 ? 'r' : ''} Baustein${
+          missing === 1 ? '' : 'e'
+        } fehlt${missing === 1 ? '' : 'en'} noch`;
   }
   const solvedIndex = statuses.findIndex((status) => status === 'success');
   return solvedIndex >= 0
-    ? `Solved by option ${solvedIndex + 1}`
-    : 'Waiting for any option to succeed';
+    ? `Gelöst durch Möglichkeit ${solvedIndex + 1}`
+    : 'Warte auf eine erfüllte Möglichkeit';
 }
 
 function getSequenceActiveStepIndex(
@@ -164,18 +170,38 @@ function getSequenceActiveStepIndex(
   );
 }
 
-function getConditionChildren(
-  condition: Exclude<RrrCondition, { type: 'module' }>,
-): RrrCondition[] {
-  return 'steps' in condition ? condition.steps : condition.children;
-}
-
 function StatusBadge({ status }: { status: RrrRuntimeStatus }) {
   return (
     <span className={`stq-rrr-status stq-rrr-status--${status}`}>
-      {status}
+      {getStatusLabel(status)}
     </span>
   );
+}
+
+function getStatusLabel(status: RrrRuntimeStatus): string {
+  switch (status) {
+    case 'idle':
+      return 'Bereit';
+    case 'running':
+      return 'Läuft';
+    case 'success':
+      return 'Erfüllt';
+    case 'failed':
+      return 'Fehlgeschlagen';
+  }
+}
+
+function getConditionTypeLabel(type: RrrConditionType): string {
+  switch (type) {
+    case 'module':
+      return 'Baustein';
+    case 'sequence':
+      return 'Nacheinander';
+    case 'all_of':
+      return 'Alles muss erfüllt sein';
+    case 'any_of':
+      return 'Eine Lösung reicht';
+  }
 }
 
 type TreeDepthStyle = CSSProperties & {

@@ -1,0 +1,44 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  height: 100vh;
+  padding: 28px 22px 18px;
+  background: #1a1614;
+  border-right: 1px solid #2c2520;
+  box-shadow: none;
+  color: #e8d8c8;
+  z-index: 30;
+  overflow: auto;
+}
+
+.brandTextWrapper {
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.brandMain {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f4e6d7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brandSub {
+  font-size: 10.5px;
+  color: #a89888;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.spacer {
+  flex: 1;
+  min-height: 12px;
+}
+
+.statusIcon {
+  color: var(--stq-success);
+}

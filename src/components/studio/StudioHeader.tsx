@@ -11,14 +11,7 @@ import type {
   StudioWorkflowSection,
   WorkflowStatus,
 } from './workflow/workflowTypes';
-
-/**
- * Backwards-compatible aliases. The shared `StudioWorkflowSection` /
- * `WorkflowStatus` types in `./workflow/workflowTypes` are the source of
- * truth; these re-exports keep older imports working during the refactor.
- */
-export type View = StudioWorkflowSection;
-export type ViewStatus = WorkflowStatus;
+import styles from './StudioHeader.module.css';
 
 interface Props {
   draft: TourDraft;
@@ -70,23 +63,7 @@ export function StudioHeader({
   const localizedTour = draft.tour[locale];
 
   return (
-    <aside
-      className="stq-author-tool-header"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 18,
-        minHeight: 0,
-        height: '100vh',
-        padding: '28px 22px 18px',
-        background: '#1a1614',
-        borderRight: '1px solid #2c2520',
-        boxShadow: 'none',
-        color: '#e8d8c8',
-        zIndex: 30,
-        overflow: 'auto',
-      }}
-    >
+    <aside className={`stq-author-tool-header ${styles.header}`}>
       <div className="stq-author-sidebar-brand">
         <button
           type="button"
@@ -107,38 +84,20 @@ export function StudioHeader({
               <path d="M16 5 L19 16 L16 27 L13 16 Z" fill="currentColor" />
             </svg>
           </span>
-          <div style={{ lineHeight: 1.1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: '#f4e6d7',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
+          <div className={styles.brandTextWrapper}>
+            <div className={styles.brandMain}>
               SouthTyrolQuests
             </div>
-            <div
-              style={{
-                fontSize: 10.5,
-                color: '#a89888',
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-              }}
-            >
+            <div className={styles.brandSub}>
               {t('studio.authorTool')}
             </div>
           </div>
         </button>
-        <label
-          className="stq-author-ui-lang"
-          aria-label="UI language"
-        >
+        <label className="stq-author-ui-lang">
           <select
             value={locale}
             onChange={(event) => onLocaleChange(event.target.value as Locale)}
+            aria-label="UI language"
           >
             <option value="de">DE</option>
             <option value="en">EN</option>
@@ -308,10 +267,10 @@ export function StudioHeader({
         </div>
       </div>
 
-      <div style={{ flex: 1, minHeight: 12 }} />
+      <div className={styles.spacer} />
 
       <div className="stq-author-sidebar-status">
-        <Icon name="check-circle" size={13} color="var(--stq-success)" />
+        <Icon name="check-circle" size={13} className={styles.statusIcon} />
         <span>{t('studio.savedLocally')} · {savedAgo}</span>
       </div>
 
@@ -394,7 +353,7 @@ function stationCountLabel(
 function useSavedAgo(updatedAt: number): string {
   const { t } = useEditorLanguage();
   return useMemo(() => {
-    const diff = Date.now() - updatedAt;
+    const diff = Math.max(0, Date.now() - updatedAt);
     const minutes = Math.floor(diff / 60000);
     if (minutes < 1) return t('studio.justNow');
     if (minutes < 60) return `${minutes}${t('studio.minutesAgo')}`;

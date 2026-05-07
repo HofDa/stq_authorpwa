@@ -54,15 +54,15 @@ export function RrrInteractionJsonEditor({
     <section className="stq-rrr-json-editor">
       <div className="stq-rrr-json-editor__header">
         <div>
-          <h4>Interaction JSON</h4>
-          <p>Paste a full interaction object and validate it before applying.</p>
+          <h4>Technische Vorschau</h4>
+          <p>Prüfe den technischen Rätselablauf, bevor du Änderungen übernimmst.</p>
         </div>
         <button
           type="button"
           className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
           onClick={copyJson}
         >
-          Copy JSON
+          JSON kopieren
         </button>
       </div>
 
@@ -75,7 +75,7 @@ export function RrrInteractionJsonEditor({
           setErrors([]);
           setStatus('idle');
         }}
-        aria-label="Interaction JSON"
+        aria-label="Technische Vorschau"
       />
 
       <div className="stq-rrr-json-editor__actions">
@@ -84,7 +84,7 @@ export function RrrInteractionJsonEditor({
           className="stq-rrr-editor__button"
           onClick={applyJson}
         >
-          Apply JSON
+          Änderungen übernehmen
         </button>
         {status !== 'idle' && (
           <span className="stq-rrr-json-editor__status">
@@ -116,7 +116,9 @@ function parseInteractionJson(
     return {
       success: false,
       errors: [
-        error instanceof Error ? `Invalid JSON: ${error.message}` : 'Invalid JSON.',
+        error instanceof Error
+          ? `Ungültiges JSON: ${error.message}`
+          : 'Ungültiges JSON.',
       ],
     };
   }
@@ -143,12 +145,12 @@ function getStatusLabel(
 ): string {
   switch (status) {
     case 'copied':
-      return 'Copied';
+      return 'Kopiert';
     case 'copy-failed':
-      return 'Copy unavailable';
+      return 'Kopieren nicht verfügbar';
     case 'applied':
-      return 'Applied';
+      return 'Übernommen';
     case 'invalid':
-      return 'Invalid JSON';
+      return 'Ungültiges JSON';
   }
 }

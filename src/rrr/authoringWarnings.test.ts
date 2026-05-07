@@ -34,6 +34,16 @@ describe('getRrrAuthoringWarnings', () => {
     ]);
   });
 
+  it('does not crash on malformed composite conditions from draft JSON', () => {
+    expect(
+      getRrrAuthoringWarnings({
+        schemaVersion: 1,
+        modules: [textModule('module_1', 'tower')],
+        condition: { type: 'sequence' } as RrrInteraction['condition'],
+      }),
+    ).toEqual([]);
+  });
+
   it('warns about fragile module config values', () => {
     const interaction: RrrInteraction = {
       schemaVersion: 1,

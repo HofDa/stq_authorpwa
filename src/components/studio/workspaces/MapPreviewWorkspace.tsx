@@ -205,6 +205,8 @@ export function MapPreviewWorkspace({
                 sections={stationSections}
                 acceptedAnswers={selectedStation.acceptedAnswers[locale]}
                 hints={selectedStation[locale].hints}
+                showHintLabel={t('studio.showHint')}
+                noHintLabel={t('studio.noHint')}
                 historyOpen={historyOpen}
                 onHistoryToggle={() => setHistoryOpen((open) => !open)}
                 presentation="mapOverlay"
@@ -216,20 +218,6 @@ export function MapPreviewWorkspace({
                 onNext={() => selectStationAt(selectedStationIndex + 1)}
                 isFirst={selectedStationIndex <= 0}
                 isLast={selectedStationIndex >= draft.stations.length - 1}
-                riddleHeadingAction={
-                  <button
-                    type="button"
-                    className={`stq-riddle-settings-cog${activeStationPanel === 'riddleSettings' ? ' is-active' : ''}`}
-                    aria-label={t('studio.riddleSettings')}
-                    title={t('studio.riddleSettings')}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setActiveStationPanel('riddleSettings');
-                    }}
-                  >
-                    <Icon name="settings" size={14} />
-                  </button>
-                }
                 editableRegions={{
                   hero: {
                     label: 'Edit station image',
@@ -256,10 +244,21 @@ export function MapPreviewWorkspace({
                     active: activeStationPanel === 'riddle',
                     onEdit: () => setActiveStationPanel('riddle'),
                   },
+                  riddleSettings: {
+                    label: t('studio.riddleSettings'),
+                    active: activeStationPanel === 'riddleSettings',
+                    icon: <Icon name="settings" size={12} />,
+                    onEdit: () => setActiveStationPanel('riddleSettings'),
+                  },
                   answers: {
-                    label: 'Edit answer and hints',
+                    label: t('studio.hints'),
                     active: activeStationPanel === 'answers',
                     onEdit: () => setActiveStationPanel('answers'),
+                  },
+                  successSection: {
+                    label: SECTION_LABELS.successSection,
+                    active: activeStationPanel === 'successSection',
+                    onEdit: () => setActiveStationPanel('successSection'),
                   },
                 }}
               />

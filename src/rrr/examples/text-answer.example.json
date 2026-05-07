@@ -4,7 +4,7 @@
     {
       "id": "module_1",
       "type": "text_answer",
-      "label": "Text answer",
+      "label": "Textantwort",
       "config": {
         "answer": "tower",
         "caseSensitive": false

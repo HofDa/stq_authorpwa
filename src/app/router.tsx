@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './AppLayout';
 import { TourListPage } from '@/pages/TourListPage';
 import { TourEditorPage } from '@/pages/TourEditorPage';
+import { RrrRuntimeDemo } from '@/pages/RrrRuntimeDemo';
 
 export const router = createBrowserRouter([
   {
@@ -11,6 +12,9 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/tours" replace /> },
       { path: 'tours', element: <TourListPage /> },
       { path: 'tours/:draftId', element: <TourEditorPage /> },
+      ...(import.meta.env.DEV
+        ? [{ path: 'rrr-runtime-demo', element: <RrrRuntimeDemo /> }]
+        : []),
     ],
   },
 ]);

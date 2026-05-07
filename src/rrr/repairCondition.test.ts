@@ -79,6 +79,12 @@ describe('repairRrrCondition', () => {
     expect(repairRrrCondition(condition, [])).toBeUndefined();
   });
 
+  it('clears malformed composite conditions instead of crashing', () => {
+    expect(
+      repairRrrCondition({ type: 'all_of' } as RrrCondition, ['module_1']),
+    ).toBeUndefined();
+  });
+
   it('keeps the repaired interaction schema-valid after deletion', () => {
     const condition: RrrCondition = {
       type: 'all_of',

@@ -8,6 +8,8 @@ interface EditableTextEntryListProps {
   heading: string;
   placeholder: string;
   inputMode?: 'textarea' | 'input';
+  fixedEntryCount?: number;
+  maxEntries?: number;
   rows?: number;
   rowClassName?: string;
 }
@@ -18,18 +20,22 @@ export function EditableTextEntryList({
   heading,
   placeholder,
   inputMode = 'textarea',
+  fixedEntryCount,
+  maxEntries,
   rows = 3,
   rowClassName,
 }: EditableTextEntryListProps) {
   const { t } = useEditorLanguage();
-  const [entries, setEntries] = useState(() => normalizeEntries(sourceEntries));
+  const [entries, setEntries] = useState(() =>
+    normalizeEntries(sourceEntries, fixedEntryCount),
+  );
 
   useEffect(() => {
-    setEntries(normalizeEntries(sourceEntries));
-  }, [sourceEntries]);
+    setEntries(normalizeEntries(sourceEntries, fixedEntryCount));
+  }, [fixedEntryCount, sourceEntries]);
 
   function commit(nextEntries: string[]) {
-    setEntries(normalizeEntries(nextEntries));
+    setEntries(normalizeEntries(nextEntries, fixedEntryCount));
     onCommit(nextEntries.map((text) => text.trim()).filter(Boolean));
   }
 
@@ -40,10 +46,19 @@ export function EditableTextEntryList({
   }
 
   function addEntry() {
+    if (maxEntries !== undefined && entries.length >= maxEntries) {
+      return;
+    }
     setEntries([...entries, '']);
   }
 
   function deleteEntry(index: number) {
+    if (fixedEntryCount !== undefined) {
+      const next = entries.slice();
+      next[index] = '';
+      commit(next);
+      return;
+    }
     commit(entries.filter((_, i) => i !== index));
   }
 
@@ -110,14 +125,27 @@ export function EditableTextEntryList({
           </div>
         ))}
       </div>
-      <button type="button" className="stq-textbody-add" onClick={addEntry}>
-        <Icon name="plus" size={13} />
-        {t('studio.addEntry')}
-      </button>
+      {fixedEntryCount === undefined && (
+        <button
+          type="button"
+          className="stq-textbody-add"
+          disabled={maxEntries !== undefined && entries.length >= maxEntries}
+          onClick={addEntry}
+        >
+          <Icon name="plus" size={13} />
+          {t('studio.addEntry')}
+        </button>
+      )}
     </>
   );
 }
 
-function normalizeEntries(entries: string[]): string[] {
+function normalizeEntries(entries: string[], fixedEntryCount?: number): string[] {
+  if (fixedEntryCount !== undefined) {
+    return [...entries, ...Array<string>(fixedEntryCount).fill('')].slice(
+      0,
+      fixedEntryCount,
+    );
+  }
   return entries.length > 0 ? entries : [''];
 }
