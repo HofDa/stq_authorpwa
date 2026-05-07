@@ -20,6 +20,14 @@ export interface RrrModuleResult {
   type: RrrModule['type'];
   status: RrrRuntimeStatus;
   message: string;
+  timeout?: {
+    timedOut: boolean;
+    retryable: boolean;
+    attempts: number;
+    maxAttempts?: number;
+    elapsedMs?: number;
+    timeoutMs: number;
+  };
 }
 
 export interface RrrConditionResult {
@@ -39,4 +47,6 @@ export interface RrrRuntimeEvaluationInput {
   mockState: RrrRuntimeMockState;
   userInput: RrrRuntimeUserInput;
   session?: RrrRuntimeSession;
+  activeModuleId?: string;
+  nowMs?: number;
 }

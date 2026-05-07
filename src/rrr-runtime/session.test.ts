@@ -71,15 +71,81 @@ describe('RRR runtime session state', () => {
         completedModuleIds: ['module_1'],
         activeSequenceIndex: 1,
         status: 'running',
+        attemptsByModuleId: {},
+        timedOutModuleIds: [],
       },
       { type: 'reset' },
     );
 
     expect(session).toEqual(resetRrrRuntimeSession());
   });
+
+  it('times out a configured sequence step and allows retry', () => {
+    const interaction = sequenceInteraction({
+      firstModuleTimeoutMs: 1000,
+      firstModuleMaxAttempts: 2,
+    });
+    let session = createRrrRuntimeSession();
+
+    const firstEvaluation = evaluateInteraction(
+      interaction,
+      { headingDegrees: 90, isStill: false },
+      {},
+      session,
+      { nowMs: 0 },
+    );
+    session = reduceRrrRuntimeSession(session, {
+      type: 'evaluation',
+      result: firstEvaluation,
+      nowMs: 0,
+    });
+
+    expect(firstEvaluation.modules.face_direction_1.status).toBe('running');
+    expect(session.activeStepStartedAtMs).toBe(0);
+
+    const timedOutEvaluation = evaluateInteraction(
+      interaction,
+      { headingDegrees: 90, isStill: false },
+      {},
+      session,
+      { nowMs: 1001 },
+    );
+    session = reduceRrrRuntimeSession(session, {
+      type: 'evaluation',
+      result: timedOutEvaluation,
+      nowMs: 1001,
+    });
+
+    expect(timedOutEvaluation.modules.face_direction_1.status).toBe('failed');
+    expect(timedOutEvaluation.modules.face_direction_1.timeout).toMatchObject({
+      timedOut: true,
+      retryable: true,
+      attempts: 1,
+      maxAttempts: 2,
+      timeoutMs: 1000,
+    });
+    expect(session.timedOutModuleIds).toContain('face_direction_1');
+    expect(session.attemptsByModuleId.face_direction_1).toBe(1);
+    expect(session.status).toBe('failed');
+
+    session = reduceRrrRuntimeSession(session, {
+      type: 'retry',
+      moduleId: 'face_direction_1',
+      nowMs: 1200,
+    });
+
+    expect(session.status).toBe('running');
+    expect(session.timedOutModuleIds).not.toContain('face_direction_1');
+    expect(session.activeStepStartedAtMs).toBe(1200);
+  });
 });
 
-function sequenceInteraction(): RrrInteraction {
+function sequenceInteraction(
+  options: {
+    firstModuleTimeoutMs?: number;
+    firstModuleMaxAttempts?: number;
+  } = {},
+): RrrInteraction {
   return {
     schemaVersion: 1,
     modules: [
@@ -88,6 +154,11 @@ function sequenceInteraction(): RrrInteraction {
         type: 'compass_align',
         label: 'Face direction',
         config: { targetDegrees: 0, tolerance: 10 },
+        timeoutMs: options.firstModuleTimeoutMs,
+        retry:
+          options.firstModuleMaxAttempts === undefined
+            ? undefined
+            : { maxAttempts: options.firstModuleMaxAttempts },
       },
       {
         id: 'hold_still_1',

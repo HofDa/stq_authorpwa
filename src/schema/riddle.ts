@@ -48,6 +48,13 @@ export const RrrModuleSchema = z.object({
   type: RrrModuleTypeSchema,
   label: z.string().trim().min(1),
   config: z.record(z.unknown()).default({}),
+  timeoutMs: z.number().int().positive().optional(),
+  retry: z
+    .object({
+      maxAttempts: z.number().int().positive().optional(),
+      resetOnFail: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 export const RrrConditionSchema: z.ZodType<RrrCondition> =

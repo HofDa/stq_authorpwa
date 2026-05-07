@@ -25,6 +25,7 @@ import { RrrMockPreview } from './RrrMockPreview';
 import { RrrTemplatePicker } from './RrrTemplatePicker';
 import { RrrWarningsPanel } from './RrrWarningsPanel';
 import { Icon, type IconName } from '@/components/studio/Icon';
+import { recommendGpsRadius } from '@/rrr-sensors';
 import type { RrrInteractionEditorProps } from './types';
 
 type FlatConditionType = RrrFlatConditionType;
@@ -42,6 +43,13 @@ const COMPASS_DIRECTION_PRESETS = [
   { label: 'Osten', degrees: 90 },
   { label: 'Süden', degrees: 180 },
   { label: 'Westen', degrees: 270 },
+] as const;
+
+const HOLD_STILL_DURATION_PRESETS = [
+  { label: '1 s', durationMs: 1000 },
+  { label: '2 s', durationMs: 2000 },
+  { label: '3 s', durationMs: 3000 },
+  { label: '5 s', durationMs: 5000 },
 ] as const;
 
 type CompassNeedleStyle = CSSProperties & {
@@ -591,28 +599,7 @@ function RrrModuleEditor({
       {isEditing && (
         <div className="stq-rrr-module__editor">
           {module.type === 'text_answer' && (
-            <>
-              <label className="stq-rrr-field">
-                <span>Antwort</span>
-                <input
-                  type="text"
-                  value={readString(config.answer)}
-                  onChange={(event) =>
-                    patchConfig({ answer: event.target.value })
-                  }
-                />
-              </label>
-              <label className="stq-rrr-check">
-                <input
-                  type="checkbox"
-                  checked={Boolean(config.caseSensitive)}
-                  onChange={(event) =>
-                    patchConfig({ caseSensitive: event.target.checked })
-                  }
-                />
-                <span>Groß-/Kleinschreibung beachten</span>
-              </label>
-            </>
+            <TextAnswerEditor config={config} onPatchConfig={patchConfig} />
           )}
 
           {module.type === 'compass_align' && (
@@ -624,35 +611,163 @@ function RrrModuleEditor({
           )}
 
           {module.type === 'hold_still' && (
-            <NumberField
-              label="Dauer in ms"
-              value={readNumber(config.durationMs)}
-              onChange={(value) => patchConfig({ durationMs: value })}
+            <HoldStillDurationEditor
+              config={config}
+              expertMode={expertMode}
+              onPatchConfig={patchConfig}
             />
           )}
 
           {module.type === 'gps_enter' && (
-            <div className="stq-rrr-field-grid">
-              <NumberField
-                label="Breitengrad"
-                value={readNumber(config.lat)}
-                onChange={(value) => patchConfig({ lat: value })}
-              />
-              <NumberField
-                label="Längengrad"
-                value={readNumber(config.lng)}
-                onChange={(value) => patchConfig({ lng: value })}
-              />
-              <NumberField
-                label="Radius in Metern"
-                value={readNumber(config.radiusMeters)}
-                onChange={(value) => patchConfig({ radiusMeters: value })}
-              />
-            </div>
+            <GpsRadiusEditor config={config} onPatchConfig={patchConfig} />
           )}
         </div>
       )}
     </article>
+  );
+}
+
+function TextAnswerEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const answer = readString(config.answer);
+  const hasAnswer = answer.trim() !== '';
+  const caseSensitive = Boolean(config.caseSensitive);
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasAnswer ? '' : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label="Textantwort einstellen"
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>Erwartete Antwort</span>
+            <strong>{hasAnswer ? 'Antwort festgelegt' : 'Antwort fehlt'}</strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasAnswer ? '' : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            {caseSensitive ? 'Exakte Schreibweise' : 'Schreibweise flexibel'}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Antwort</span>
+          <input
+            type="text"
+            value={answer}
+            placeholder="z. B. Turm"
+            onChange={(event) => onPatchConfig({ answer: event.target.value })}
+          />
+          <small className="stq-rrr-field__hint">
+            Spieler müssen diese Antwort eingeben, um den Baustein zu lösen.
+          </small>
+        </label>
+
+        {!hasAnswer && (
+          <p className="stq-rrr-text-answer__warning">
+            Lege eine Antwort fest, damit dieser Baustein lösbar ist.
+          </p>
+        )}
+
+        <label className="stq-rrr-check stq-rrr-text-answer__toggle">
+          <input
+            type="checkbox"
+            checked={caseSensitive}
+            onChange={(event) =>
+              onPatchConfig({ caseSensitive: event.target.checked })
+            }
+          />
+          <span>Groß-/Kleinschreibung beachten</span>
+        </label>
+      </section>
+    </div>
+  );
+}
+
+function HoldStillDurationEditor({
+  config,
+  expertMode,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  expertMode: boolean;
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const durationMs = normalizeDurationMs(readNumber(config.durationMs));
+  const durationSliderValue = clampNumber(durationMs, 500, 8000);
+  const durationMeta = getHoldStillDurationMeta(durationMs);
+
+  function setDurationMs(value: number) {
+    onPatchConfig({ durationMs: normalizeDurationMs(value) });
+  }
+
+  return (
+    <div className="stq-rrr-hold-editor">
+      <section
+        className="stq-rrr-hold-duration"
+        aria-label="Stillhalte-Dauer einstellen"
+      >
+        <div className="stq-rrr-hold-duration__header">
+          <div>
+            <span>Dauer</span>
+            <strong>{formatDurationSeconds(durationMs)}</strong>
+          </div>
+          <span
+            className={`stq-rrr-hold-duration__badge stq-rrr-hold-duration__badge--${durationMeta.tone}`}
+          >
+            {durationMeta.label}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Dauer per Schieberegler</span>
+          <input
+            type="range"
+            min="500"
+            max="8000"
+            step="100"
+            value={durationSliderValue}
+            onChange={(event) => setDurationMs(Number(event.target.value))}
+          />
+          <small className="stq-rrr-field__hint">
+            {durationMeta.description}
+          </small>
+        </label>
+
+        <div className="stq-rrr-hold-duration__presets" aria-label="Schnelle Dauer">
+          {HOLD_STILL_DURATION_PRESETS.map((preset) => (
+            <button
+              key={preset.durationMs}
+              type="button"
+              className={`stq-rrr-hold-duration__preset ${
+                durationMs === preset.durationMs ? 'is-active' : ''
+              }`}
+              onClick={() => setDurationMs(preset.durationMs)}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {expertMode && (
+        <NumberField
+          label="Dauer in ms"
+          value={durationMs}
+          onChange={setDurationMs}
+        />
+      )}
+    </div>
   );
 }
 
@@ -771,6 +886,82 @@ function CompassDirectionPicker({
           onChange={setTargetDegrees}
         />
       )}
+    </div>
+  );
+}
+
+function GpsRadiusEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const radiusMeters = Math.max(0, readNumber(config.radiusMeters));
+  const radiusSliderValue = Math.min(radiusMeters, 100);
+  const radiusMeta = getGpsRadiusMeta(radiusMeters);
+
+  function setRadiusMeters(value: number) {
+    onPatchConfig({ radiusMeters: Math.max(0, Math.round(value)) });
+  }
+
+  return (
+    <div className="stq-rrr-gps-editor">
+      <div className="stq-rrr-field-grid">
+        <NumberField
+          label="Breitengrad"
+          value={readNumber(config.lat)}
+          onChange={(value) => onPatchConfig({ lat: value })}
+        />
+        <NumberField
+          label="Längengrad"
+          value={readNumber(config.lng)}
+          onChange={(value) => onPatchConfig({ lng: value })}
+        />
+      </div>
+
+      <section
+        className="stq-rrr-gps-radius"
+        aria-label="GPS-Radius einstellen"
+      >
+        <div className="stq-rrr-gps-radius__header">
+          <div>
+            <span>Radius</span>
+            <strong>{formatNumber(radiusMeters, 0)} m</strong>
+          </div>
+          <span
+            className={`stq-rrr-gps-radius__badge stq-rrr-gps-radius__badge--${radiusMeta.tone}`}
+          >
+            {radiusMeta.label}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Radius per Schieberegler</span>
+          <input
+            type="range"
+            min="1"
+            max="100"
+            step="1"
+            value={radiusSliderValue}
+            onChange={(event) => setRadiusMeters(Number(event.target.value))}
+          />
+          <small className="stq-rrr-field__hint">
+            {radiusMeta.description}
+          </small>
+        </label>
+
+        <NumberField
+          label="Radius in Metern"
+          value={radiusMeters}
+          onChange={setRadiusMeters}
+        />
+        <p className="stq-rrr-gps-radius__calibration">
+          Im Feld sollte der Radius mindestens so groß sein wie die aktuelle
+          GPS-Genauigkeit. Ohne Live-Messung ist {recommendGpsRadius()} m ein
+          sinnvoller Startwert.
+        </p>
+      </section>
     </div>
   );
 }
@@ -951,6 +1142,84 @@ function readNumber(value: unknown): number {
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
+}
+
+function getGpsRadiusMeta(radiusMeters: number): {
+  label: string;
+  description: string;
+  tone: 'precise' | 'normal' | 'forgiving';
+} {
+  if (radiusMeters < 5) {
+    return {
+      label: 'Sehr präzise / riskant',
+      description:
+        'Unter 5 m kann GPS unzuverlässig sein. Spieler müssen sehr genau am Ort stehen.',
+      tone: 'precise',
+    };
+  }
+
+  if (radiusMeters <= 20) {
+    return {
+      label: 'Normal',
+      description:
+        '5 bis 20 m ist meist gut verständlich und verzeiht normale GPS-Abweichungen.',
+      tone: 'normal',
+    };
+  }
+
+  return {
+    label: 'Großzügig',
+    description:
+      'Über 20 m ist leichter zu treffen und eignet sich für größere Plätze oder schwaches GPS.',
+    tone: 'forgiving',
+  };
+}
+
+function normalizeDurationMs(value: number): number {
+  return Math.max(0, Math.round(value));
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function formatDurationSeconds(durationMs: number): string {
+  if (durationMs < 1000) {
+    return `${formatNumber(durationMs, 0)} ms`;
+  }
+
+  return `${formatNumber(durationMs / 1000, 1)} s`;
+}
+
+function getHoldStillDurationMeta(durationMs: number): {
+  label: string;
+  description: string;
+  tone: 'short' | 'normal' | 'long';
+} {
+  if (durationMs < 2000) {
+    return {
+      label: 'Kurz',
+      description:
+        'Kurze Dauer ist schnell geschafft und eignet sich für einfache Schritte.',
+      tone: 'short',
+    };
+  }
+
+  if (durationMs <= 3000) {
+    return {
+      label: 'Normal',
+      description:
+        'Normale Dauer ist gut verständlich, ohne den Spielfluss stark zu bremsen.',
+      tone: 'normal',
+    };
+  }
+
+  return {
+    label: 'Lang',
+    description:
+      'Lange Dauer macht den Schritt anspruchsvoller und verlangt ruhigeres Halten.',
+    tone: 'long',
+  };
 }
 
 function normalizeCompassDegrees(value: number): number {

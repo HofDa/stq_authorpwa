@@ -31,12 +31,12 @@ describe('evaluateInteraction', () => {
           label: 'Text answer',
           type: 'text_answer',
           status: 'success',
-          message: 'Answer matches',
+          message: 'Antwort passt',
         },
       },
       condition: {
         status: 'success',
-        message: 'Single module module_1',
+        message: 'Einzelner Baustein module_1',
         condition: { type: 'module', moduleId: 'module_1' },
       },
     });

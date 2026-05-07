@@ -95,6 +95,14 @@ export function RrrMockPreview({
     setInputs(INITIAL_INPUTS);
   }
 
+  function handleRetry() {
+    dispatchSession({
+      type: 'retry',
+      moduleId: activeStep?.module.id,
+      resetProgress: activeStep?.module.retry?.resetOnFail,
+    });
+  }
+
   function handleStep() {
     dispatchSession({ type: 'evaluation', result: sessionEvaluation });
   }
@@ -218,9 +226,22 @@ export function RrrMockPreview({
         <div className="stq-rrr-guide__feedback stq-rrr-guide__feedback--failed">
           <div>
             <span>Testergebnis</span>
-            <strong>Dieser Testlauf ist fehlgeschlagen. Setze ihn zurück.</strong>
+            <strong>
+              {activeResult?.timeout?.retryable
+                ? 'Zeit abgelaufen. Du kannst es noch einmal versuchen.'
+                : 'Dieser Testlauf ist fehlgeschlagen. Setze ihn zurück.'}
+            </strong>
           </div>
           <StatusBadge status="failed" />
+          {activeResult?.timeout?.retryable && (
+            <button
+              type="button"
+              className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
+              onClick={handleRetry}
+            >
+              Noch einmal versuchen
+            </button>
+          )}
         </div>
       )}
 

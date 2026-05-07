@@ -4,6 +4,9 @@ export interface RrrRuntimeSession {
   completedModuleIds: string[];
   activeSequenceIndex: number;
   status: RrrRuntimeStatus;
+  activeStepStartedAtMs?: number;
+  attemptsByModuleId: Record<string, number>;
+  timedOutModuleIds: string[];
 }
 
 export function createRrrRuntimeSession(): RrrRuntimeSession {
@@ -11,6 +14,8 @@ export function createRrrRuntimeSession(): RrrRuntimeSession {
     completedModuleIds: [],
     activeSequenceIndex: 0,
     status: 'idle',
+    attemptsByModuleId: {},
+    timedOutModuleIds: [],
   };
 }
 

@@ -7,14 +7,23 @@ import type {
   RrrRuntimeUserInput,
 } from './types';
 import type { RrrRuntimeSession } from '../session/session';
+import type { RrrCondition } from '../types';
 
 export function evaluateInteraction(
   interaction: RrrInteraction,
   mockState: RrrRuntimeMockState,
   userInput: RrrRuntimeUserInput = {},
   session?: RrrRuntimeSession,
+  options: { nowMs?: number } = {},
 ): RrrInteractionResult {
-  const input = { mockState, userInput, session };
+  const activeModuleId = getActiveModuleId(interaction.condition, session);
+  const input = {
+    mockState,
+    userInput,
+    session,
+    activeModuleId,
+    nowMs: options.nowMs,
+  };
   const moduleResults = interaction.modules.map((module) =>
     evaluateModule(module, input),
   );
@@ -35,4 +44,27 @@ export function evaluateInteraction(
     modules,
     condition,
   };
+}
+
+function getActiveModuleId(
+  condition: RrrCondition | undefined,
+  session: RrrRuntimeSession | undefined,
+): string | undefined {
+  if (!condition) {
+    return undefined;
+  }
+  if (condition.type === 'module') {
+    return condition.moduleId;
+  }
+  if (condition.type !== 'sequence') {
+    return undefined;
+  }
+
+  const children = 'steps' in condition ? condition.steps : condition.children;
+  const activeIndex = Math.min(
+    Math.max(session?.activeSequenceIndex ?? 0, 0),
+    Math.max(children.length - 1, 0),
+  );
+  const activeCondition = children[activeIndex];
+  return activeCondition?.type === 'module' ? activeCondition.moduleId : undefined;
 }

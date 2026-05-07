@@ -31,6 +31,11 @@ export interface RrrModule {
   type: RrrModuleType;
   label: string;
   config: Record<string, unknown>;
+  timeoutMs?: number;
+  retry?: {
+    maxAttempts?: number;
+    resetOnFail?: boolean;
+  };
 }
 
 export type RrrCondition =

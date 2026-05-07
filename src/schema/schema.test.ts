@@ -226,6 +226,28 @@ describe('RRR interaction schemas', () => {
     }
   });
 
+  it('accepts optional timeout and retry metadata on modules', () => {
+    expect(
+      RrrModuleSchema.parse({
+        id: 'module-timeout',
+        type: 'gps_enter',
+        label: 'GPS',
+        config: { radiusMeters: 20 },
+        timeoutMs: 30000,
+        retry: {
+          maxAttempts: 3,
+          resetOnFail: true,
+        },
+      }),
+    ).toMatchObject({
+      timeoutMs: 30000,
+      retry: {
+        maxAttempts: 3,
+        resetOnFail: true,
+      },
+    });
+  });
+
   it('accepts the initial condition graph types', () => {
     for (const type of RRR_COMPOSITE_CONDITION_TYPES) {
       expect(() =>

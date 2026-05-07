@@ -101,6 +101,104 @@ describe('RrrInteractionEditor', () => {
       tolerance: 15,
     });
   });
+
+  it('updates gps radiusMeters from the radius slider', () => {
+    const onChange = vi.fn();
+    renderEditor(
+      <RrrInteractionEditor
+        interaction={sequenceInteraction}
+        onChange={onChange}
+      />,
+    );
+
+    clickButton('Bearbeiten', 0);
+
+    expect(container.textContent).toContain('Breitengrad');
+    expect(container.textContent).toContain('Längengrad');
+    expect(container.textContent).toContain('Radius per Schieberegler');
+    expect(container.textContent).toContain('Großzügig');
+    expect(container.textContent).toContain('GPS-Genauigkeit');
+    expect(container.textContent).toContain('20 m ein sinnvoller Startwert');
+
+    changeRangeValue('30');
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const nextInteraction = onChange.mock.calls[0][0] as RrrInteraction;
+    const gpsModule = nextInteraction.modules.find(
+      (module) => module.id === 'gps_enter_1',
+    );
+    expect(gpsModule?.config).toMatchObject({
+      lat: 46.4983,
+      lng: 11.3548,
+      radiusMeters: 30,
+    });
+  });
+
+  it('updates hold_still durationMs from friendly controls', () => {
+    const onChange = vi.fn();
+    renderEditor(
+      <RrrInteractionEditor
+        interaction={sequenceInteraction}
+        onChange={onChange}
+      />,
+    );
+
+    clickButton('Bearbeiten', 2);
+
+    expect(container.textContent).toContain('Dauer per Schieberegler');
+    expect(container.textContent).toContain('Normal');
+    expect(container.textContent).toContain('1 s');
+    expect(container.textContent).toContain('5 s');
+    expect(container.textContent).not.toContain('Dauer in ms');
+
+    toggleExpertMode();
+
+    expect(container.textContent).toContain('Dauer in ms');
+
+    clickButton('5 s');
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const nextInteraction = onChange.mock.calls[0][0] as RrrInteraction;
+    const holdModule = nextInteraction.modules.find(
+      (module) => module.id === 'hold_still_1',
+    );
+    expect(holdModule?.config).toMatchObject({
+      durationMs: 5000,
+    });
+  });
+
+  it('renders text_answer authoring helpers and keeps empty answer warnings visible', () => {
+    const onChange = vi.fn();
+    renderEditor(
+      <RrrInteractionEditor
+        interaction={textAnswerInteraction}
+        onChange={onChange}
+      />,
+    );
+
+    expect(container.textContent).toContain('Hinweise');
+    expect(container.textContent).toContain('hat noch keine Antwort');
+
+    clickButton('Bearbeiten');
+
+    expect(container.textContent).toContain('Erwartete Antwort');
+    expect(container.textContent).toContain('Antwort fehlt');
+    expect(container.textContent).toContain(
+      'Spieler müssen diese Antwort eingeben',
+    );
+    expect(container.textContent).toContain('Schreibweise flexibel');
+    expect(container.textContent).toContain('Groß-/Kleinschreibung beachten');
+    expect(container.textContent).not.toContain('Weitere Antworten');
+
+    changeTextValue('Turm');
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const nextInteraction = onChange.mock.calls[0][0] as RrrInteraction;
+    expect(nextInteraction.modules[0].config).toMatchObject({
+      answer: 'Turm',
+      caseSensitive: false,
+    });
+  });
 });
 
 function renderEditor(element: ReactElement) {
@@ -120,6 +218,49 @@ function clickButton(label: string, index = 0) {
 
   act(() => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
+
+function changeRangeValue(value: string) {
+  const input = container.querySelector('input[type="range"]');
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error('Range input not found');
+  }
+
+  act(() => {
+    const valueSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    )?.set;
+    valueSetter?.call(input, value);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
+function changeTextValue(value: string) {
+  const input = container.querySelector('input[type="text"]');
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error('Text input not found');
+  }
+
+  act(() => {
+    const valueSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    )?.set;
+    valueSetter?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+function toggleExpertMode() {
+  const input = container.querySelector('input[type="checkbox"]');
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error('Expert mode checkbox not found');
+  }
+
+  act(() => {
+    input.click();
   });
 }
 
@@ -152,5 +293,21 @@ const sequenceInteraction: RrrInteraction = {
       { type: 'module', moduleId: 'face_north_1' },
       { type: 'module', moduleId: 'hold_still_1' },
     ],
+  },
+};
+
+const textAnswerInteraction: RrrInteraction = {
+  schemaVersion: 1,
+  modules: [
+    {
+      id: 'text_answer_1',
+      type: 'text_answer',
+      label: 'Antwort eingeben',
+      config: { answer: '', caseSensitive: false },
+    },
+  ],
+  condition: {
+    type: 'module',
+    moduleId: 'text_answer_1',
   },
 };

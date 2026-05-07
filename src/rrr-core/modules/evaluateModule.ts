@@ -9,6 +9,11 @@ export function evaluateModule(
   module: RrrModule,
   input: RrrRuntimeEvaluationInput,
 ): RrrModuleResult {
+  const timeoutResult = evaluateTimeout(module, input);
+  if (timeoutResult) {
+    return timeoutResult;
+  }
+
   switch (module.type) {
     case 'text_answer':
       return evaluateTextAnswer(module, input);
@@ -19,6 +24,48 @@ export function evaluateModule(
     case 'gps_enter':
       return evaluateGpsEnter(module, input);
   }
+}
+
+function evaluateTimeout(
+  module: RrrModule,
+  input: RrrRuntimeEvaluationInput,
+): RrrModuleResult | null {
+  const timeoutMs = readPositiveNumber(module.timeoutMs);
+  if (!timeoutMs || input.activeModuleId !== module.id) {
+    return null;
+  }
+
+  const session = input.session;
+  const alreadyTimedOut = session?.timedOutModuleIds.includes(module.id) ?? false;
+  const startedAt = session?.activeStepStartedAtMs;
+  const nowMs = input.nowMs;
+  const elapsedMs =
+    isFiniteNumber(startedAt) && isFiniteNumber(nowMs) ? nowMs - startedAt : 0;
+
+  if (!alreadyTimedOut && elapsedMs < timeoutMs) {
+    return null;
+  }
+
+  const attempts =
+    (session?.attemptsByModuleId[module.id] ?? 0) + (alreadyTimedOut ? 0 : 1);
+  const maxAttempts = readPositiveNumber(module.retry?.maxAttempts);
+  const retryable = maxAttempts === undefined || attempts < maxAttempts;
+
+  return moduleResult(
+    module,
+    'failed',
+    retryable
+      ? 'Zeit abgelaufen. Noch einmal versuchen.'
+      : 'Zeit abgelaufen.',
+    {
+      timedOut: true,
+      retryable,
+      attempts,
+      maxAttempts,
+      elapsedMs,
+      timeoutMs,
+    },
+  );
 }
 
 function evaluateTextAnswer(
@@ -109,14 +156,19 @@ function moduleResult(
   module: RrrModule,
   status: RrrRuntimeStatus,
   message: string,
+  timeout?: RrrModuleResult['timeout'],
 ): RrrModuleResult {
-  return {
+  const result: RrrModuleResult = {
     id: module.id,
     label: module.label,
     type: module.type,
     status,
     message,
   };
+  if (timeout) {
+    result.timeout = timeout;
+  }
+  return result;
 }
 
 function headingDelta(a: number, b: number): number {
@@ -166,6 +218,11 @@ function readNumber(value: unknown): number {
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
+}
+
+function readPositiveNumber(value: unknown): number | undefined {
+  const number = readNumber(value);
+  return number > 0 ? number : undefined;
 }
 
 function isFiniteNumber(value: unknown): value is number {

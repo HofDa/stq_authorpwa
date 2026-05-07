@@ -3,6 +3,7 @@ import { AppLayout } from './AppLayout';
 import { TourListPage } from '@/pages/TourListPage';
 import { TourEditorPage } from '@/pages/TourEditorPage';
 import { RrrRuntimeDemo } from '@/pages/RrrRuntimeDemo';
+import { RrrFieldTest } from '@/pages/RrrFieldTest';
 
 export const router = createBrowserRouter([
   {
@@ -13,7 +14,10 @@ export const router = createBrowserRouter([
       { path: 'tours', element: <TourListPage /> },
       { path: 'tours/:draftId', element: <TourEditorPage /> },
       ...(import.meta.env.DEV
-        ? [{ path: 'rrr-runtime-demo', element: <RrrRuntimeDemo /> }]
+        ? [
+            { path: 'rrr-runtime-demo', element: <RrrRuntimeDemo /> },
+            { path: 'rrr-field-test', element: <RrrFieldTest /> },
+          ]
         : []),
     ],
   },

@@ -4,6 +4,7 @@ import {
   ExportRiddleEntrySchema,
   TourEntrySchema,
   createDefaultRrrInteraction,
+  type RrrInteraction,
   type TourDraft,
 } from '@/schema';
 import { db, type StoredBlob } from '@/storage/db';
@@ -29,7 +30,7 @@ async function draftWithAllBlobs(): Promise<TourDraft> {
   return draft;
 }
 
-function buildGpsCompassSequenceInteraction() {
+function buildGpsCompassSequenceInteraction(): RrrInteraction {
   return {
     schemaVersion: 1 as const,
     modules: [
@@ -291,6 +292,38 @@ describe('buildDraftExportZip', () => {
     });
     expect(modulesById.hold_still_1.config).toMatchObject({
       durationMs: 3000,
+    });
+  });
+
+  it('preserves optional RRR timeout and retry metadata through export', async () => {
+    const draft = await draftWithAllBlobs();
+    const interaction = buildGpsCompassSequenceInteraction();
+    interaction.modules[0] = {
+      ...interaction.modules[0],
+      timeoutMs: 30000,
+      retry: { maxAttempts: 3, resetOnFail: true },
+    };
+    draft.stations[0] = {
+      ...draft.stations[0],
+      riddleType: 'modular',
+      interaction,
+    };
+
+    const result = await buildDraftExportZip(draft);
+
+    expect(result.validationErrors).toEqual([]);
+    const station = (result.riddlesJson as Array<Record<string, unknown>>)[0];
+    const exported = station.interaction as {
+      modules: Array<{
+        id: string;
+        timeoutMs?: number;
+        retry?: { maxAttempts?: number; resetOnFail?: boolean };
+      }>;
+    };
+    expect(exported.modules[0]).toMatchObject({
+      id: 'gps_enter_1',
+      timeoutMs: 30000,
+      retry: { maxAttempts: 3, resetOnFail: true },
     });
   });
 
