@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from 'react';
 import { RrrInteractionSchema } from '@/schema';
 import {
   RRR_MODULE_TYPES,
@@ -29,6 +35,17 @@ const CONDITION_TYPE_LABELS: Record<FlatConditionType, string> = {
   sequence: 'Nacheinander',
   all_of: 'Alles muss erfüllt sein',
   any_of: 'Eine Lösung reicht',
+};
+
+const COMPASS_DIRECTION_PRESETS = [
+  { label: 'Norden', degrees: 0 },
+  { label: 'Osten', degrees: 90 },
+  { label: 'Süden', degrees: 180 },
+  { label: 'Westen', degrees: 270 },
+] as const;
+
+type CompassNeedleStyle = CSSProperties & {
+  '--stq-rrr-compass-degrees': string;
 };
 
 export function RrrInteractionEditor({
@@ -599,18 +616,11 @@ function RrrModuleEditor({
           )}
 
           {module.type === 'compass_align' && (
-            <div className="stq-rrr-field-grid">
-              <NumberField
-                label="Zielrichtung in Grad"
-                value={readNumber(config.targetDegrees)}
-                onChange={(value) => patchConfig({ targetDegrees: value })}
-              />
-              <NumberField
-                label="Toleranz"
-                value={readNumber(config.tolerance)}
-                onChange={(value) => patchConfig({ tolerance: value })}
-              />
-            </div>
+            <CompassDirectionPicker
+              config={config}
+              expertMode={expertMode}
+              onPatchConfig={patchConfig}
+            />
           )}
 
           {module.type === 'hold_still' && (
@@ -643,6 +653,125 @@ function RrrModuleEditor({
         </div>
       )}
     </article>
+  );
+}
+
+function CompassDirectionPicker({
+  config,
+  expertMode,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  expertMode: boolean;
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const targetDegrees = normalizeCompassDegrees(readNumber(config.targetDegrees));
+  const tolerance = Math.max(0, readNumber(config.tolerance));
+  const toleranceSliderValue = Math.min(tolerance, 90);
+
+  function setTargetDegrees(value: number) {
+    onPatchConfig({ targetDegrees: normalizeCompassDegrees(value) });
+  }
+
+  function setTolerance(value: number) {
+    onPatchConfig({ tolerance: Math.max(0, value) });
+  }
+
+  function handleDialPointer(event: PointerEvent<HTMLButtonElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const centerX = bounds.left + bounds.width / 2;
+    const centerY = bounds.top + bounds.height / 2;
+    const x = event.clientX - centerX;
+    const y = event.clientY - centerY;
+    const degrees = (Math.atan2(x, -y) * 180) / Math.PI;
+    setTargetDegrees(degrees);
+  }
+
+  return (
+    <div className="stq-rrr-compass-picker">
+      <div className="stq-rrr-compass-picker__main">
+        <button
+          type="button"
+          className="stq-rrr-compass-picker__dial"
+          onPointerDown={handleDialPointer}
+          aria-label="Richtung auf dem Kompass wählen"
+        >
+          <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--north">
+            N
+          </span>
+          <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--east">
+            O
+          </span>
+          <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--south">
+            S
+          </span>
+          <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--west">
+            W
+          </span>
+          <span
+            className="stq-rrr-compass-picker__needle"
+            style={
+              {
+                '--stq-rrr-compass-degrees': `${targetDegrees}deg`,
+              } as CompassNeedleStyle
+            }
+          />
+          <span className="stq-rrr-compass-picker__center" />
+        </button>
+
+        <div className="stq-rrr-compass-picker__readout">
+          <span>Ausgewählte Richtung</span>
+          <strong>{formatNumber(targetDegrees, 0)}°</strong>
+          <small>{getCompassDirectionLabel(targetDegrees)}</small>
+        </div>
+      </div>
+
+      <div className="stq-rrr-compass-picker__presets" aria-label="Schnelle Richtungen">
+        {COMPASS_DIRECTION_PRESETS.map((preset) => (
+          <button
+            key={preset.degrees}
+            type="button"
+            className={`stq-rrr-compass-picker__preset ${
+              targetDegrees === preset.degrees ? 'is-active' : ''
+            }`}
+            onClick={() => setTargetDegrees(preset.degrees)}
+          >
+            {preset.label} {preset.degrees}°
+          </button>
+        ))}
+      </div>
+
+      <div className="stq-rrr-compass-picker__tolerance">
+        <label className="stq-rrr-field">
+          <span>Toleranz: ±{formatNumber(tolerance, 0)}°</span>
+          <input
+            type="range"
+            min="0"
+            max="90"
+            step="1"
+            value={toleranceSliderValue}
+            onChange={(event) => setTolerance(Number(event.target.value))}
+          />
+          <small className="stq-rrr-field__hint">
+            Je größer die Toleranz, desto großzügiger gilt die Blickrichtung als
+            richtig.
+          </small>
+        </label>
+        <NumberField
+          label="Toleranz in Grad"
+          value={tolerance}
+          onChange={setTolerance}
+        />
+      </div>
+
+      {expertMode && (
+        <NumberField
+          label="Zielrichtung in Grad"
+          value={targetDegrees}
+          onChange={setTargetDegrees}
+        />
+      )}
+    </div>
   );
 }
 
@@ -822,4 +951,27 @@ function readNumber(value: unknown): number {
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
+}
+
+function normalizeCompassDegrees(value: number): number {
+  const normalized = value % 360;
+  return Math.round(normalized < 0 ? normalized + 360 : normalized);
+}
+
+function getCompassDirectionLabel(degrees: number): string {
+  const nearestPreset = COMPASS_DIRECTION_PRESETS.reduce(
+    (best, preset) =>
+      getDegreeDistance(degrees, preset.degrees) <
+      getDegreeDistance(degrees, best.degrees)
+        ? preset
+        : best,
+    COMPASS_DIRECTION_PRESETS[0],
+  );
+
+  return `Nahe ${nearestPreset.label}`;
+}
+
+function getDegreeDistance(left: number, right: number): number {
+  const difference = Math.abs(normalizeCompassDegrees(left - right));
+  return Math.min(difference, 360 - difference);
 }
