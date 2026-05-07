@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "type": "text_answer",
+      "label": "Text answer",
+      "config": {
+        "answer": "tower",
+        "caseSensitive": false
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "module_1"
+  }
+}

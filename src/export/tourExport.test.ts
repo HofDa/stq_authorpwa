@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   ExportRiddleEntrySchema,
   TourEntrySchema,
+  createDefaultRrrInteraction,
   type TourDraft,
 } from '@/schema';
 import { db, type StoredBlob } from '@/storage/db';
@@ -26,6 +27,40 @@ async function draftWithAllBlobs(): Promise<TourDraft> {
   await seedBlob('blob-station-hero', draft.draftId);
   await seedBlob('blob-station-body', draft.draftId);
   return draft;
+}
+
+function buildGpsCompassSequenceInteraction() {
+  return {
+    schemaVersion: 1 as const,
+    modules: [
+      {
+        id: 'gps_enter_1',
+        type: 'gps_enter' as const,
+        label: 'Enter GPS radius',
+        config: { lat: 46.4983, lng: 11.3548, radiusMeters: 25 },
+      },
+      {
+        id: 'face_direction_1',
+        type: 'compass_align' as const,
+        label: 'Face direction',
+        config: { targetDegrees: 180, tolerance: 20 },
+      },
+      {
+        id: 'hold_still_1',
+        type: 'hold_still' as const,
+        label: 'Hold still',
+        config: { durationMs: 3000 },
+      },
+    ],
+    condition: {
+      type: 'sequence' as const,
+      steps: [
+        { type: 'module' as const, moduleId: 'gps_enter_1' },
+        { type: 'module' as const, moduleId: 'face_direction_1' },
+        { type: 'module' as const, moduleId: 'hold_still_1' },
+      ],
+    },
+  };
 }
 
 beforeEach(async () => {
@@ -106,6 +141,19 @@ describe('buildDraftExportZip', () => {
     expect(station).not.toHaveProperty('iconColorKey');
   });
 
+  it('does not export stale interaction data for text riddles', async () => {
+    const draft = await draftWithAllBlobs();
+    draft.stations[0].interaction = createDefaultRrrInteraction();
+
+    const result = await buildDraftExportZip(draft);
+
+    expect(result.validationErrors).toEqual([]);
+    const station = (result.riddlesJson as Array<Record<string, unknown>>)[0];
+    expect(station.riddleType).toBe('text');
+    expect(station).not.toHaveProperty('interaction');
+    expect(station).not.toHaveProperty('interactionVersion');
+  });
+
   it('produces JSON that re-parses through the Flutter-facing schemas', async () => {
     const draft = await draftWithAllBlobs();
     const result = await buildDraftExportZip(draft);
@@ -118,6 +166,112 @@ describe('buildDraftExportZip', () => {
     for (const riddle of riddles) {
       expect(() => ExportRiddleEntrySchema.parse(riddle)).not.toThrow();
     }
+  });
+
+  it('exports modular riddles with their interaction object', async () => {
+    const draft = await draftWithAllBlobs();
+    const interaction = createDefaultRrrInteraction();
+    draft.stations[0] = {
+      ...draft.stations[0],
+      riddleType: 'modular',
+      interaction,
+    };
+
+    const result = await buildDraftExportZip(draft);
+
+    expect(result.validationErrors).toEqual([]);
+    const station = (result.riddlesJson as Array<Record<string, unknown>>)[0];
+    expect(station.riddleType).toBe('modular');
+    expect(station.interactionVersion).toBe(1);
+    expect(station.interaction).toEqual(interaction);
+    expect(() => ExportRiddleEntrySchema.parse(station)).not.toThrow();
+  });
+
+  it('reports a serialized validation error for invalid modular interaction data', async () => {
+    const draft = await draftWithAllBlobs();
+    draft.stations[0] = {
+      ...draft.stations[0],
+      riddleType: 'modular',
+      interaction: {
+        schemaVersion: 1,
+        modules: [
+          {
+            id: 'module_1',
+            type: 'text_answer',
+            label: 'Text answer',
+            config: {},
+          },
+          {
+            id: 'module_1',
+            type: 'text_answer',
+            label: 'Duplicate',
+            config: {},
+          },
+        ],
+        condition: { type: 'module', moduleId: 'module_1' },
+      },
+    };
+
+    const result = await buildDraftExportZip(draft);
+
+    expect(result.validationErrors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'stations.0.interaction.modules.1.id',
+          message: 'Module id "module_1" is duplicated.',
+        }),
+      ]),
+    );
+  });
+
+  it('exports a modular GPS-then-compass sequence with the full condition tree', async () => {
+    const draft = await draftWithAllBlobs();
+    draft.stations[0] = {
+      ...draft.stations[0],
+      riddleType: 'modular',
+      interaction: buildGpsCompassSequenceInteraction(),
+    };
+
+    const result = await buildDraftExportZip(draft);
+
+    expect(result.validationErrors).toEqual([]);
+    const station = (result.riddlesJson as Array<Record<string, unknown>>)[0];
+    expect(station.riddleType).toBe('modular');
+    expect(station.interactionVersion).toBe(1);
+    expect(station.interaction).toEqual(buildGpsCompassSequenceInteraction());
+    expect(() => ExportRiddleEntrySchema.parse(station)).not.toThrow();
+  });
+
+  it('preserves module config fields (targetDegrees, tolerance, durationMs, radiusMeters) through export', async () => {
+    const draft = await draftWithAllBlobs();
+    draft.stations[0] = {
+      ...draft.stations[0],
+      riddleType: 'modular',
+      interaction: buildGpsCompassSequenceInteraction(),
+    };
+
+    const result = await buildDraftExportZip(draft);
+
+    const station = (result.riddlesJson as Array<Record<string, unknown>>)[0];
+    const interaction = station.interaction as {
+      modules: Array<{ id: string; type: string; config: Record<string, unknown> }>;
+    };
+    const modulesById = Object.fromEntries(
+      interaction.modules.map((module) => [module.id, module]),
+    );
+
+    expect(modulesById.gps_enter_1.config).toMatchObject({
+      lat: 46.4983,
+      lng: 11.3548,
+      radiusMeters: 25,
+    });
+    expect(modulesById.face_direction_1.config).toMatchObject({
+      targetDegrees: 180,
+      tolerance: 20,
+    });
+    expect(modulesById.hold_still_1.config).toMatchObject({
+      durationMs: 3000,
+    });
   });
 
   it('reports missing blobs without throwing', async () => {

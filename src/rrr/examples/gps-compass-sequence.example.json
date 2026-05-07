@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "gps_enter_1",
+      "type": "gps_enter",
+      "label": "Enter GPS radius",
+      "config": {
+        "lat": 46.4983,
+        "lng": 11.3548,
+        "radiusMeters": 25
+      }
+    },
+    {
+      "id": "face_direction_1",
+      "type": "compass_align",
+      "label": "Face direction",
+      "config": {
+        "targetDegrees": 180,
+        "tolerance": 20
+      }
+    }
+  ],
+  "condition": {
+    "type": "sequence",
+    "steps": [
+      {
+        "type": "module",
+        "moduleId": "gps_enter_1"
+      },
+      {
+        "type": "module",
+        "moduleId": "face_direction_1"
+      }
+    ]
+  }
+}

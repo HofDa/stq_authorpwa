@@ -13,6 +13,7 @@ import {
   type TourEntry,
   type TourLocaleContent,
 } from '@/schema';
+import { RRR_INTERACTION_VERSION } from '@/rrr';
 import { db } from '@/storage/db';
 import {
   buildExportStationAssetPaths,
@@ -263,9 +264,19 @@ function serializeRiddleEntry(
     : undefined;
   const generatedIconPath = iconPathByStationId.get(station.id);
   const generatedMarkerPath = markerPathByStationId.get(station.id);
-  const { imageBlobId, iconKey, iconColorKey, acceptedAnswers, ...base } = station;
+  const {
+    imageBlobId,
+    iconKey,
+    iconColorKey,
+    acceptedAnswers,
+    interaction,
+    ...base
+  } = station;
   return {
     ...base,
+    ...(station.riddleType === 'modular'
+      ? { interactionVersion: RRR_INTERACTION_VERSION, interaction }
+      : {}),
     imagePath: imagePath ?? station.imagePath,
     iconPath: generatedIconPath ?? station.iconPath,
     markerIconPath: generatedMarkerPath ?? station.markerIconPath,

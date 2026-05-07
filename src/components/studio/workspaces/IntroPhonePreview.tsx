@@ -1,12 +1,12 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { ContentBlock, Locale, TourDraft } from '@/schema';
-import { InlineStationDrawer } from '@/components/editable/InlineStationDrawer';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { ContentSectionRenderer } from '@/renderer/ContentSectionRenderer';
 import { getTourTitleLabel } from '@/utils/localizedContent';
 import { EditPanel, type EditPanelField } from '../EditPanel';
 import { Icon } from '../Icon';
+import { EditableTextEntryList } from './EditableTextEntryList';
 import { TextBodyPanel } from './TextBodyPanel';
 
 interface Props {
@@ -28,7 +28,6 @@ export function IntroPhonePreview({
 }: Props) {
   const { t } = useEditorLanguage();
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
-  const [screen, setScreen] = useState<'intro' | 'station'>('intro');
   const coverUrl = useBlobUrl(draft.tour.coverBlobId);
   const firstStation =
     draft.stations.slice().sort((a, b) => a.number - b.number)[0] ?? null;
@@ -148,17 +147,6 @@ export function IntroPhonePreview({
     },
   };
   const panel = activePanel ? panelConfig[activePanel] : null;
-
-  if (screen === 'station' && firstStation) {
-    return (
-      <InlineStationDrawer
-        draft={draft}
-        station={firstStation}
-        locale={locale}
-        onChange={(recipe) => onChange(recipe)}
-      />
-    );
-  }
 
   return (
     <article className="stq-intro-phone">
@@ -282,9 +270,7 @@ export function IntroPhonePreview({
             className="stq-intro-phone__start"
             disabled={mode === 'intro' && !firstStation}
             onClick={() => {
-              if (mode === 'intro' && firstStation) {
-                setScreen('station');
-              } else if (mode === 'outro') {
+              if (mode === 'outro') {
                 onSelectTourOverview?.();
               }
             }}
@@ -352,38 +338,6 @@ function PreStartHintsPanel({
   onHints: (values: string[]) => void;
 }) {
   const { t } = useEditorLanguage();
-  const [entries, setEntries] = useState(() => (hints.length > 0 ? hints : ['']));
-
-  useEffect(() => {
-    setEntries(hints.length > 0 ? hints : ['']);
-  }, [hints]);
-
-  function commit(nextEntries: string[]) {
-    setEntries(nextEntries.length > 0 ? nextEntries : ['']);
-    onHints(nextEntries.map((text) => text.trim()).filter(Boolean));
-  }
-
-  function setEntry(index: number, value: string) {
-    const next = entries.slice();
-    next[index] = value;
-    commit(next);
-  }
-
-  function addEntry() {
-    setEntries([...entries, '']);
-  }
-
-  function deleteEntry(index: number) {
-    commit(entries.filter((_, i) => i !== index));
-  }
-
-  function moveEntry(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= entries.length) return;
-    const next = entries.slice();
-    [next[index], next[target]] = [next[target], next[index]];
-    commit(next);
-  }
 
   return (
     <div className="stq-prestart-panel">
@@ -399,51 +353,13 @@ function PreStartHintsPanel({
         />
       </div>
 
-      <div className="stq-textbody-panel-heading">{t('studio.hints')}</div>
-      <div className="stq-textbody-list">
-        {entries.map((entry, index) => (
-          <div className="stq-textbody-row" key={`${index}-${entries.length}`}>
-            <div className="stq-textbody-index">{index + 1}</div>
-            <textarea
-              className="stq-textbody-textarea"
-              value={entry}
-              placeholder={t('studio.preStartHintPlaceholder')}
-              rows={2}
-              onChange={(e) => setEntry(index, e.target.value)}
-            />
-            <div className="stq-textbody-actions">
-              <button
-                type="button"
-                aria-label={t('studio.moveUp')}
-                disabled={index === 0}
-                onClick={() => moveEntry(index, -1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                aria-label={t('studio.moveDown')}
-                disabled={index === entries.length - 1}
-                onClick={() => moveEntry(index, 1)}
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                aria-label={t('studio.deleteEntry')}
-                disabled={entries.length === 1 && !entry.trim()}
-                onClick={() => deleteEntry(index)}
-              >
-                <Icon name="trash" size={13} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button type="button" className="stq-textbody-add" onClick={addEntry}>
-        <Icon name="plus" size={13} />
-        {t('studio.addEntry')}
-      </button>
+      <EditableTextEntryList
+        sourceEntries={hints}
+        onCommit={onHints}
+        heading={t('studio.hints')}
+        placeholder={t('studio.preStartHintPlaceholder')}
+        rows={2}
+      />
     </div>
   );
 }
@@ -464,94 +380,20 @@ function LinesPanel({
   onThemeDescription: (value: string) => void;
 }) {
   const { t } = useEditorLanguage();
-  const [entries, setEntries] = useState(() => {
-    const textEntries = blocksToLineEntries(blocks);
-    return textEntries.length > 0 ? textEntries : [''];
-  });
-
-  useEffect(() => {
-    const textEntries = blocksToLineEntries(blocks);
-    setEntries(textEntries.length > 0 ? textEntries : ['']);
-  }, [blocks]);
-
-  function commit(nextEntries: string[]) {
-    setEntries(nextEntries.length > 0 ? nextEntries : ['']);
-    onChange(
-      nextEntries
-        .map((text) => text.trim())
-        .filter(Boolean)
-        .map((text) => ({ type: 'line', text })),
-    );
-  }
-
-  function setEntry(index: number, value: string) {
-    const next = entries.slice();
-    next[index] = value;
-    commit(next);
-  }
-
-  function addEntry() {
-    setEntries([...entries, '']);
-  }
-
-  function deleteEntry(index: number) {
-    commit(entries.filter((_, i) => i !== index));
-  }
-
-  function moveEntry(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= entries.length) return;
-    const next = entries.slice();
-    [next[index], next[target]] = [next[target], next[index]];
-    commit(next);
-  }
+  const sourceEntries = useMemo(() => blocksToLineEntries(blocks), [blocks]);
 
   return (
     <div className="stq-lines-panel">
-      <div className="stq-textbody-panel-heading">{t('studio.lines')}</div>
-      <div className="stq-textbody-list">
-        {entries.map((entry, index) => (
-          <div className="stq-textbody-row stq-textbody-row--line" key={`${index}-${entries.length}`}>
-            <div className="stq-textbody-index">{index + 1}</div>
-            <input
-              className="stq-lines-input"
-              value={entry}
-              placeholder={t('studio.linePlaceholder')}
-              onChange={(e) => setEntry(index, e.target.value)}
-            />
-            <div className="stq-textbody-actions">
-              <button
-                type="button"
-                aria-label={t('studio.moveUp')}
-                disabled={index === 0}
-                onClick={() => moveEntry(index, -1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                aria-label={t('studio.moveDown')}
-                disabled={index === entries.length - 1}
-                onClick={() => moveEntry(index, 1)}
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                aria-label={t('studio.deleteEntry')}
-                disabled={entries.length === 1 && !entry.trim()}
-                onClick={() => deleteEntry(index)}
-              >
-                <Icon name="trash" size={13} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button type="button" className="stq-textbody-add" onClick={addEntry}>
-        <Icon name="plus" size={13} />
-        {t('studio.addEntry')}
-      </button>
+      <EditableTextEntryList
+        sourceEntries={sourceEntries}
+        onCommit={(entries) =>
+          onChange(entries.map((text) => ({ type: 'line', text })))
+        }
+        heading={t('studio.lines')}
+        placeholder={t('studio.linePlaceholder')}
+        inputMode="input"
+        rowClassName="stq-textbody-row--line"
+      />
 
       <div className="stq-lines-section">
         <div className="stq-textbody-panel-heading">{t('studio.theme')}</div>

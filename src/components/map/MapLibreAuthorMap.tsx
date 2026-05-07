@@ -5,6 +5,7 @@ import {
   buildNumberedStationMarkerSvg,
   buildStationMarkerSvg,
 } from '@/stations/visuals';
+import { useLatest } from '@/hooks/useLatest';
 import {
   MAPLIBRE_STYLE_URL,
   resolveMapLibreStyle,
@@ -13,14 +14,23 @@ import {
   AUTHOR_MAP_CURRENT_POSITION_STYLE_PLANNER,
   DEFAULT_AUTHOR_MAP_BASEMAP,
   type AuthorMapBasemapKey,
-  type AuthorMapCoordinate,
   type AuthorMapProps,
 } from './mapTypes';
-
-interface RouteLayerRef {
-  layerId: string;
-  sourceId: string;
-}
+import {
+  attachLiveStationMarkerDrag,
+  createRouteEndpointMarkerElement,
+  createRoutePointMarkerElement,
+  getRouteEndpointPoints,
+  parseDashArray,
+  removeCurrentPositionMarker,
+  removeLayerAndSource,
+  removeRouteLayers,
+  removeStationMarkers,
+  sanitizeLayerSuffix,
+  toLngLat,
+  toPaddingOptions,
+  type RouteLayerRef,
+} from './mapLibreUtils';
 
 interface MapLibreErrorEvent {
   error?: {
@@ -87,26 +97,11 @@ export function MapLibreAuthorMap({
   // Capture the latest `onSelectStation` so the marker effect doesn't have to
   // re-run (and re-create every marker) when the parent supplies a fresh
   // arrow-function reference on each render.
-  const onSelectStationRef = useRef(onSelectStation);
-  useEffect(() => {
-    onSelectStationRef.current = onSelectStation;
-  }, [onSelectStation]);
-  const onDeleteStationRef = useRef(onDeleteStation);
-  useEffect(() => {
-    onDeleteStationRef.current = onDeleteStation;
-  }, [onDeleteStation]);
-  const onStationCoordinateChangeRef = useRef(onStationCoordinateChange);
-  useEffect(() => {
-    onStationCoordinateChangeRef.current = onStationCoordinateChange;
-  }, [onStationCoordinateChange]);
-  const onRoutePointCoordinateChangeRef = useRef(onRoutePointCoordinateChange);
-  useEffect(() => {
-    onRoutePointCoordinateChangeRef.current = onRoutePointCoordinateChange;
-  }, [onRoutePointCoordinateChange]);
-  const onMapClickRef = useRef(onMapClick);
-  useEffect(() => {
-    onMapClickRef.current = onMapClick;
-  }, [onMapClick]);
+  const onSelectStationRef = useLatest(onSelectStation);
+  const onDeleteStationRef = useLatest(onDeleteStation);
+  const onStationCoordinateChangeRef = useLatest(onStationCoordinateChange);
+  const onRoutePointCoordinateChangeRef = useLatest(onRoutePointCoordinateChange);
+  const onMapClickRef = useLatest(onMapClick);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -294,7 +289,7 @@ export function MapLibreAuthorMap({
     return () => {
       map.off('click', handleClick);
     };
-  }, [styleReady]);
+  }, [onMapClickRef, styleReady]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -390,7 +385,16 @@ export function MapLibreAuthorMap({
     });
 
     stationMarkersRef.current = markers;
-  }, [deletableStationIds, draggableStationIds, stations, selectedStationId]);
+  }, [
+    deletableStationIds,
+    draggableStationIds,
+    onDeleteStationRef,
+    onSelectStationRef,
+    onStationCoordinateChangeRef,
+    stations,
+    selectedStationId,
+    styleReady,
+  ]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -426,7 +430,7 @@ export function MapLibreAuthorMap({
       return marker;
     });
     routePointMarkersRef.current = nextRoutePointMarkers;
-  }, [routePointMarkers, styleReady]);
+  }, [onRoutePointCoordinateChangeRef, routePointMarkers, styleReady]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -842,243 +846,4 @@ export function MapLibreAuthorMap({
       ) : null}
     </div>
   );
-}
-
-function removeStationMarkers(markers: maplibregl.Marker[]) {
-  for (const marker of markers) {
-    marker.remove();
-  }
-  markers.length = 0;
-}
-
-function attachLiveStationMarkerDrag({
-  element,
-  map,
-  marker,
-  onDragStart,
-  onDragEnd,
-}: {
-  element: HTMLElement;
-  map: maplibregl.Map;
-  marker: maplibregl.Marker;
-  onDragStart: () => void;
-  onDragEnd: () => void;
-}) {
-  let active = false;
-  let moved = false;
-  let dragOffset = { x: 0, y: 0 };
-
-  const stop = (event: Event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-  };
-
-  const start = (clientX: number, clientY: number) => {
-    map.stop();
-    const pointerPoint = getMapClientPoint(map, clientX, clientY);
-    const markerPoint = map.project(marker.getLngLat());
-    dragOffset = {
-      x: pointerPoint.x - markerPoint.x,
-      y: pointerPoint.y - markerPoint.y,
-    };
-    active = true;
-    moved = false;
-    onDragStart();
-  };
-
-  const move = (clientX: number, clientY: number) => {
-    if (!active) return;
-    const pointerPoint = getMapClientPoint(map, clientX, clientY);
-    marker.setLngLat(
-      map.unproject([
-        pointerPoint.x - dragOffset.x,
-        pointerPoint.y - dragOffset.y,
-      ]),
-    );
-    moved = true;
-  };
-
-  const finish = () => {
-    if (!active) return;
-    active = false;
-    window.removeEventListener('mousemove', handleMouseMove, true);
-    window.removeEventListener('mouseup', handleMouseUp, true);
-    window.removeEventListener('touchmove', handleTouchMove, true);
-    window.removeEventListener('touchend', handleTouchEnd, true);
-    window.removeEventListener('touchcancel', handleTouchEnd, true);
-    onDragEnd();
-  };
-
-  const handleMouseMove = (event: MouseEvent) => {
-    move(event.clientX, event.clientY);
-    stop(event);
-  };
-
-  const handleMouseUp = (event: MouseEvent) => {
-    finish();
-    stop(event);
-  };
-
-  const handleTouchMove = (event: TouchEvent) => {
-    const touch = event.touches[0];
-    if (!touch) return;
-    move(touch.clientX, touch.clientY);
-    stop(event);
-  };
-
-  const handleTouchEnd = (event: TouchEvent) => {
-    finish();
-    stop(event);
-  };
-
-  element.addEventListener(
-    'mousedown',
-    (event) => {
-      if (event.button !== 0) return;
-      if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
-        return;
-      }
-      start(event.clientX, event.clientY);
-      window.addEventListener('mousemove', handleMouseMove, true);
-      window.addEventListener('mouseup', handleMouseUp, true);
-      stop(event);
-    },
-    true,
-  );
-
-  element.addEventListener(
-    'touchstart',
-    (event) => {
-      if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
-        return;
-      }
-      const touch = event.touches[0];
-      if (!touch) return;
-      start(touch.clientX, touch.clientY);
-      window.addEventListener('touchmove', handleTouchMove, {
-        capture: true,
-        passive: false,
-      });
-      window.addEventListener('touchend', handleTouchEnd, true);
-      window.addEventListener('touchcancel', handleTouchEnd, true);
-      stop(event);
-    },
-    { capture: true, passive: false },
-  );
-
-  element.addEventListener(
-    'click',
-    (event) => {
-      if (!moved) return;
-      moved = false;
-      stop(event);
-    },
-    true,
-  );
-}
-
-function getMapClientPoint(map: maplibregl.Map, clientX: number, clientY: number) {
-  const rect = map.getCanvasContainer().getBoundingClientRect();
-  return {
-    x: clientX - rect.left,
-    y: clientY - rect.top,
-  };
-}
-
-function removeCurrentPositionMarker(marker: maplibregl.Marker | null) {
-  marker?.remove();
-}
-
-function removeRouteLayers(map: maplibregl.Map, routeLayers: RouteLayerRef[]) {
-  for (const routeLayer of routeLayers) {
-    removeLayerAndSource(map, routeLayer.layerId, routeLayer.sourceId);
-  }
-}
-
-function removeLayerAndSource(
-  map: maplibregl.Map,
-  layerId: string,
-  sourceId: string,
-) {
-  if (map.getLayer(layerId)) {
-    map.removeLayer(layerId);
-  }
-  if (map.getSource(sourceId)) {
-    map.removeSource(sourceId);
-  }
-}
-
-function parseDashArray(dashArray: string | undefined) {
-  if (!dashArray) {
-    return undefined;
-  }
-
-  const values = dashArray
-    .split(/[\s,]+/)
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value) && value > 0);
-
-  return values.length > 0 ? values : undefined;
-}
-
-function getRouteEndpointPoints(points: AuthorMapCoordinate[]) {
-  const first = points[0];
-  const last = points[points.length - 1];
-  if (!first || !last) {
-    return [];
-  }
-
-  if (first.lat === last.lat && first.lng === last.lng) {
-    return [first];
-  }
-
-  return [first, last];
-}
-
-function createRouteEndpointMarkerElement(color: string) {
-  const element = document.createElement('div');
-  element.style.width = '12px';
-  element.style.height = '12px';
-  element.style.borderRadius = '999px';
-  element.style.background = color;
-  element.style.border = '2px solid #ffffff';
-  element.style.boxShadow = '0 2px 8px rgba(25, 35, 45, 0.22)';
-  element.style.pointerEvents = 'none';
-  element.style.zIndex = '20';
-  return element;
-}
-
-function createRoutePointMarkerElement(color: string) {
-  const element = document.createElement('button');
-  element.type = 'button';
-  element.setAttribute('aria-label', 'Move route point');
-  element.style.width = '18px';
-  element.style.height = '18px';
-  element.style.borderRadius = '999px';
-  element.style.background = '#ffffff';
-  element.style.border = `3px solid ${color}`;
-  element.style.boxShadow = '0 2px 9px rgba(25, 35, 45, 0.25)';
-  element.style.cursor = 'grab';
-  element.style.padding = '0';
-  element.style.touchAction = 'none';
-  element.style.zIndex = '30';
-  return element;
-}
-
-function sanitizeLayerSuffix(value: string) {
-  return value.replace(/[^a-zA-Z0-9-_]/g, '-');
-}
-
-function toLngLat(coordinate: AuthorMapCoordinate): [number, number] {
-  return [coordinate.lng, coordinate.lat];
-}
-
-function toPaddingOptions(padding: [number, number]) {
-  return {
-    top: padding[1],
-    right: padding[0],
-    bottom: padding[1],
-    left: padding[0],
-  };
 }

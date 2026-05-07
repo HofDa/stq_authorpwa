@@ -6,6 +6,7 @@ export type IconName =
   | 'camera'
   | 'route'
   | 'grid'
+  | 'upload'
   | 'download'
   | 'check'
   | 'sparkles'
@@ -107,6 +108,12 @@ export function Icon({
           <rect x="14" y="3" width="7" height="7" />
           <rect x="3" y="14" width="7" height="7" />
           <rect x="14" y="14" width="7" height="7" />
+        </svg>
+      );
+    case 'upload':
+      return (
+        <svg {...common}>
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
         </svg>
       );
     case 'download':

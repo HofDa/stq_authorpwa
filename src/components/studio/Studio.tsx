@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,19 +9,15 @@ import {
   createId,
   emptyStation,
   type Locale,
-  type RiddleEntry,
   type TourDraft,
 } from '@/schema';
 import { StudioHeader } from './StudioHeader';
+import { JumpPalette } from './JumpPalette';
+import { StudioWorkspaceRenderer } from './StudioWorkspaceRenderer';
 import { useExportTour } from '@/hooks/useExportTour';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { listDrafts } from '@/storage';
 import type { StudioWorkflowSection } from './workflow/workflowTypes';
-import { PlanWorkspace } from './workspaces/PlanWorkspace';
-import { StoryWorkspace } from './workspaces/StoryWorkspace';
-import { MapPreviewWorkspace } from './workspaces/MapPreviewWorkspace';
-import { RouteWorkspace } from './workspaces/RouteWorkspace';
-import { StudioSidebar } from './sidebar/StudioSidebar';
 
 interface Props {
   draft: TourDraft;
@@ -72,11 +67,6 @@ export function Studio({
       setSelectedId(null);
     }
   }, [draft.stations, selectedId]);
-
-  const selected = useMemo(
-    () => draft.stations.find((s) => s.id === selectedId) ?? null,
-    [draft.stations, selectedId],
-  );
 
   const selectByDelta = useCallback(
     (delta: -1 | 1) => {
@@ -209,11 +199,6 @@ export function Studio({
           setReorderMode((value) => !value);
         }}
         onExport={onExport}
-        onEnterField={() =>
-          navigate(`/tours/${draft.draftId}/field`, {
-            state: { selectedStationId: selectedId },
-          })
-        }
       />
 
       {exportError && (
@@ -256,28 +241,19 @@ export function Studio({
           <span className="stq-author-canvas-hint__dot" aria-hidden />
           {t('studio.canvasHint')}
         </div>
-        {renderWorkspace({
-          activeSection,
-          draft,
-          locale,
-          selected,
-          selectedId,
-          reorderMode,
-          onChange,
-          onLocaleChange: changeLanguage,
-          onSelectStation: setSelectedId,
-          onSelectPrev: () => selectByDelta(-1),
-          onSelectNext: () => selectByDelta(1),
-          onAddStation: addStation,
-          onReorderStations: reorderStations,
-          onToggleReorder: () => setReorderMode((v) => !v),
-          onOpenFullEditor: (stationId) =>
-            navigate(`/tours/${draft.draftId}/stations/${stationId}`),
-          onCreateTour,
-          onSelectDraft,
-          drafts,
-          onSelectTourOverview: () => setActiveSection('plan'),
-        })}
+        <StudioWorkspaceRenderer
+          activeSection={activeSection}
+          draft={draft}
+          locale={locale}
+          selectedId={selectedId}
+          onChange={onChange}
+          onSelectStation={setSelectedId}
+          onAddStation={addStation}
+          onCreateTour={onCreateTour}
+          onSelectDraft={onSelectDraft}
+          drafts={drafts}
+          onSelectTourOverview={() => setActiveSection('plan')}
+        />
       </div>
       {jumpOpen && (
         <JumpPalette
@@ -292,258 +268,4 @@ export function Studio({
       )}
     </div>
   );
-}
-
-interface RenderWorkspaceArgs {
-  activeSection: StudioWorkflowSection;
-  draft: TourDraft;
-  locale: Locale;
-  selected: RiddleEntry | null;
-  selectedId: string | null;
-  reorderMode: boolean;
-  onChange: (
-    patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
-  ) => void;
-  onLocaleChange: (locale: Locale) => void;
-  onSelectStation: (id: string) => void;
-  onSelectPrev: () => void;
-  onSelectNext: () => void;
-  onAddStation: () => void;
-  onReorderStations: (sourceId: string, targetId: string) => void;
-  onToggleReorder: () => void;
-  onOpenFullEditor: (stationId: string) => void;
-  onCreateTour?: () => void | Promise<void>;
-  onSelectDraft?: (draftId: string) => void;
-  drafts?: TourDraft[];
-  onSelectTourOverview: () => void;
-}
-
-function renderWorkspace(args: RenderWorkspaceArgs) {
-  // Top-level mockup views ship their own full-canvas layout.
-  if (args.activeSection === 'stations') {
-    return (
-      <MapPreviewWorkspace
-        draft={args.draft}
-        locale={args.locale}
-        selectedId={args.selectedId}
-        onSelectStation={args.onSelectStation}
-        onAddStation={args.onAddStation}
-        onChange={args.onChange}
-      />
-    );
-  }
-
-  if (
-    args.activeSection === 'plan' ||
-    args.activeSection === 'story' ||
-    args.activeSection === 'route' ||
-    args.activeSection === 'outro'
-  ) {
-    return (
-      <div style={{ minWidth: 0, minHeight: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
-        {renderWorkspaceBody(args)}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '260px minmax(0, 1fr)',
-        gap: 12,
-        minHeight: 0,
-        minWidth: 0,
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-      }}
-    >
-      <StudioSidebar
-        section={args.activeSection}
-        draft={args.draft}
-        locale={args.locale}
-        selectedStation={args.selected}
-        onOpenFullStationEditor={args.onOpenFullEditor}
-      />
-      <div style={{ minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
-        {renderWorkspaceBody(args)}
-      </div>
-    </div>
-  );
-}
-
-function renderWorkspaceBody(args: RenderWorkspaceArgs) {
-  switch (args.activeSection) {
-    case 'plan':
-      return (
-        <PlanWorkspace
-          draft={args.draft}
-          locale={args.locale}
-          onChange={args.onChange}
-          onCreateTour={args.onCreateTour}
-          drafts={args.drafts}
-          onSelectDraft={args.onSelectDraft}
-        />
-      );
-    case 'story':
-      return (
-        <StoryWorkspace
-          draft={args.draft}
-          locale={args.locale}
-          onChange={args.onChange}
-          onSelectTourOverview={args.onSelectTourOverview}
-        />
-      );
-    case 'outro':
-      return (
-        <StoryWorkspace
-          draft={args.draft}
-          locale={args.locale}
-          onChange={args.onChange}
-          mode="outro"
-          onSelectTourOverview={args.onSelectTourOverview}
-        />
-      );
-    case 'route':
-      return (
-        <RouteWorkspace
-          draft={args.draft}
-          locale={args.locale}
-          selectedId={args.selectedId}
-          onSelectStation={args.onSelectStation}
-          onChange={args.onChange}
-        />
-      );
-    case 'stations':
-      return null;
-  }
-}
-
-function JumpPalette({
-  stations,
-  locale,
-  onClose,
-  onSelect,
-}: {
-  stations: RiddleEntry[];
-  locale: Locale;
-  onClose: () => void;
-  onSelect: (id: string) => void;
-}) {
-  const [query, setQuery] = useState('');
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return stations;
-    return stations.filter((s) => {
-      const fields = [s[locale].location, summarize(s, locale), String(s.number)];
-      return fields.some((f) =>
-        (f ?? '').toString().toLowerCase().includes(q),
-      );
-    });
-  }, [stations, locale, query]);
-
-  useEffect(() => {
-    setActiveIdx(0);
-  }, [query]);
-
-  function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setActiveIdx((i) => Math.min(matches.length - 1, i + 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setActiveIdx((i) => Math.max(0, i - 1));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const target = matches[activeIdx];
-      if (target) onSelect(target.id);
-    } else if (e.key === 'Escape') {
-      onClose();
-    }
-  }
-
-  return (
-    <div
-      role="dialog"
-      aria-label="Jump to station"
-      className="studio-jump-backdrop"
-      onClick={onClose}
-    >
-      <div className="studio-jump-panel" onClick={(e) => e.stopPropagation()}>
-        <input
-          autoFocus
-          className="studio-jump-input"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder="Jump to station…"
-        />
-        <div className="studio-jump-list">
-          {matches.length === 0 && (
-            <div
-              style={{
-                padding: 16,
-                fontSize: 13,
-                color: 'var(--stq-text-mute)',
-                textAlign: 'center',
-              }}
-            >
-              No matching stations.
-            </div>
-          )}
-          {matches.map((s, i) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`studio-jump-row${i === activeIdx ? ' active' : ''}`}
-              onMouseEnter={() => setActiveIdx(i)}
-              onClick={() => onSelect(s.id)}
-            >
-              <span className="studio-pin" style={{ width: 26, height: 26, fontSize: 11 }}>
-                {s.number}
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span
-                  style={{
-                    display: 'block',
-                    fontWeight: 700,
-                    fontSize: 13,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {s[locale].location || 'Unnamed station'}
-                </span>
-                {summarize(s, locale) && (
-                  <span
-                    style={{
-                      display: 'block',
-                      fontSize: 11,
-                      color: 'var(--stq-text-mute)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {summarize(s, locale)}
-                  </span>
-                )}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function summarize(station: RiddleEntry, locale: Locale): string {
-  const first = station[locale].firstSection.find(
-    (b) => b.type === 'paragraph' || b.type === 'heading' || b.type === 'line',
-  ) as { text?: string } | undefined;
-  return (first?.text ?? '').trim();
 }

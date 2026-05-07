@@ -6,12 +6,10 @@ export function AppLayout() {
   const { t } = useEditorLanguage();
   const isRoot = pathname === '/' || pathname === '/tours';
   const isTourEditor = /^\/tours\/[^/]+\/?$/.test(pathname);
-  const isFieldMode = /^\/tours\/[^/]+\/field\/?$/.test(pathname);
 
-  // Field mode and the tour editor both render their own full-bleed chrome
-  // (Studio on desktop, FieldMode on mobile). Skip the app shell entirely so
-  // they fill the viewport.
-  if (isFieldMode || isTourEditor) {
+  // Studio renders its own full-bleed chrome. Skip the app shell so it fills
+  // the viewport.
+  if (isTourEditor) {
     return (
       <div className="stq-app-shell">
         <Outlet />

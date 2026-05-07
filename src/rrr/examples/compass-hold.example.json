@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "face_direction_1",
+      "type": "compass_align",
+      "label": "Face direction",
+      "config": {
+        "targetDegrees": 0,
+        "tolerance": 15
+      }
+    },
+    {
+      "id": "hold_still_1",
+      "type": "hold_still",
+      "label": "Hold still",
+      "config": {
+        "durationMs": 3000
+      }
+    }
+  ],
+  "condition": {
+    "type": "all_of",
+    "children": [
+      {
+        "type": "module",
+        "moduleId": "face_direction_1"
+      },
+      {
+        "type": "module",
+        "moduleId": "hold_still_1"
+      }
+    ]
+  }
+}

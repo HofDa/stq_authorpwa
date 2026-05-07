@@ -2,7 +2,10 @@ import type { TourDraft } from './draft';
 import type { TourEntry, TourLocaleContent } from './tour';
 import type { RiddleEntry, RiddleLocaleContent } from './riddle';
 import { LOCALES, type Locale } from './locales';
-import { emptyAcceptedAnswers } from './riddle';
+import {
+  createEmptyRrrInteraction,
+  emptyAcceptedAnswers,
+} from './riddle';
 import { createDefaultTourMeta } from './tourMeta';
 import {
   buildDraftStationAssetPaths,
@@ -79,6 +82,24 @@ export function emptyStation(id: string, number: number): RiddleEntry {
     solutionInputType: 'text',
     acceptedAnswers: emptyAcceptedAnswers(),
     ...localeMap(emptyRiddleLocale),
+  };
+}
+
+export function withRiddleType(
+  station: RiddleEntry,
+  riddleType: RiddleEntry['riddleType'],
+): RiddleEntry {
+  if (riddleType === 'modular') {
+    return {
+      ...station,
+      riddleType,
+      interaction: station.interaction ?? createEmptyRrrInteraction(),
+    };
+  }
+
+  return {
+    ...station,
+    riddleType,
   };
 }
 

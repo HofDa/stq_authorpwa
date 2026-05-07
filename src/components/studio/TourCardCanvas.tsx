@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type {
   DifficultyLevel,
   Locale,
@@ -8,10 +8,10 @@ import type {
 } from '@/schema';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
-import { storeImageBlob } from '@/media/imagePipeline';
 import { Icon } from './Icon';
 import { DeviceMockup } from './DeviceMockup';
 import { EditPanel, type EditPanelField } from './EditPanel';
+import { ImageAssetPanel } from './ImageAssetPanel';
 
 interface Props {
   draft: TourDraft;
@@ -145,15 +145,17 @@ export function TourCardCanvas({
       title: t('studio.tourCover'),
       fields: [],
       body: (
-        <CoverImagePanel
+        <ImageAssetPanel
           draftId={draft.draftId}
-          coverUrl={coverUrl}
+          label={t('studio.tourImage')}
+          imageUrl={coverUrl}
           imagePath={draft.tour.imagePath}
-          coverBlobId={draft.tour.coverBlobId}
-          onBlob={(blobId) =>
+          imageBlobId={draft.tour.coverBlobId}
+          preset="tourCover"
+          onBlobStored={(blobId) =>
             patchTour({ coverBlobId: blobId, imagePath: `images/${blobId}.webp` })
           }
-          onUrl={(url) => patchTour({ imagePath: url, coverBlobId: undefined })}
+          onPathChange={(url) => patchTour({ imagePath: url, coverBlobId: undefined })}
         />
       ),
     },
@@ -371,136 +373,6 @@ export function TourCardCanvas({
         >
           {panel.body}
         </EditPanel>
-      )}
-    </div>
-  );
-}
-
-function CoverImagePanel({
-  draftId,
-  coverUrl,
-  imagePath,
-  coverBlobId,
-  onBlob,
-  onUrl,
-}: {
-  draftId: string;
-  coverUrl: string | undefined;
-  imagePath: string;
-  coverBlobId: string | undefined;
-  onBlob: (blobId: string) => void;
-  onUrl: (url: string) => void;
-}) {
-  const { t } = useEditorLanguage();
-  const [tab, setTab] = useState<'photo' | 'upload'>('upload');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
-
-  async function handleFile(file: File | undefined) {
-    if (!file) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const stored = await storeImageBlob(draftId, file, 'tourCover');
-      onBlob(stored.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Capture failed');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const hasImage = Boolean(coverUrl ?? (imagePath && !coverBlobId));
-  const statusLabel = coverBlobId
-    ? t('studio.imageSelected')
-    : imagePath || t('studio.imageSelected');
-
-  return (
-    <div className="stq-cover-panel">
-      <div className="stq-edit-panel-label">{t('studio.tourImage')}</div>
-
-      <div className="stq-cover-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'photo'}
-          className={`stq-cover-tab${tab === 'photo' ? ' is-active' : ''}`}
-          onClick={() => setTab('photo')}
-        >
-          <span aria-hidden>📷</span> {t('studio.takePhoto')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'upload'}
-          className={`stq-cover-tab${tab === 'upload' ? ' is-active' : ''}`}
-          onClick={() => setTab('upload')}
-        >
-          <span aria-hidden>⬆️</span> {t('studio.upload')}
-        </button>
-      </div>
-
-      {hasImage && (
-        <div className="stq-cover-status" title={statusLabel}>
-          {statusLabel}
-        </div>
-      )}
-
-      <button
-        type="button"
-        className="stq-cover-dropzone"
-        disabled={busy}
-        onClick={() =>
-          (tab === 'photo' ? cameraInputRef : fileInputRef).current?.click()
-        }
-      >
-        <span aria-hidden className="stq-cover-dropzone-icon">⬆️</span>
-        <span className="stq-cover-dropzone-title">
-          {busy ? '…' : t('studio.chooseImage')}
-        </span>
-        <span className="stq-cover-dropzone-hint">
-          {t('studio.imageFormatHint')}
-        </span>
-      </button>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = '';
-          handleFile(file);
-        }}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = '';
-          handleFile(file);
-        }}
-      />
-
-      <input
-        type="text"
-        className="stq-edit-panel-input"
-        value={coverBlobId ? '' : imagePath}
-        placeholder={t('studio.imageUrlPlaceholder')}
-        onChange={(e) => onUrl(e.target.value)}
-      />
-
-      {error && (
-        <p style={{ color: '#c84a3a', fontSize: 12, margin: 0 }}>{error}</p>
       )}
     </div>
   );
