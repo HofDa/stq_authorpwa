@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "sequential_code_1",
+      "type": "sequential_code",
+      "label": "Gesammelten Code eingeben",
+      "config": {
+        "code": "A1B2",
+        "hint": "Symbole aus den Stationen",
+        "caseSensitive": false
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "sequential_code_1"
+  }
+}

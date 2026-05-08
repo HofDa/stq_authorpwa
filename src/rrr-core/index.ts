@@ -15,6 +15,12 @@ export {
 // Runtime evaluation entrypoints and result/input types.
 export { evaluateInteraction } from './evaluator/evaluateInteraction';
 export {
+  getDirectionHotColdFeedback,
+  getProximityHintFeedback,
+} from './modules/evaluateModule';
+export {
+  type DirectionHotColdProximity,
+  type ProximityHintState,
   type RrrConditionResult,
   type RrrInteractionResult,
   type RrrModuleResult,
@@ -46,8 +52,13 @@ export {
 } from './conditions/conditionHelpers';
 export {
   createRrrModuleFromPreset,
+  RRR_MODULE_CATEGORIES,
+  RRR_MODULE_PRESET_GROUPS,
   RRR_MODULE_PRESETS,
+  type RrrModuleCategory,
+  type RrrModuleDifficulty,
   type RrrModulePreset,
+  type RrrModuleReliability,
 } from './modules/modulePresets';
 export {
   createUniqueModuleId,

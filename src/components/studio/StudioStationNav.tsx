@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { Locale, TourDraft } from '@/schema';
+import type { Locale, RrrFieldTestStatus, TourDraft } from '@/schema';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { getStationLocationLabel } from '@/utils/localizedContent';
 import { Icon } from './Icon';
@@ -59,6 +59,8 @@ export function StudioStationNav({
           const dragging = draggingStationId === station.id;
           const dropTarget =
             dropTargetStationId === station.id && draggingStationId !== station.id;
+          const fieldTestStatus = station.fieldTestStatus ?? 'not_tested';
+          const issueTagCount = station.fieldTestIssueTags?.length ?? 0;
           return (
             <button
               key={station.id}
@@ -113,6 +115,13 @@ export function StudioStationNav({
                   `${t('studio.station')} ${station.number}`,
                 )}
               </span>
+              {station.riddleType === 'modular' && (
+                <span
+                  className={`stq-author-nav-item__rrr-status stq-author-nav-item__rrr-status--${fieldTestStatus}`}
+                >
+                  {getFieldTestStatusBadgeLabel(fieldTestStatus, issueTagCount)}
+                </span>
+              )}
             </button>
           );
         })}
@@ -129,4 +138,21 @@ export function StudioStationNav({
       </div>
     </div>
   );
+}
+
+function getFieldTestStatusBadgeLabel(
+  status: RrrFieldTestStatus,
+  issueTagCount: number,
+): string {
+  const suffix = issueTagCount > 0 ? ` · ${issueTagCount}` : '';
+  switch (status) {
+    case 'tested_ok':
+      return `OK${suffix}`;
+    case 'tested_with_warnings':
+      return `Hinweise${suffix}`;
+    case 'needs_fix':
+      return `Fix${suffix}`;
+    case 'not_tested':
+      return `Nicht getestet${suffix}`;
+  }
 }

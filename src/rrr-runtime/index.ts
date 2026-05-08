@@ -1,5 +1,9 @@
 export { evaluateCondition } from '@/rrr-core/conditions/evaluateCondition';
-export { evaluateModule } from '@/rrr-core/modules/evaluateModule';
+export {
+  evaluateModule,
+  getDirectionHotColdFeedback,
+  getProximityHintFeedback,
+} from '@/rrr-core/modules/evaluateModule';
 export { createRrrRuntimeBridge } from './createRrrRuntimeBridge';
 export { useRrrRuntimeBridge } from './useRrrRuntimeBridge';
 export {
@@ -8,6 +12,8 @@ export {
   reduceRrrRuntimeSession,
   resetRrrRuntimeSession,
   type RrrInteraction,
+  type DirectionHotColdProximity,
+  type ProximityHintState,
   type RrrConditionResult,
   type RrrInteractionResult,
   type RrrModuleResult,

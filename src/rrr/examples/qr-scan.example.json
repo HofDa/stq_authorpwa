@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "qr_scan_1",
+      "type": "qr_scan",
+      "label": "QR-Code scannen",
+      "config": {
+        "expectedValue": "station-3-gate"
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "qr_scan_1"
+  }
+}

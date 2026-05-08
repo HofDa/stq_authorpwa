@@ -55,6 +55,7 @@ export const RrrModuleSchema = z.object({
       resetOnFail: z.boolean().optional(),
     })
     .optional(),
+  fallbackModuleId: z.string().trim().min(1).optional(),
 });
 
 export const RrrConditionSchema: z.ZodType<RrrCondition> =
@@ -98,6 +99,19 @@ export const RrrInteractionSchema = z
       moduleIds.add(module.id);
     });
 
+    interaction.modules.forEach((module, index) => {
+      if (
+        module.fallbackModuleId &&
+        !moduleIds.has(module.fallbackModuleId)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['modules', index, 'fallbackModuleId'],
+          message: `Module fallback references unknown module "${module.fallbackModuleId}".`,
+        });
+      }
+    });
+
     if (!interaction.condition) {
       return;
     }
@@ -123,6 +137,23 @@ export const AcceptedAnswersSchema = z.object({
   de: AcceptedAnswerListSchema,
   it: AcceptedAnswerListSchema,
 });
+
+export const RrrFieldTestStatusSchema = z.enum([
+  'not_tested',
+  'tested_ok',
+  'tested_with_warnings',
+  'needs_fix',
+]);
+
+export const RrrFieldTestIssueTagSchema = z.enum([
+  'gps_ungenau',
+  'kompass_instabil',
+  'qr_schlecht_lesbar',
+  'aufgabe_unklar',
+  'ort_schwer_zugaenglich',
+  'ersatzloesung_noetig',
+  'sonstiges',
+]);
 
 const AuthoringRiddleEntrySchema = z
   .object({
@@ -154,6 +185,10 @@ const AuthoringRiddleEntrySchema = z
      */
     acceptedAnswers: AcceptedAnswersSchema.default(emptyAcceptedAnswers()),
     interaction: RrrInteractionSchema.optional(),
+    fieldTestStatus: RrrFieldTestStatusSchema.default('not_tested'),
+    fieldTestIssueTags: z.array(RrrFieldTestIssueTagSchema).default([]),
+    fieldTestNotes: z.string().default(''),
+    fieldTestTestedAt: z.string().datetime().optional(),
     en: RiddleLocaleSchema,
     de: RiddleLocaleSchema,
     it: RiddleLocaleSchema,
@@ -203,6 +238,8 @@ export const ExportRiddleEntrySchema = z
   });
 
 export type RiddleEntry = z.infer<typeof RiddleEntrySchema>;
+export type RrrFieldTestStatus = z.infer<typeof RrrFieldTestStatusSchema>;
+export type RrrFieldTestIssueTag = z.infer<typeof RrrFieldTestIssueTagSchema>;
 export type RiddleLocaleContent = z.infer<typeof RiddleLocaleSchema>;
 export type ExportRiddleEntry = z.infer<typeof ExportRiddleEntrySchema>;
 export type ExportRiddleLocaleContent = z.infer<typeof ExportRiddleLocaleSchema>;

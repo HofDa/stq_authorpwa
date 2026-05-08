@@ -2,9 +2,18 @@ export const RRR_INTERACTION_VERSION = 1;
 
 export const RRR_MODULE_TYPES = [
   'text_answer',
+  'multi_choice',
   'compass_align',
+  'direction_hotcold',
   'hold_still',
   'gps_enter',
+  'proximity_hint',
+  'qr_scan',
+  'code_word',
+  'sequential_code',
+  'timer_wait',
+  'photo_check_manual',
+  'object_found',
 ] as const;
 
 export type RrrModuleType = (typeof RRR_MODULE_TYPES)[number];
@@ -36,6 +45,7 @@ export interface RrrModule {
     maxAttempts?: number;
     resetOnFail?: boolean;
   };
+  fallbackModuleId?: string;
 }
 
 export type RrrCondition =

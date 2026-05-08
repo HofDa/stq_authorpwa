@@ -138,6 +138,65 @@ describe('RRR runtime session state', () => {
     expect(session.timedOutModuleIds).not.toContain('face_direction_1');
     expect(session.activeStepStartedAtMs).toBe(1200);
   });
+
+  it('resets timer_wait elapsed time on session reset', () => {
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'timer_wait_1',
+          type: 'timer_wait',
+          label: 'Wait',
+          config: { durationMs: 3000 },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'timer_wait_1' },
+    };
+    let session = createRrrRuntimeSession();
+
+    const firstEvaluation = evaluateInteraction(
+      interaction,
+      {},
+      {},
+      session,
+      { nowMs: 1000 },
+    );
+    session = reduceRrrRuntimeSession(session, {
+      type: 'evaluation',
+      result: firstEvaluation,
+      nowMs: 1000,
+    });
+
+    expect(session.activeStepStartedAtMs).toBe(1000);
+
+    const completed = evaluateInteraction(interaction, {}, {}, session, {
+      nowMs: 4000,
+    });
+    expect(completed.modules.timer_wait_1.status).toBe('success');
+
+    session = reduceRrrRuntimeSession(session, { type: 'reset' });
+    const restarted = evaluateInteraction(interaction, {}, {}, session, {
+      nowMs: 5000,
+    });
+    session = reduceRrrRuntimeSession(session, {
+      type: 'evaluation',
+      result: restarted,
+      nowMs: 5000,
+    });
+
+    expect(restarted.modules.timer_wait_1.status).toBe('running');
+    expect(session.activeStepStartedAtMs).toBe(5000);
+    expect(
+      evaluateInteraction(interaction, {}, {}, session, {
+        nowMs: 7999,
+      }).modules.timer_wait_1.status,
+    ).toBe('running');
+    expect(
+      evaluateInteraction(interaction, {}, {}, session, {
+        nowMs: 8000,
+      }).modules.timer_wait_1.status,
+    ).toBe('success');
+  });
 });
 
 function sequenceInteraction(

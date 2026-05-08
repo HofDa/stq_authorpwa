@@ -9,11 +9,8 @@ describe('RrrRuntimeDemo', () => {
     expect(html).toContain('Demo für modulares Rätsel');
     expect(html).toContain('Beispielhafter Rätselablauf');
     expect(html).toContain('Nach Osten schauen');
-    expect(html).toContain('Beim Testpunkt stehen');
-    expect(html).toContain('Stillhalten');
-    expect(html).toContain('Kennwort eingeben');
     expect(html).toContain('Testvorschau');
-    expect(html).toContain('Richtung: 0 Grad');
-    expect(html).toContain('Zurücksetzen');
+    expect(html).toContain('Richtung simulieren: 0 Grad');
+    expect(html).toContain('Test zurücksetzen');
   });
 });

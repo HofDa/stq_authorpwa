@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { RrrInteractionSchema } from '@/schema';
 import {
-  RRR_MODULE_TYPES,
+  RRR_MODULE_PRESET_GROUPS,
   RRR_MODULE_PRESETS,
   buildFlatCondition,
   conditionToFlatModuleIds,
@@ -52,12 +52,22 @@ const HOLD_STILL_DURATION_PRESETS = [
   { label: '5 s', durationMs: 5000 },
 ] as const;
 
+const TIMER_WAIT_DURATION_PRESETS = [
+  { label: '3 s', durationMs: 3000 },
+  { label: '5 s', durationMs: 5000 },
+  { label: '10 s', durationMs: 10000 },
+  { label: '30 s', durationMs: 30000 },
+] as const;
+
 type CompassNeedleStyle = CSSProperties & {
   '--stq-rrr-compass-degrees': string;
 };
 
 export function RrrInteractionEditor({
   interaction,
+  stationId,
+  stationTitle,
+  fieldTestIssueTags,
   onChange,
 }: RrrInteractionEditorProps) {
   const [moduleTypeToAdd, setModuleTypeToAdd] =
@@ -65,6 +75,7 @@ export function RrrInteractionEditor({
   const [expertMode, setExpertMode] = useState(false);
   const moduleCount = interaction.modules.length;
   const conditionType = interaction.condition?.type ?? 'none';
+  const selectedModulePreset = RRR_MODULE_PRESETS[moduleTypeToAdd];
   const validation = RrrInteractionSchema.safeParse(interaction);
   const validationMessages = validation.success
     ? []
@@ -106,6 +117,36 @@ export function RrrInteractionEditor({
         interaction.condition,
         nextModules.map((module) => module.id),
       ),
+    });
+  }
+
+  function createFallbackModule(moduleId: string, fallbackType: RrrModuleType) {
+    const targetModule = interaction.modules.find(
+      (module) => module.id === moduleId,
+    );
+    if (!targetModule) {
+      return;
+    }
+
+    const fallbackModule = createRrrModuleFromPreset(
+      fallbackType,
+      interaction.modules,
+    );
+    const labeledFallbackModule = {
+      ...fallbackModule,
+      label: `${fallbackModule.label} für ${targetModule.label}`,
+    };
+
+    onChange({
+      ...interaction,
+      modules: [
+        ...interaction.modules.map((module) =>
+          module.id === moduleId
+            ? { ...module, fallbackModuleId: labeledFallbackModule.id }
+            : module,
+        ),
+        labeledFallbackModule,
+      ],
     });
   }
 
@@ -159,10 +200,14 @@ export function RrrInteractionEditor({
               setModuleTypeToAdd(event.target.value as RrrModuleType)
             }
           >
-            {RRR_MODULE_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {RRR_MODULE_PRESETS[type].label}
-              </option>
+            {RRR_MODULE_PRESET_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.types.map((type) => (
+                  <option key={type} value={type}>
+                    {RRR_MODULE_PRESETS[type].label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <button
@@ -173,6 +218,7 @@ export function RrrInteractionEditor({
             Hinzufügen
           </button>
         </div>
+        <ModulePresetHints preset={selectedModulePreset} />
       </div>
 
       {moduleCount === 0 && (
@@ -187,8 +233,12 @@ export function RrrInteractionEditor({
             <RrrModuleEditor
               key={module.id}
               module={module}
+              modules={interaction.modules}
               expertMode={expertMode}
               onChange={(nextModule) => updateModule(module.id, nextModule)}
+              onCreateFallback={(fallbackType) =>
+                createFallbackModule(module.id, fallbackType)
+              }
               onRemove={() => removeModule(module.id)}
             />
           ))}
@@ -207,7 +257,13 @@ export function RrrInteractionEditor({
         }
       />
 
-      <RrrMockPreview interaction={interaction} expertMode={expertMode} />
+      <RrrMockPreview
+        interaction={interaction}
+        expertMode={expertMode}
+        stationId={stationId}
+        stationTitle={stationTitle}
+        fieldTestIssueTags={fieldTestIssueTags}
+      />
 
       <RrrWarningsPanel warnings={warnings} expertMode={expertMode} />
 
@@ -235,6 +291,63 @@ export function RrrInteractionEditor({
       )}
     </section>
   );
+}
+
+function ModulePresetHints({
+  preset,
+}: {
+  preset: (typeof RRR_MODULE_PRESETS)[RrrModuleType];
+}) {
+  const reliabilityLabel = getModuleReliabilityLabel(preset.reliability);
+  const difficultyLabel = getModuleDifficultyLabel(preset.difficulty);
+  const shouldFieldTest =
+    preset.reliability === 'medium' ||
+    preset.reliability === 'device-dependent' ||
+    preset.difficulty === 'advanced';
+
+  return (
+    <div
+      className={`stq-rrr-module-preset-hints stq-rrr-module-preset-hints--${preset.reliability}`}
+      aria-live="polite"
+    >
+      <div className="stq-rrr-module-preset-hints__header">
+        <strong>{preset.label}</strong>
+        <span>{preset.category}</span>
+      </div>
+      <div className="stq-rrr-module-preset-hints__badges">
+        <span>{difficultyLabel}</span>
+        <span>{reliabilityLabel}</span>
+        <span>{preset.needsFallback ? 'Ersatzlösung empfohlen' : 'Robust'}</span>
+        {shouldFieldTest && <span>Für Feldtests prüfen</span>}
+      </div>
+    </div>
+  );
+}
+
+function getModuleDifficultyLabel(
+  difficulty: (typeof RRR_MODULE_PRESETS)[RrrModuleType]['difficulty'],
+): string {
+  switch (difficulty) {
+    case 'easy':
+      return 'Einfach';
+    case 'medium':
+      return 'Mittel';
+    case 'advanced':
+      return 'Fortgeschritten';
+  }
+}
+
+function getModuleReliabilityLabel(
+  reliability: (typeof RRR_MODULE_PRESETS)[RrrModuleType]['reliability'],
+): string {
+  switch (reliability) {
+    case 'high':
+      return 'Sehr zuverlässig';
+    case 'medium':
+      return 'Zuverlässig';
+    case 'device-dependent':
+      return 'Geräteabhängig';
+  }
 }
 
 function RrrConditionEditor({
@@ -529,19 +642,31 @@ function RrrConditionEditor({
 
 function RrrModuleEditor({
   module,
+  modules,
   expertMode,
   onChange,
+  onCreateFallback,
   onRemove,
 }: {
   module: RrrModule;
+  modules: RrrModule[];
   expertMode: boolean;
   onChange: (module: RrrModule) => void;
+  onCreateFallback: (fallbackType: RrrModuleType) => void;
   onRemove: () => void;
 }) {
   const config = module.config;
   const [isEditing, setIsEditing] = useState(false);
   const cardMeta = getModuleCardMeta(module);
-  const summary = getModuleSettingsSummary(module);
+  const modulePreset = RRR_MODULE_PRESETS[module.type];
+  const fallbackOptions = modules.filter((entry) => entry.id !== module.id);
+  const fallbackSuggestions = module.fallbackModuleId
+    ? []
+    : modulePreset.recommendedFallbackTypes;
+  const summary = [
+    ...getModuleSettingsSummary(module),
+    ...getFallbackSettingsSummary(module, modules, expertMode),
+  ];
 
   function patchConfig(patch: Record<string, unknown>) {
     onChange({
@@ -550,6 +675,19 @@ function RrrModuleEditor({
         ...module.config,
         ...patch,
       },
+    });
+  }
+
+  function setFallbackModuleId(moduleId: string) {
+    if (!moduleId) {
+      const { fallbackModuleId, ...nextModule } = module;
+      onChange(nextModule);
+      return;
+    }
+
+    onChange({
+      ...module,
+      fallbackModuleId: moduleId,
     });
   }
 
@@ -602,10 +740,29 @@ function RrrModuleEditor({
             <TextAnswerEditor config={config} onPatchConfig={patchConfig} />
           )}
 
+          {module.type === 'multi_choice' && (
+            <MultiChoiceEditor
+              moduleId={module.id}
+              config={config}
+              onPatchConfig={patchConfig}
+            />
+          )}
+
           {module.type === 'compass_align' && (
             <CompassDirectionPicker
               config={config}
               expertMode={expertMode}
+              onPatchConfig={patchConfig}
+            />
+          )}
+
+          {module.type === 'direction_hotcold' && (
+            <CompassDirectionPicker
+              config={config}
+              expertMode={expertMode}
+              toleranceConfigKey="successTolerance"
+              toleranceLabel="Erfolgstoleranz"
+              toleranceHint="Innerhalb dieser Abweichung gilt die Richtung als korrekt. Außerhalb davon sehen Spieler warm/kalt-Feedback."
               onPatchConfig={patchConfig}
             />
           )}
@@ -621,9 +778,128 @@ function RrrModuleEditor({
           {module.type === 'gps_enter' && (
             <GpsRadiusEditor config={config} onPatchConfig={patchConfig} />
           )}
+
+          {module.type === 'proximity_hint' && (
+            <GpsRadiusEditor
+              config={config}
+              radiusConfigKey="successRadiusMeters"
+              radiusLabel="Erfolgsradius"
+              radiusHint="Innerhalb dieses Radius ist der Schritt erfüllt. Außerhalb davon sehen Spieler Nähe-Hinweise."
+              onPatchConfig={patchConfig}
+            />
+          )}
+
+          {module.type === 'qr_scan' && (
+            <QrScanEditor config={config} onPatchConfig={patchConfig} />
+          )}
+
+          {module.type === 'code_word' && (
+            <CodeWordEditor config={config} onPatchConfig={patchConfig} />
+          )}
+
+          {module.type === 'sequential_code' && (
+            <SequentialCodeEditor
+              config={config}
+              onPatchConfig={patchConfig}
+            />
+          )}
+
+          {module.type === 'timer_wait' && (
+            <TimerWaitDurationEditor
+              config={config}
+              expertMode={expertMode}
+              onPatchConfig={patchConfig}
+            />
+          )}
+
+          {module.type === 'photo_check_manual' && (
+            <PhotoCheckManualEditor
+              config={config}
+              onPatchConfig={patchConfig}
+            />
+          )}
+
+          {module.type === 'object_found' && (
+            <ObjectFoundEditor config={config} onPatchConfig={patchConfig} />
+          )}
+
+          {fallbackSuggestions.length > 0 && (
+            <FallbackSuggestion
+              moduleLabel={module.label}
+              fallbackTypes={fallbackSuggestions}
+              onCreateFallback={onCreateFallback}
+            />
+          )}
+
+          <label className="stq-rrr-field">
+            <span>Ersatzlösung (Fallback)</span>
+            <select
+              className="stq-rrr-editor__select"
+              value={module.fallbackModuleId ?? ''}
+              onChange={(event) => setFallbackModuleId(event.target.value)}
+            >
+              <option value="">Keine Ersatzlösung</option>
+              {fallbackOptions.map((fallbackModule) => (
+                <option key={fallbackModule.id} value={fallbackModule.id}>
+                  {formatModuleOption(fallbackModule, expertMode)}
+                </option>
+              ))}
+              {module.fallbackModuleId &&
+                !modules.some(
+                  (fallbackModule) =>
+                    fallbackModule.id === module.fallbackModuleId,
+                ) && (
+                  <option value={module.fallbackModuleId}>
+                    {expertMode
+                      ? `Fehlender Baustein (${module.fallbackModuleId})`
+                      : 'Fehlender Baustein'}
+                  </option>
+                )}
+            </select>
+            <small className="stq-rrr-field__hint">
+              Optionaler Baustein, den Autoren als Ersatzlösung vormerken.
+            </small>
+          </label>
         </div>
       )}
     </article>
+  );
+}
+
+function FallbackSuggestion({
+  moduleLabel,
+  fallbackTypes,
+  onCreateFallback,
+}: {
+  moduleLabel: string;
+  fallbackTypes: readonly RrrModuleType[];
+  onCreateFallback: (fallbackType: RrrModuleType) => void;
+}) {
+  return (
+    <section
+      className="stq-rrr-fallback-suggestion"
+      aria-label="Vorgeschlagene Ersatzlösung"
+    >
+      <div className="stq-rrr-fallback-suggestion__text">
+        <strong>Ersatzlösung empfohlen</strong>
+        <span>
+          Falls "{moduleLabel}" im Feld nicht zuverlässig funktioniert, kann ein
+          einfacher Ersatzbaustein helfen.
+        </span>
+      </div>
+      <div className="stq-rrr-fallback-suggestion__actions">
+        {fallbackTypes.map((fallbackType) => (
+          <button
+            key={fallbackType}
+            type="button"
+            className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
+            onClick={() => onCreateFallback(fallbackType)}
+          >
+            {RRR_MODULE_PRESETS[fallbackType].label} anlegen
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -689,6 +965,178 @@ function TextAnswerEditor({
           />
           <span>Groß-/Kleinschreibung beachten</span>
         </label>
+      </section>
+    </div>
+  );
+}
+
+function MultiChoiceEditor({
+  moduleId,
+  config,
+  onPatchConfig,
+}: {
+  moduleId: string;
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const question = readString(config.question);
+  const options = normalizeMultiChoiceOptions(config.options);
+  const correctOptionIndexes = normalizeMultiChoiceIndexes(
+    config.correctOptionIndexes,
+    options,
+  );
+  const allowMultiple = Boolean(config.allowMultiple);
+  const hasQuestion = question.trim() !== '';
+  const hasOptions = options.some((option) => option.trim() !== '');
+  const hasCorrectOption = correctOptionIndexes.length > 0;
+
+  function setOption(index: number, value: string) {
+    const nextOptions = options.map((option, optionIndex) =>
+      optionIndex === index ? value : option,
+    );
+    onPatchConfig({
+      options: nextOptions,
+      correctOptionIndexes: normalizeMultiChoiceIndexes(
+        correctOptionIndexes,
+        nextOptions,
+      ),
+    });
+  }
+
+  function addOption() {
+    onPatchConfig({ options: [...options, ''] });
+  }
+
+  function removeOption(index: number) {
+    if (options.length <= 1) {
+      return;
+    }
+    const nextOptions = options.filter((_, optionIndex) => optionIndex !== index);
+    onPatchConfig({
+      options: nextOptions,
+      correctOptionIndexes: correctOptionIndexes
+        .filter((entry) => entry !== index)
+        .map((entry) => (entry > index ? entry - 1 : entry)),
+    });
+  }
+
+  function toggleCorrectOption(index: number, checked: boolean) {
+    const nextCorrect = allowMultiple
+      ? checked
+        ? [...new Set([...correctOptionIndexes, index])]
+        : correctOptionIndexes.filter((entry) => entry !== index)
+      : checked
+        ? [index]
+        : [];
+    onPatchConfig({ correctOptionIndexes: nextCorrect });
+  }
+
+  function setAllowMultiple(nextAllowMultiple: boolean) {
+    onPatchConfig({
+      allowMultiple: nextAllowMultiple,
+      correctOptionIndexes: nextAllowMultiple
+        ? correctOptionIndexes
+        : correctOptionIndexes.slice(0, 1),
+    });
+  }
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasQuestion && hasOptions && hasCorrectOption
+            ? ''
+            : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label="Auswahlfrage einstellen"
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>Auswahlfrage</span>
+            <strong>
+              {hasQuestion && hasOptions && hasCorrectOption
+                ? 'Frage bereit'
+                : 'Angaben fehlen'}
+            </strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasQuestion && hasOptions && hasCorrectOption
+                ? ''
+                : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            {allowMultiple ? 'Mehrfachauswahl' : 'Einzelauswahl'}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Frage</span>
+          <input
+            type="text"
+            value={question}
+            placeholder="z. B. Welche Spur siehst du am Brunnen?"
+            onChange={(event) =>
+              onPatchConfig({ question: event.target.value })
+            }
+          />
+        </label>
+
+        <label className="stq-rrr-check stq-rrr-text-answer__toggle">
+          <input
+            type="checkbox"
+            checked={allowMultiple}
+            onChange={(event) => setAllowMultiple(event.target.checked)}
+          />
+          <span>Mehrere richtige Antworten erlauben</span>
+        </label>
+
+        <div className="stq-rrr-multi-choice-editor__options">
+          {options.map((option, index) => (
+            <div key={index} className="stq-rrr-multi-choice-editor__option">
+              <label className="stq-rrr-check">
+                <input
+                  type={allowMultiple ? 'checkbox' : 'radio'}
+                  name={`multi-choice-correct-${moduleId}`}
+                  checked={correctOptionIndexes.includes(index)}
+                  onChange={(event) =>
+                    toggleCorrectOption(index, event.target.checked)
+                  }
+                  aria-label={`Option ${index + 1} als richtig markieren`}
+                />
+                <span>Richtig</span>
+              </label>
+              <input
+                type="text"
+                value={option}
+                placeholder={`Option ${index + 1}`}
+                onChange={(event) => setOption(index, event.target.value)}
+              />
+              <button
+                type="button"
+                className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
+                onClick={() => removeOption(index)}
+                disabled={options.length <= 1}
+              >
+                Entfernen
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
+          onClick={addOption}
+        >
+          Option hinzufügen
+        </button>
+
+        {(!hasQuestion || !hasOptions || !hasCorrectOption) && (
+          <p className="stq-rrr-text-answer__warning">
+            Lege Frage, Antwortoptionen und mindestens eine richtige Option fest.
+          </p>
+        )}
       </section>
     </div>
   );
@@ -774,14 +1222,20 @@ function HoldStillDurationEditor({
 function CompassDirectionPicker({
   config,
   expertMode,
+  toleranceConfigKey = 'tolerance',
+  toleranceLabel = 'Toleranz',
+  toleranceHint = 'Je größer die Toleranz, desto großzügiger gilt die Blickrichtung als richtig.',
   onPatchConfig,
 }: {
   config: RrrModule['config'];
   expertMode: boolean;
+  toleranceConfigKey?: 'tolerance' | 'successTolerance';
+  toleranceLabel?: string;
+  toleranceHint?: string;
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
   const targetDegrees = normalizeCompassDegrees(readNumber(config.targetDegrees));
-  const tolerance = Math.max(0, readNumber(config.tolerance));
+  const tolerance = Math.max(0, readNumber(config[toleranceConfigKey]));
   const toleranceSliderValue = Math.min(tolerance, 90);
 
   function setTargetDegrees(value: number) {
@@ -789,7 +1243,7 @@ function CompassDirectionPicker({
   }
 
   function setTolerance(value: number) {
-    onPatchConfig({ tolerance: Math.max(0, value) });
+    onPatchConfig({ [toleranceConfigKey]: Math.max(0, value) });
   }
 
   function handleDialPointer(event: PointerEvent<HTMLButtonElement>) {
@@ -858,7 +1312,7 @@ function CompassDirectionPicker({
 
       <div className="stq-rrr-compass-picker__tolerance">
         <label className="stq-rrr-field">
-          <span>Toleranz: ±{formatNumber(tolerance, 0)}°</span>
+          <span>{toleranceLabel}: ±{formatNumber(tolerance, 0)}°</span>
           <input
             type="range"
             min="0"
@@ -868,12 +1322,11 @@ function CompassDirectionPicker({
             onChange={(event) => setTolerance(Number(event.target.value))}
           />
           <small className="stq-rrr-field__hint">
-            Je größer die Toleranz, desto großzügiger gilt die Blickrichtung als
-            richtig.
+            {toleranceHint}
           </small>
         </label>
         <NumberField
-          label="Toleranz in Grad"
+          label={`${toleranceLabel} in Grad`}
           value={tolerance}
           onChange={setTolerance}
         />
@@ -892,17 +1345,23 @@ function CompassDirectionPicker({
 
 function GpsRadiusEditor({
   config,
+  radiusConfigKey = 'radiusMeters',
+  radiusLabel = 'Radius',
+  radiusHint,
   onPatchConfig,
 }: {
   config: RrrModule['config'];
+  radiusConfigKey?: 'radiusMeters' | 'successRadiusMeters';
+  radiusLabel?: string;
+  radiusHint?: string;
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
-  const radiusMeters = Math.max(0, readNumber(config.radiusMeters));
+  const radiusMeters = Math.max(0, readNumber(config[radiusConfigKey]));
   const radiusSliderValue = Math.min(radiusMeters, 100);
   const radiusMeta = getGpsRadiusMeta(radiusMeters);
 
   function setRadiusMeters(value: number) {
-    onPatchConfig({ radiusMeters: Math.max(0, Math.round(value)) });
+    onPatchConfig({ [radiusConfigKey]: Math.max(0, Math.round(value)) });
   }
 
   return (
@@ -926,7 +1385,7 @@ function GpsRadiusEditor({
       >
         <div className="stq-rrr-gps-radius__header">
           <div>
-            <span>Radius</span>
+            <span>{radiusLabel}</span>
             <strong>{formatNumber(radiusMeters, 0)} m</strong>
           </div>
           <span
@@ -937,7 +1396,7 @@ function GpsRadiusEditor({
         </div>
 
         <label className="stq-rrr-field">
-          <span>Radius per Schieberegler</span>
+          <span>{radiusLabel} per Schieberegler</span>
           <input
             type="range"
             min="1"
@@ -947,12 +1406,12 @@ function GpsRadiusEditor({
             onChange={(event) => setRadiusMeters(Number(event.target.value))}
           />
           <small className="stq-rrr-field__hint">
-            {radiusMeta.description}
+            {radiusHint ?? radiusMeta.description}
           </small>
         </label>
 
         <NumberField
-          label="Radius in Metern"
+          label={`${radiusLabel} in Metern`}
           value={radiusMeters}
           onChange={setRadiusMeters}
         />
@@ -961,6 +1420,444 @@ function GpsRadiusEditor({
           GPS-Genauigkeit. Ohne Live-Messung ist {recommendGpsRadius()} m ein
           sinnvoller Startwert.
         </p>
+      </section>
+    </div>
+  );
+}
+
+function QrScanEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const expectedValue = readString(config.expectedValue);
+  const hasExpectedValue = expectedValue.trim() !== '';
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasExpectedValue ? '' : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label="QR-Code einstellen"
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>Erwarteter QR-Wert</span>
+            <strong>
+              {hasExpectedValue ? 'QR-Wert festgelegt' : 'QR-Wert fehlt'}
+            </strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasExpectedValue ? '' : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            Exakter Wert
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Erwarteter Wert</span>
+          <input
+            type="text"
+            value={expectedValue}
+            placeholder="z. B. station-3-gate"
+            onChange={(event) =>
+              onPatchConfig({ expectedValue: event.target.value })
+            }
+          />
+          <small className="stq-rrr-field__hint">
+            Dieser Wert wird später mit dem gescannten QR-Code verglichen.
+          </small>
+        </label>
+
+        <div className="stq-rrr-editor__empty">
+          <strong>Kamera wird benötigt</strong>
+          <span>
+            Im Spiel wird dafür eine Kamera-Freigabe vorbereitet. Kamera
+            aktivieren, Kamera nicht verfügbar und QR-Code konnte nicht gelesen
+            werden sind eigene UI-Zustände. Der geführte Test bleibt über den
+            simulierten QR-Wert bedienbar.
+          </span>
+        </div>
+
+        {!hasExpectedValue && (
+          <p className="stq-rrr-text-answer__warning">
+            Lege einen erwarteten QR-Wert fest, damit dieser Baustein lösbar ist.
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function CodeWordEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const code = readString(config.code);
+  const hasCode = code.trim() !== '';
+  const caseSensitive = Boolean(config.caseSensitive);
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasCode ? '' : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label="Codewort einstellen"
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>Codewort</span>
+            <strong>{hasCode ? 'Codewort festgelegt' : 'Codewort fehlt'}</strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasCode ? '' : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            {caseSensitive ? 'Exakte Schreibweise' : 'Schreibweise flexibel'}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Codewort</span>
+          <input
+            type="text"
+            value={code}
+            placeholder="z. B. Adler"
+            onChange={(event) => onPatchConfig({ code: event.target.value })}
+          />
+          <small className="stq-rrr-field__hint">
+            Spieler geben dieses Codewort ein, um den Baustein zu lösen.
+          </small>
+        </label>
+
+        {!hasCode && (
+          <p className="stq-rrr-text-answer__warning">
+            Lege ein Codewort fest, damit dieser Baustein lösbar ist.
+          </p>
+        )}
+
+        <label className="stq-rrr-check stq-rrr-text-answer__toggle">
+          <input
+            type="checkbox"
+            checked={caseSensitive}
+            onChange={(event) =>
+              onPatchConfig({ caseSensitive: event.target.checked })
+            }
+          />
+          <span>Groß-/Kleinschreibung beachten</span>
+        </label>
+      </section>
+    </div>
+  );
+}
+
+function SequentialCodeEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const code = readString(config.code);
+  const hint = readString(config.hint);
+  const hasCode = code.trim() !== '';
+  const caseSensitive = Boolean(config.caseSensitive);
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasCode ? '' : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label="Gesammelten Code einstellen"
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>Gesammelter Code</span>
+            <strong>{hasCode ? 'Code festgelegt' : 'Code fehlt'}</strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasCode ? '' : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            {caseSensitive ? 'Exakte Schreibweise' : 'Schreibweise flexibel'}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Code</span>
+          <input
+            type="text"
+            value={code}
+            placeholder="z. B. 1842"
+            onChange={(event) => onPatchConfig({ code: event.target.value })}
+          />
+          <small className="stq-rrr-field__hint">
+            Spieler geben den unterwegs gesammelten Code am Ende ein.
+          </small>
+        </label>
+
+        <label className="stq-rrr-field">
+          <span>Hinweis (optional)</span>
+          <input
+            type="text"
+            value={hint}
+            placeholder="z. B. Vier Zeichen aus den Stationen"
+            onChange={(event) => onPatchConfig({ hint: event.target.value })}
+          />
+        </label>
+
+        {!hasCode && (
+          <p className="stq-rrr-text-answer__warning">
+            Lege einen Code fest, damit dieser Baustein lösbar ist.
+          </p>
+        )}
+
+        <label className="stq-rrr-check stq-rrr-text-answer__toggle">
+          <input
+            type="checkbox"
+            checked={caseSensitive}
+            onChange={(event) =>
+              onPatchConfig({ caseSensitive: event.target.checked })
+            }
+          />
+          <span>Groß-/Kleinschreibung beachten</span>
+        </label>
+      </section>
+    </div>
+  );
+}
+
+function TimerWaitDurationEditor({
+  config,
+  expertMode,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  expertMode: boolean;
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const durationMs = normalizeDurationMs(readNumber(config.durationMs));
+  const durationSliderValue = clampNumber(durationMs, 500, 30000);
+  const durationMeta = getTimerWaitDurationMeta(durationMs);
+
+  function setDurationMs(value: number) {
+    onPatchConfig({ durationMs: normalizeDurationMs(value) });
+  }
+
+  return (
+    <div className="stq-rrr-hold-editor">
+      <section
+        className="stq-rrr-hold-duration"
+        aria-label="Wartezeit einstellen"
+      >
+        <div className="stq-rrr-hold-duration__header">
+          <div>
+            <span>Wartezeit</span>
+            <strong>{formatDurationSeconds(durationMs)}</strong>
+          </div>
+          <span
+            className={`stq-rrr-hold-duration__badge stq-rrr-hold-duration__badge--${durationMeta.tone}`}
+          >
+            {durationMeta.label}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Wartezeit per Schieberegler</span>
+          <input
+            type="range"
+            min="500"
+            max="30000"
+            step="500"
+            value={durationSliderValue}
+            onChange={(event) => setDurationMs(Number(event.target.value))}
+          />
+          <small className="stq-rrr-field__hint">
+            {durationMeta.description}
+          </small>
+        </label>
+
+        <div className="stq-rrr-hold-duration__presets" aria-label="Schnelle Wartezeit">
+          {TIMER_WAIT_DURATION_PRESETS.map((preset) => (
+            <button
+              key={preset.durationMs}
+              type="button"
+              className={`stq-rrr-hold-duration__preset ${
+                durationMs === preset.durationMs ? 'is-active' : ''
+              }`}
+              onClick={() => setDurationMs(preset.durationMs)}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {expertMode && (
+        <NumberField
+          label="Wartezeit in ms"
+          value={durationMs}
+          onChange={setDurationMs}
+        />
+      )}
+    </div>
+  );
+}
+
+function ObjectFoundEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const prompt = readString(config.prompt);
+  const confirmLabel = readString(config.confirmLabel);
+  const hasPrompt = prompt.trim() !== '';
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasPrompt ? '' : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label="Objektfund einstellen"
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>Fund-Anweisung</span>
+            <strong>
+              {hasPrompt ? 'Anweisung festgelegt' : 'Anweisung fehlt'}
+            </strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasPrompt ? '' : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            Manuelle Bestätigung
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Anweisung</span>
+          <input
+            type="text"
+            value={prompt}
+            placeholder="z. B. Finde den roten Marker am Baum"
+            onChange={(event) => onPatchConfig({ prompt: event.target.value })}
+          />
+          <small className="stq-rrr-field__hint">
+            Beschreibe, welches Objekt, Schild oder welcher Hinweis gefunden
+            werden soll.
+          </small>
+        </label>
+
+        <label className="stq-rrr-field">
+          <span>Bestätigungstext</span>
+          <input
+            type="text"
+            value={confirmLabel}
+            placeholder="Gefunden"
+            onChange={(event) =>
+              onPatchConfig({ confirmLabel: event.target.value })
+            }
+          />
+          <small className="stq-rrr-field__hint">
+            Text auf dem Button für die manuelle Bestätigung.
+          </small>
+        </label>
+
+        {!hasPrompt && (
+          <p className="stq-rrr-text-answer__warning">
+            Lege eine Fund-Anweisung fest, damit dieser Baustein verständlich ist.
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function PhotoCheckManualEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const prompt = readString(config.prompt);
+  const confirmLabel = readString(config.confirmLabel);
+  const hasPrompt = prompt.trim() !== '';
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasPrompt ? '' : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label="Foto-Aufgabe einstellen"
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>Foto-Aufgabe</span>
+            <strong>
+              {hasPrompt ? 'Aufgabe festgelegt' : 'Aufgabe fehlt'}
+            </strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasPrompt ? '' : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            Manuelle Bestätigung
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>Anweisung</span>
+          <input
+            type="text"
+            value={prompt}
+            placeholder="z. B. Vergleiche dein Foto mit dem Schild"
+            onChange={(event) => onPatchConfig({ prompt: event.target.value })}
+          />
+          <small className="stq-rrr-field__hint">
+            Beschreibe, welches Foto aufgenommen oder verglichen werden soll.
+          </small>
+        </label>
+
+        <label className="stq-rrr-field">
+          <span>Bestätigungstext</span>
+          <input
+            type="text"
+            value={confirmLabel}
+            placeholder="Bestätigt"
+            onChange={(event) =>
+              onPatchConfig({ confirmLabel: event.target.value })
+            }
+          />
+          <small className="stq-rrr-field__hint">
+            Text auf dem Button für die manuelle Bestätigung.
+          </small>
+        </label>
+
+        {!hasPrompt && (
+          <p className="stq-rrr-text-answer__warning">
+            Lege eine Foto-Aufgabe fest, damit dieser Baustein verständlich ist.
+          </p>
+        )}
       </section>
     </div>
   );
@@ -978,10 +1875,22 @@ function getModuleCardMeta(module: RrrModule): {
         description: 'Spieler lösen den Schritt mit einer Texteingabe.',
         icon: 'type',
       };
+    case 'multi_choice':
+      return {
+        title: 'Auswahlfrage',
+        description: 'Spieler wählen eine oder mehrere Antwortoptionen.',
+        icon: 'check',
+      };
     case 'gps_enter':
       return {
         title: 'Am richtigen Ort stehen',
         description: 'Der Schritt prüft eine simulierte Position am Zielort.',
+        icon: 'map-pin',
+      };
+    case 'proximity_hint':
+      return {
+        title: 'Nähe-Hinweis',
+        description: 'Spieler erhalten Nähe-Feedback beim Annähern an den Zielort.',
         icon: 'map-pin',
       };
     case 'compass_align':
@@ -990,11 +1899,53 @@ function getModuleCardMeta(module: RrrModule): {
         description: 'Der Schritt prüft die Blickrichtung per Kompasswert.',
         icon: 'compass',
       };
+    case 'direction_hotcold':
+      return {
+        title: 'Richtung warm/kalt',
+        description: 'Spieler erhalten wärmer/kälter-Feedback zur Zielrichtung.',
+        icon: 'compass',
+      };
     case 'hold_still':
       return {
         title: 'Handy ruhig halten',
         description: 'Der Schritt wartet auf ruhiges Halten des Geräts.',
         icon: 'hand',
+      };
+    case 'qr_scan':
+      return {
+        title: 'QR-Code scannen',
+        description: 'Der Schritt erwartet einen bestimmten QR-Code-Wert.',
+        icon: 'qr-code',
+      };
+    case 'code_word':
+      return {
+        title: 'Codewort eingeben',
+        description: 'Spieler lösen den Schritt mit einem Codewort.',
+        icon: 'type',
+      };
+    case 'sequential_code':
+      return {
+        title: 'Gesammelten Code eingeben',
+        description: 'Spieler lösen den Schritt mit einem gesammelten Code.',
+        icon: 'type',
+      };
+    case 'timer_wait':
+      return {
+        title: 'Warten',
+        description: 'Der Schritt ist nach einer Wartezeit erfüllt.',
+        icon: 'clock',
+      };
+    case 'photo_check_manual':
+      return {
+        title: 'Foto-Aufgabe bestätigen',
+        description: 'Spieler bestätigen eine Foto-Aufgabe manuell.',
+        icon: 'image',
+      };
+    case 'object_found':
+      return {
+        title: 'Objekt gefunden',
+        description: 'Spieler bestätigen manuell, dass sie etwas gefunden haben.',
+        icon: 'check-circle',
       };
   }
 }
@@ -1019,6 +1970,28 @@ function getModuleSettingsSummary(
         },
       ];
     }
+    case 'multi_choice': {
+      const question = readString(config.question).trim();
+      const options = normalizeMultiChoiceOptions(config.options);
+      const filledOptions = options.filter((option) => option.trim() !== '');
+      const correctCount = normalizeMultiChoiceIndexes(
+        config.correctOptionIndexes,
+        options,
+      ).length;
+      return [
+        {
+          label: 'Frage',
+          value: question || 'Noch nicht festgelegt',
+        },
+        {
+          label: 'Optionen',
+          value:
+            filledOptions.length > 0
+              ? `${filledOptions.length} Optionen, ${correctCount} richtig`
+              : 'Noch nicht festgelegt',
+        },
+      ];
+    }
     case 'gps_enter':
       return [
         {
@@ -1035,6 +2008,22 @@ function getModuleSettingsSummary(
           value: `${formatNumber(readNumber(config.radiusMeters), 0)} m`,
         },
       ];
+    case 'proximity_hint':
+      return [
+        {
+          label: 'Zielort',
+          value: hasFiniteNumber(config.lat) && hasFiniteNumber(config.lng)
+            ? `${formatNumber(readNumber(config.lat), 5)}, ${formatNumber(
+                readNumber(config.lng),
+                5,
+              )}`
+            : 'Koordinaten fehlen',
+        },
+        {
+          label: 'Erfolgsradius',
+          value: `${formatNumber(readNumber(config.successRadiusMeters), 0)} m`,
+        },
+      ];
     case 'compass_align':
       return [
         {
@@ -1044,6 +2033,17 @@ function getModuleSettingsSummary(
         {
           label: 'Toleranz',
           value: `±${formatNumber(readNumber(config.tolerance), 0)}°`,
+        },
+      ];
+    case 'direction_hotcold':
+      return [
+        {
+          label: 'Richtung',
+          value: `${formatNumber(readNumber(config.targetDegrees), 0)}°`,
+        },
+        {
+          label: 'Erfolgstoleranz',
+          value: `±${formatNumber(readNumber(config.successTolerance), 0)}°`,
         },
       ];
     case 'hold_still': {
@@ -1058,7 +2058,105 @@ function getModuleSettingsSummary(
         },
       ];
     }
+    case 'qr_scan': {
+      const expectedValue = readString(config.expectedValue).trim();
+      return [
+        {
+          label: 'QR-Wert',
+          value: expectedValue ? `"${expectedValue}"` : 'Noch nicht festgelegt',
+        },
+      ];
+    }
+    case 'code_word': {
+      const code = readString(config.code).trim();
+      return [
+        {
+          label: 'Codewort',
+          value: code ? `"${code}"` : 'Noch nicht festgelegt',
+        },
+        {
+          label: 'Schreibweise',
+          value: Boolean(config.caseSensitive)
+            ? 'Groß-/Kleinschreibung wichtig'
+            : 'Groß-/Kleinschreibung egal',
+        },
+      ];
+    }
+    case 'sequential_code': {
+      const code = readString(config.code).trim();
+      const hint = readString(config.hint).trim();
+      return [
+        {
+          label: 'Code',
+          value: code ? `"${code}"` : 'Noch nicht festgelegt',
+        },
+        {
+          label: 'Hinweis',
+          value: hint || 'Kein Hinweis',
+        },
+        {
+          label: 'Schreibweise',
+          value: Boolean(config.caseSensitive)
+            ? 'Groß-/Kleinschreibung wichtig'
+            : 'Groß-/Kleinschreibung egal',
+        },
+      ];
+    }
+    case 'timer_wait': {
+      const durationMs = readNumber(config.durationMs);
+      return [
+        {
+          label: 'Wartezeit',
+          value: formatDurationSeconds(durationMs),
+        },
+      ];
+    }
+    case 'photo_check_manual': {
+      const prompt = readString(config.prompt).trim();
+      const confirmLabel = readString(config.confirmLabel).trim();
+      return [
+        {
+          label: 'Anweisung',
+          value: prompt || 'Noch nicht festgelegt',
+        },
+        {
+          label: 'Button',
+          value: confirmLabel || 'Bestätigt',
+        },
+      ];
+    }
+    case 'object_found': {
+      const prompt = readString(config.prompt).trim();
+      const confirmLabel = readString(config.confirmLabel).trim();
+      return [
+        {
+          label: 'Anweisung',
+          value: prompt || 'Noch nicht festgelegt',
+        },
+        {
+          label: 'Button',
+          value: confirmLabel || 'Gefunden',
+        },
+      ];
+    }
   }
+}
+
+function getFallbackSettingsSummary(
+  module: RrrModule,
+  modules: RrrModule[],
+  expertMode: boolean,
+): Array<{ label: string; value: string }> {
+  if (!module.fallbackModuleId) {
+    return [];
+  }
+
+  return [
+    {
+      label: 'Ersatzlösung',
+      value: getModuleDisplayLabel(module.fallbackModuleId, modules, expertMode),
+    },
+  ];
 }
 
 function getModuleDisplayLabel(
@@ -1121,6 +2219,35 @@ function NumberField({
 
 function readString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function normalizeMultiChoiceOptions(value: unknown): string[] {
+  const options = Array.isArray(value)
+    ? value.map((entry) => (typeof entry === 'string' ? entry : ''))
+    : [];
+  return options.length > 0 ? options : [''];
+}
+
+function normalizeMultiChoiceIndexes(
+  value: unknown,
+  options: readonly string[],
+): number[] {
+  const maxIndex = options.length - 1;
+  const indexes = Array.isArray(value)
+    ? value
+        .map((entry) => {
+          if (typeof entry === 'number') return entry;
+          if (typeof entry === 'string') return Number(entry);
+          return Number.NaN;
+        })
+        .filter(
+          (entry) =>
+            Number.isInteger(entry) &&
+            entry >= 0 &&
+            entry <= maxIndex,
+        )
+    : [];
+  return [...new Set(indexes)];
 }
 
 function hasFiniteNumber(value: unknown): boolean {
@@ -1218,6 +2345,37 @@ function getHoldStillDurationMeta(durationMs: number): {
     label: 'Lang',
     description:
       'Lange Dauer macht den Schritt anspruchsvoller und verlangt ruhigeres Halten.',
+    tone: 'long',
+  };
+}
+
+function getTimerWaitDurationMeta(durationMs: number): {
+  label: string;
+  description: string;
+  tone: 'short' | 'normal' | 'long';
+} {
+  if (durationMs <= 5000) {
+    return {
+      label: 'Kurz',
+      description:
+        'Kurze Wartezeit eignet sich als leichter Rhythmus- oder Verzögerungsschritt.',
+      tone: 'short',
+    };
+  }
+
+  if (durationMs <= 30000) {
+    return {
+      label: 'Normal',
+      description:
+        'Mittlere Wartezeit ist gut testbar und bleibt im Spielfluss verständlich.',
+      tone: 'normal',
+    };
+  }
+
+  return {
+    label: 'Lang',
+    description:
+      'Lange Wartezeit kann Spieler ausbremsen und sollte bewusst eingesetzt werden.',
     tone: 'long',
   };
 }

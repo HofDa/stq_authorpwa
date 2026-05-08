@@ -2,9 +2,18 @@ import type { RrrModule, RrrModuleType } from '../types';
 
 const MODULE_ID_BASES: Record<RrrModuleType, string> = {
   text_answer: 'module',
+  multi_choice: 'multi_choice',
   compass_align: 'face_direction',
+  direction_hotcold: 'direction_hotcold',
   hold_still: 'hold_still',
   gps_enter: 'gps_enter',
+  proximity_hint: 'proximity_hint',
+  qr_scan: 'qr_scan',
+  code_word: 'code_word',
+  sequential_code: 'sequential_code',
+  timer_wait: 'timer_wait',
+  photo_check_manual: 'photo_check_manual',
+  object_found: 'object_found',
 };
 
 export function createUniqueModuleId(

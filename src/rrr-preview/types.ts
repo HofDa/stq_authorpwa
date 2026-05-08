@@ -13,6 +13,12 @@ export interface RrrMockInputs {
   gpsLng: number;
   isStill: boolean;
   textAnswer: string;
+  qrScanValue: string;
+  codeWordValue: string;
+  sequentialCodeValue: string;
+  multiChoiceSelectionsByModuleId: Record<string, number[]>;
+  photoCheckManualModuleIds: string[];
+  objectFoundModuleIds: string[];
 }
 
 export type RrrMockModuleResult = RrrModuleResult;

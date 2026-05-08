@@ -3,6 +3,20 @@ import type { RrrRuntimeSession } from '../session/session';
 
 export type RrrRuntimeStatus = 'idle' | 'running' | 'success' | 'failed';
 
+export type DirectionHotColdProximity =
+  | 'very_cold'
+  | 'cold'
+  | 'warm'
+  | 'very_warm'
+  | 'correct';
+
+export type ProximityHintState =
+  | 'far'
+  | 'getting_closer'
+  | 'near'
+  | 'very_near'
+  | 'inside_target_radius';
+
 export interface RrrRuntimeMockState {
   headingDegrees?: number;
   gpsLat?: number;
@@ -12,6 +26,12 @@ export interface RrrRuntimeMockState {
 
 export interface RrrRuntimeUserInput {
   textAnswer?: string;
+  qrScanValue?: string;
+  codeWordValue?: string;
+  sequentialCodeValue?: string;
+  multiChoiceSelectionsByModuleId?: Record<string, number[]>;
+  photoCheckManualModuleIds?: string[];
+  objectFoundModuleIds?: string[];
 }
 
 export interface RrrModuleResult {
@@ -20,6 +40,22 @@ export interface RrrModuleResult {
   type: RrrModule['type'];
   status: RrrRuntimeStatus;
   message: string;
+  directionHotCold?: {
+    proximity: DirectionHotColdProximity;
+    headingDegrees: number;
+    targetDegrees: number;
+    deltaDegrees: number;
+    successTolerance: number;
+  };
+  proximityHint?: {
+    proximity: ProximityHintState;
+    distanceMeters: number;
+    targetLat: number;
+    targetLng: number;
+    currentLat: number;
+    currentLng: number;
+    successRadiusMeters: number;
+  };
   timeout?: {
     timedOut: boolean;
     retryable: boolean;

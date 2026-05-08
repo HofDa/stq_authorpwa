@@ -54,5 +54,22 @@ export const TourEntrySchema = z.object({
   storyMeta: TourStoryMetaSchema.optional(),
 });
 
+export const ExportTourEntrySchema = z.object({
+  id: z.string(),
+  number: z.number().int().nonnegative(),
+  imagePath: z.string(),
+  riddlesPath: z.string(),
+  distance: z.string(),
+  unlocked: z.boolean(),
+  code: z.string().optional(),
+  hideUnsolvedRiddles: z.boolean().optional(),
+  gpsRangeMeters: z.number().int().positive().optional(),
+  en: TourLocaleSchema,
+  de: TourLocaleSchema,
+  it: TourLocaleSchema,
+  publicMeta: TourPublicMetaSchema.optional(),
+});
+
 export type TourEntry = z.infer<typeof TourEntrySchema>;
+export type ExportTourEntry = z.infer<typeof ExportTourEntrySchema>;
 export type TourLocaleContent = z.infer<typeof TourLocaleSchema>;

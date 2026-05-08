@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "multi_choice_1",
+      "type": "multi_choice",
+      "label": "Auswahlfrage",
+      "config": {
+        "question": "Welche Symbole siehst du am Tor?",
+        "options": ["Stern", "Adler", "Rose"],
+        "correctOptionIndexes": [1],
+        "allowMultiple": false
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "multi_choice_1"
+  }
+}

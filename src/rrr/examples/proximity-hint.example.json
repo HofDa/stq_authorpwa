@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "proximity_hint_1",
+      "type": "proximity_hint",
+      "label": "Nähe-Hinweis",
+      "config": {
+        "lat": 46.4983,
+        "lng": 11.3548,
+        "successRadiusMeters": 20
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "proximity_hint_1"
+  }
+}

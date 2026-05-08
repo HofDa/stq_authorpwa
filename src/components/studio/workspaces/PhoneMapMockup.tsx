@@ -69,6 +69,13 @@ export interface PhoneMapMockupProps {
    * Used by the Route workspace to render segment pills (1→2, 2→3, …).
    */
   dockOverride?: ReactNode;
+  /** Optional leading action inside the station progress dock. */
+  dockLeadingAction?: {
+    ariaLabel: string;
+    active?: boolean;
+    icon: ReactNode;
+    onClick: () => void;
+  };
 
   /**
    * Renders a clickable arrow between consecutive station bubbles in the
@@ -93,6 +100,8 @@ export interface PhoneMapMockupProps {
 
   /** Hide the title pill at the top of the phone screen. */
   hideTitlePill?: boolean;
+  /** Fired from the back button in the title pill. */
+  onTitleBack?: () => void;
   /** Hide the zoom +/− controls overlay. */
   hideZoomControls?: boolean;
 }
@@ -122,11 +131,13 @@ export function PhoneMapMockup({
   onViewportCenterChange,
   bottomSheet,
   dockOverride,
+  dockLeadingAction,
   segmentArrows,
   routePointMarkers,
   onRoutePointCoordinateChange,
   onMapClick,
   hideTitlePill = false,
+  onTitleBack,
   hideZoomControls = false,
 }: PhoneMapMockupProps) {
   const { t } = useEditorLanguage();
@@ -229,7 +240,11 @@ export function PhoneMapMockup({
 
           {!hideTitlePill && (
             <div className="stq-phone-map-title-pill">
-              <button type="button" aria-label={t('studio.back')}>
+              <button
+                type="button"
+                aria-label={t('studio.back')}
+                onClick={onTitleBack}
+              >
                 <Icon name="chevron-left" size={16} />
               </button>
               <span>{getTourTitleLabel(draft.tour, locale, t('studio.untitledTour'))}</span>
@@ -302,10 +317,14 @@ export function PhoneMapMockup({
             <div ref={dockRef} className="stq-phone-map-dock-track" role="list">
               <button
                 type="button"
-                className="stq-phone-map-dock-info"
-                aria-label={t('studio.tourOverview')}
+                className={`stq-phone-map-dock-info${
+                  dockLeadingAction?.active ? ' is-active' : ''
+                }`}
+                aria-label={dockLeadingAction?.ariaLabel ?? t('studio.tourOverview')}
+                aria-pressed={dockLeadingAction?.active || undefined}
+                onClick={dockLeadingAction?.onClick}
               >
-                i
+                {dockLeadingAction?.icon ?? 'i'}
               </button>
               {draft.stations.map((station, index) => {
                 const active = station.id === selected?.id;

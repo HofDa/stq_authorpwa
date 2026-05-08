@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "timer_wait_1",
+      "type": "timer_wait",
+      "label": "Warten",
+      "config": {
+        "durationMs": 3000
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "timer_wait_1"
+  }
+}

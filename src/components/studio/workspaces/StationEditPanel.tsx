@@ -4,6 +4,8 @@ import {
   withRiddleType,
   type Locale,
   type RiddleEntry,
+  type RrrFieldTestIssueTag,
+  type RrrFieldTestStatus,
 } from '@/schema';
 import { RrrInteractionEditor } from '@/components/rrr-author/RrrInteractionEditor';
 import type { ContentBlock } from '@/schema/contentBlock';
@@ -21,6 +23,8 @@ import { EditableTextEntryList } from './EditableTextEntryList';
 import { TextBodyPanel } from './TextBodyPanel';
 
 export type StationEditPanelKey =
+  | 'station'
+  | 'marker'
   | 'hero'
   | 'title'
   | 'story'
@@ -63,6 +67,66 @@ export function getStationEditPanel({
     StationEditPanelKey,
     { title: string; fields: EditPanelField[]; body?: ReactNode }
   > = {
+    station: {
+      title: t('studio.editStation'),
+      fields: [
+        {
+          id: 'station-number',
+          label: t('studio.station'),
+          type: 'text',
+          value: String(station.number),
+          placeholder: '1',
+          onChange: (value) => {
+            const parsed = Number.parseInt(value, 10);
+            if (Number.isFinite(parsed) && parsed >= 0) {
+              onPatchStation({ number: parsed });
+            }
+          },
+        },
+        ...getStationIdentityFields({
+          station,
+          localized,
+          t,
+          onPatchLocale,
+          onPatchStation,
+        }),
+      ],
+    },
+    marker: {
+      title: 'Marker & GPS',
+      fields: [
+        {
+          id: 'station-latitude',
+          label: 'Latitude',
+          type: 'text',
+          value: formatCoordinate(station.position_lat),
+          placeholder: '46.670300',
+          onChange: (value) => {
+            const parsed = parseCoordinate(value);
+            if (parsed !== null) onPatchStation({ position_lat: parsed });
+          },
+        },
+        {
+          id: 'station-longitude',
+          label: 'Longitude',
+          type: 'text',
+          value: formatCoordinate(station.position_lng),
+          placeholder: '11.159400',
+          onChange: (value) => {
+            const parsed = parseCoordinate(value);
+            if (parsed !== null) onPatchStation({ position_lng: parsed });
+          },
+        },
+        {
+          id: 'station-marker-icon',
+          label: 'Marker icon',
+          type: 'text',
+          value: station.markerIconPath,
+          placeholder: 'markers/...',
+          onChange: (value) => onPatchStation({ markerIconPath: value }),
+        },
+      ],
+    },
     hero: {
       title: 'Stations-Bild & Icon',
       fields: [],
@@ -76,35 +140,13 @@ export function getStationEditPanel({
     },
     title: {
       title: t('studio.stationTitle'),
-      fields: [
-        {
-          id: 'station-name',
-          label: t('studio.stationName'),
-          type: 'text',
-          value: localized.location,
-          placeholder: `${t('studio.station')} ${station.number}`,
-          onChange: (value) => onPatchLocale({ location: value }),
-        },
-        {
-          id: 'station-story-heading',
-          label: t('studio.storyHeading'),
-          type: 'text',
-          value: getFirstHeadingText(localized.firstSection),
-          placeholder: t('studio.storyHeadingPlaceholder'),
-          onChange: (value) =>
-            onPatchLocale({
-              firstSection: setFirstHeadingText(localized.firstSection, value),
-            }),
-        },
-        {
-          id: 'station-icon-label',
-          label: t('studio.iconLabel'),
-          type: 'text',
-          value: station.iconPath,
-          placeholder: 'icons/...',
-          onChange: (value) => onPatchStation({ iconPath: value }),
-        },
-      ],
+      fields: getStationIdentityFields({
+        station,
+        localized,
+        t,
+        onPatchLocale,
+        onPatchStation,
+      }),
     },
     story: {
       title: t('studio.storyParagraphsTitle'),
@@ -268,6 +310,59 @@ export function getStoryHeading(
   return heading || t('studio.storyHeadingPlaceholder');
 }
 
+function getStationIdentityFields({
+  station,
+  localized,
+  t,
+  onPatchLocale,
+  onPatchStation,
+}: {
+  station: RiddleEntry;
+  localized: RiddleEntry[Locale];
+  t: ReturnType<typeof useEditorLanguage>['t'];
+  onPatchLocale: (patch: Partial<RiddleEntry[Locale]>) => void;
+  onPatchStation: (patch: Partial<RiddleEntry>) => void;
+}): EditPanelField[] {
+  return [
+    {
+      id: 'station-name',
+      label: t('studio.stationName'),
+      type: 'text',
+      value: localized.location,
+      placeholder: `${t('studio.station')} ${station.number}`,
+      onChange: (value) => onPatchLocale({ location: value }),
+    },
+    {
+      id: 'station-story-heading',
+      label: t('studio.storyHeading'),
+      type: 'text',
+      value: getFirstHeadingText(localized.firstSection),
+      placeholder: t('studio.storyHeadingPlaceholder'),
+      onChange: (value) =>
+        onPatchLocale({
+          firstSection: setFirstHeadingText(localized.firstSection, value),
+        }),
+    },
+    {
+      id: 'station-icon-label',
+      label: t('studio.iconLabel'),
+      type: 'text',
+      value: station.iconPath,
+      placeholder: 'icons/...',
+      onChange: (value) => onPatchStation({ iconPath: value }),
+    },
+  ];
+}
+
+function parseCoordinate(value: string): number | null {
+  const parsed = Number.parseFloat(value.trim().replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatCoordinate(value: number): string {
+  return Number.isFinite(value) ? String(value) : '';
+}
+
 function renderRiddleSettingsPanelBody({
   station,
   onPatchStation,
@@ -277,6 +372,30 @@ function renderRiddleSettingsPanelBody({
 }) {
   const isText = station.riddleType === 'text';
   const isModular = station.riddleType === 'modular';
+  const fieldTestStatus = station.fieldTestStatus ?? 'not_tested';
+  const fieldTestIssueTags = station.fieldTestIssueTags ?? [];
+  const fieldTestNotes = station.fieldTestNotes ?? '';
+  const fieldTestTestedAt = station.fieldTestTestedAt ?? '';
+
+  function patchFieldTestStatus(status: RrrFieldTestStatus) {
+    onPatchStation({
+      fieldTestStatus: status,
+      fieldTestTestedAt:
+        status === 'not_tested'
+          ? undefined
+          : station.fieldTestTestedAt ?? new Date().toISOString(),
+    });
+  }
+
+  function toggleFieldTestIssueTag(
+    tag: RrrFieldTestIssueTag,
+    checked: boolean,
+  ) {
+    const nextTags = checked
+      ? [...new Set([...fieldTestIssueTags, tag])]
+      : fieldTestIssueTags.filter((entry) => entry !== tag);
+    onPatchStation({ fieldTestIssueTags: nextTags });
+  }
 
   return (
     <div className="stq-edit-panel-field">
@@ -300,13 +419,141 @@ function renderRiddleSettingsPanelBody({
         </button>
       </div>
       {isModular && (
-        <RrrInteractionEditor
-          interaction={station.interaction ?? createEmptyRrrInteraction()}
-          onChange={(interaction) => onPatchStation({ interaction })}
-        />
+        <>
+          <div className="stq-rrr-field-test-status">
+            <div>
+              <span>Feldtest-Status</span>
+              <strong>{getFieldTestStatusLabel(fieldTestStatus)}</strong>
+            </div>
+            <select
+              className="stq-rrr-editor__select"
+              value={fieldTestStatus}
+              onChange={(event) =>
+                patchFieldTestStatus(event.target.value as RrrFieldTestStatus)
+              }
+            >
+              {FIELD_TEST_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="stq-rrr-field-test-tags" aria-label="Feldtest-Problem-Tags">
+              {FIELD_TEST_ISSUE_TAG_OPTIONS.map((option) => (
+                <label key={option.value} className="stq-rrr-check">
+                  <input
+                    type="checkbox"
+                    checked={fieldTestIssueTags.includes(option.value)}
+                    onChange={(event) =>
+                      toggleFieldTestIssueTag(
+                        option.value,
+                        event.target.checked,
+                      )
+                    }
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+            <label className="stq-rrr-field">
+              <span>Getestet am</span>
+              <input
+                type="datetime-local"
+                value={toDateTimeLocalValue(fieldTestTestedAt)}
+                onChange={(event) =>
+                  onPatchStation({
+                    fieldTestTestedAt: fromDateTimeLocalValue(
+                      event.target.value,
+                    ),
+                  })
+                }
+              />
+            </label>
+            <label className="stq-rrr-field">
+              <span>Feldtest-Notizen</span>
+              <textarea
+                value={fieldTestNotes}
+                onChange={(event) =>
+                  onPatchStation({ fieldTestNotes: event.target.value })
+                }
+                placeholder="Optional: Beobachtungen, Gerätehinweise oder offene Punkte"
+              />
+            </label>
+          </div>
+          <RrrInteractionEditor
+            interaction={station.interaction ?? createEmptyRrrInteraction()}
+            stationId={station.id}
+            fieldTestIssueTags={fieldTestIssueTags}
+            stationTitle={
+              station.de.location ||
+              station.en.location ||
+              station.it.location ||
+              `Station ${station.number}`
+            }
+            onChange={(interaction) => onPatchStation({ interaction })}
+          />
+        </>
       )}
     </div>
   );
+}
+
+const FIELD_TEST_STATUS_OPTIONS: Array<{
+  value: RrrFieldTestStatus;
+  label: string;
+}> = [
+  { value: 'not_tested', label: 'Nicht getestet' },
+  { value: 'tested_ok', label: 'Getestet: OK' },
+  { value: 'tested_with_warnings', label: 'Getestet: mit Hinweisen' },
+  { value: 'needs_fix', label: 'Braucht Fix' },
+];
+
+const FIELD_TEST_ISSUE_TAG_OPTIONS: Array<{
+  value: RrrFieldTestIssueTag;
+  label: string;
+}> = [
+  { value: 'gps_ungenau', label: 'GPS ungenau' },
+  { value: 'kompass_instabil', label: 'Kompass instabil' },
+  { value: 'qr_schlecht_lesbar', label: 'QR schlecht lesbar' },
+  { value: 'aufgabe_unklar', label: 'Aufgabe unklar' },
+  { value: 'ort_schwer_zugaenglich', label: 'Ort schwer zugänglich' },
+  { value: 'ersatzloesung_noetig', label: 'Ersatzlösung nötig' },
+  { value: 'sonstiges', label: 'Sonstiges' },
+];
+
+function getFieldTestStatusLabel(status: RrrFieldTestStatus): string {
+  return (
+    FIELD_TEST_STATUS_OPTIONS.find((option) => option.value === status)
+      ?.label ?? 'Nicht getestet'
+  );
+}
+
+function toDateTimeLocalValue(value: string): string {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  const year = date.getFullYear();
+  const month = padDatePart(date.getMonth() + 1);
+  const day = padDatePart(date.getDate());
+  const hours = padDatePart(date.getHours());
+  const minutes = padDatePart(date.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function fromDateTimeLocalValue(value: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0');
 }
 
 function getFirstHeadingText(blocks: ContentBlock[]): string {

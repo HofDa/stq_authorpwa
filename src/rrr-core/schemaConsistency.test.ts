@@ -17,9 +17,18 @@ import {
 
 const CORE_EVALUATED_MODULE_TYPES = [
   'text_answer',
+  'multi_choice',
   'compass_align',
+  'direction_hotcold',
   'hold_still',
   'gps_enter',
+  'proximity_hint',
+  'qr_scan',
+  'code_word',
+  'sequential_code',
+  'timer_wait',
+  'photo_check_manual',
+  'object_found',
 ] as const satisfies readonly RrrModuleType[];
 
 const CORE_EVALUATED_CONDITION_TYPES = [

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "direction_hotcold_1",
+      "type": "direction_hotcold",
+      "label": "Richtung warm/kalt",
+      "config": {
+        "targetDegrees": 90,
+        "successTolerance": 15
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "direction_hotcold_1"
+  }
+}

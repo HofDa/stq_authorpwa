@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "object_found_1",
+      "type": "object_found",
+      "label": "Objekt gefunden",
+      "config": {
+        "prompt": "Finde den roten Marker am Baum.",
+        "confirmLabel": "Gefunden"
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "object_found_1"
+  }
+}

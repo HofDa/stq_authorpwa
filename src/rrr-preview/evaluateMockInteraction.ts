@@ -16,6 +16,12 @@ export function evaluateMockInteraction(
     },
     {
       textAnswer: inputs.textAnswer,
+      qrScanValue: inputs.qrScanValue,
+      codeWordValue: inputs.codeWordValue,
+      sequentialCodeValue: inputs.sequentialCodeValue,
+      multiChoiceSelectionsByModuleId: inputs.multiChoiceSelectionsByModuleId,
+      photoCheckManualModuleIds: inputs.photoCheckManualModuleIds,
+      objectFoundModuleIds: inputs.objectFoundModuleIds,
     },
   );
 }

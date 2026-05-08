@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
+  createRrrFieldTestReport,
+  downloadRrrFieldTestReport,
   getConditionChildren,
+  getRrrWarnings,
   type RrrCondition,
   type RrrInteraction,
   type RrrModule,
   type RrrModuleType,
 } from '@/rrr';
+import type { RrrFieldTestIssueTag } from '@/schema';
 import { evaluateMockInteraction } from '@/rrr-preview/evaluateMockInteraction';
 import type { RrrMockInputs, RrrMockStatus } from '@/rrr-preview/types';
 import {
@@ -15,6 +19,7 @@ import {
   type RrrInteractionResult,
   type RrrRuntimeSession,
 } from '@/rrr-runtime';
+import { QrScanner } from '@/components/rrr-runtime/QrScanner';
 import { RrrConditionStatusTree } from './RrrConditionStatusTree';
 
 const INITIAL_INPUTS: RrrMockInputs = {
@@ -23,14 +28,26 @@ const INITIAL_INPUTS: RrrMockInputs = {
   gpsLng: 0,
   isStill: false,
   textAnswer: '',
+  qrScanValue: '',
+  codeWordValue: '',
+  sequentialCodeValue: '',
+  multiChoiceSelectionsByModuleId: {},
+  photoCheckManualModuleIds: [],
+  objectFoundModuleIds: [],
 };
 
 export function RrrMockPreview({
   interaction,
   expertMode = false,
+  stationId = 'unassigned-station',
+  stationTitle = 'Unbenannte Station',
+  fieldTestIssueTags = [],
 }: {
   interaction: RrrInteraction;
   expertMode?: boolean;
+  stationId?: string;
+  stationTitle?: string;
+  fieldTestIssueTags?: RrrFieldTestIssueTag[];
 }) {
   const [inputs, setInputs] = useState<RrrMockInputs>(INITIAL_INPUTS);
   const [session, dispatchSession] = useReducer(
@@ -40,6 +57,7 @@ export function RrrMockPreview({
   );
   const sessionRef = useRef(session);
   const [autoEvaluate, setAutoEvaluate] = useState(false);
+  const [reportNotes, setReportNotes] = useState('');
   const inputState = useMemo(
     () => ({
       headingDegrees: inputs.headingDegrees,
@@ -50,15 +68,34 @@ export function RrrMockPreview({
     [inputs.gpsLat, inputs.gpsLng, inputs.headingDegrees, inputs.isStill],
   );
   const userInput = useMemo(
-    () => ({ textAnswer: inputs.textAnswer }),
-    [inputs.textAnswer],
+    () => ({
+      textAnswer: inputs.textAnswer,
+      qrScanValue: inputs.qrScanValue,
+      codeWordValue: inputs.codeWordValue,
+      sequentialCodeValue: inputs.sequentialCodeValue,
+      multiChoiceSelectionsByModuleId: inputs.multiChoiceSelectionsByModuleId,
+      photoCheckManualModuleIds: inputs.photoCheckManualModuleIds,
+      objectFoundModuleIds: inputs.objectFoundModuleIds,
+    }),
+    [
+      inputs.codeWordValue,
+      inputs.multiChoiceSelectionsByModuleId,
+      inputs.objectFoundModuleIds,
+      inputs.photoCheckManualModuleIds,
+      inputs.qrScanValue,
+      inputs.sequentialCodeValue,
+      inputs.textAnswer,
+    ],
   );
   const evaluation = useMemo(
     () => evaluateMockInteraction(interaction, inputs),
     [interaction, inputs],
   );
   const sessionEvaluation = useMemo(
-    () => evaluateInteraction(interaction, inputState, userInput, session),
+    () =>
+      evaluateInteraction(interaction, inputState, userInput, session, {
+        nowMs: Date.now(),
+      }),
     [interaction, inputState, userInput, session],
   );
   const activeStep = useMemo(
@@ -80,14 +117,16 @@ export function RrrMockPreview({
 
   function handleStart() {
     const freshSession = createRrrRuntimeSession();
+    const nowMs = Date.now();
     const firstEvaluation = evaluateInteraction(
       interaction,
       inputState,
       userInput,
       freshSession,
+      { nowMs },
     );
     dispatchSession({ type: 'reset' });
-    dispatchSession({ type: 'evaluation', result: firstEvaluation });
+    dispatchSession({ type: 'evaluation', result: firstEvaluation, nowMs });
   }
 
   function handleReset() {
@@ -104,7 +143,31 @@ export function RrrMockPreview({
   }
 
   function handleStep() {
-    dispatchSession({ type: 'evaluation', result: sessionEvaluation });
+    const nowMs = Date.now();
+    dispatchSession({
+      type: 'evaluation',
+      result: evaluateInteraction(interaction, inputState, userInput, session, {
+        nowMs,
+      }),
+      nowMs,
+    });
+  }
+
+  function handleExportReport() {
+    downloadRrrFieldTestReport(
+      createRrrFieldTestReport({
+        station: {
+          id: stationId,
+          title: stationTitle,
+        },
+        interaction,
+        finalResult: sessionEvaluation.status,
+        result: sessionEvaluation,
+        notes: reportNotes,
+        issueTags: fieldTestIssueTags,
+        warnings: getRrrWarnings(interaction),
+      }),
+    );
   }
 
   useEffect(() => {
@@ -121,6 +184,7 @@ export function RrrMockPreview({
     ) {
       return;
     }
+    const nowMs = Date.now();
     dispatchSession({
       type: 'evaluation',
       result: evaluateInteraction(
@@ -128,7 +192,9 @@ export function RrrMockPreview({
         inputState,
         userInput,
         currentSession,
+        { nowMs },
       ),
+      nowMs,
     });
   }, [autoEvaluate, inputState, interaction, userInput]);
 
@@ -167,6 +233,11 @@ export function RrrMockPreview({
             <p className="stq-rrr-guide__instruction">
               {getPlayerInstruction(activeStep.module)}
             </p>
+            <FallbackGuidance
+              module={activeStep.module}
+              modules={interaction.modules}
+              results={sessionEvaluation.modules}
+            />
             <GuidedControl
               module={activeStep.module}
               inputs={inputs}
@@ -244,6 +315,24 @@ export function RrrMockPreview({
           )}
         </div>
       )}
+
+      <div className="stq-rrr-report-export">
+        <label className="stq-rrr-field">
+          <span>Notizen für Testbericht</span>
+          <textarea
+            value={reportNotes}
+            onChange={(event) => setReportNotes(event.target.value)}
+            placeholder="Optional: Beobachtungen aus dem Testlauf"
+          />
+        </label>
+        <button
+          type="button"
+          className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
+          onClick={handleExportReport}
+        >
+          Testbericht exportieren
+        </button>
+      </div>
 
       {expertMode && (
         <details className="stq-rrr-mock__expert" open>
@@ -323,6 +412,48 @@ export function RrrMockPreview({
   );
 }
 
+function FallbackGuidance({
+  module,
+  modules,
+  results,
+}: {
+  module: RrrModule;
+  modules: RrrModule[];
+  results: RrrInteractionResult['modules'];
+}) {
+  if (!module.fallbackModuleId) {
+    return null;
+  }
+
+  const fallbackModule = modules.find(
+    (candidate) => candidate.id === module.fallbackModuleId,
+  );
+
+  return (
+    <div className="stq-rrr-guide__feedback">
+      <div>
+        <span>Ersatzlösung</span>
+        <strong>
+          Falls dieser Schritt auf dem Gerät nicht funktioniert, kann alternativ
+          diese Ersatzlösung verwendet werden.
+        </strong>
+        {fallbackModule ? (
+          <small>{fallbackModule.label}</small>
+        ) : (
+          <small>Die Ersatzlösung fehlt oder wurde gelöscht.</small>
+        )}
+      </div>
+      {fallbackModule ? (
+        <StatusBadge
+          status={results[fallbackModule.id]?.status ?? 'running'}
+        />
+      ) : (
+        <StatusBadge status="failed" />
+      )}
+    </div>
+  );
+}
+
 function GuidedControl({
   module,
   inputs,
@@ -333,7 +464,8 @@ function GuidedControl({
   onPatchInputs: (patch: Partial<RrrMockInputs>) => void;
 }) {
   switch (module.type) {
-    case 'compass_align': {
+    case 'compass_align':
+    case 'direction_hotcold': {
       const targetDegrees = normalizeDegrees(
         readNumber(module.config.targetDegrees),
       );
@@ -356,12 +488,13 @@ function GuidedControl({
             className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
             onClick={() => onPatchInputs({ headingDegrees: targetDegrees })}
           >
-            Zielrichtung setzen
+            Zielrichtung simulieren
           </button>
         </label>
       );
     }
-    case 'gps_enter': {
+    case 'gps_enter':
+    case 'proximity_hint': {
       const lat = readNumber(module.config.lat);
       const lng = readNumber(module.config.lng);
       return (
@@ -407,6 +540,163 @@ function GuidedControl({
           />
         </label>
       );
+    case 'multi_choice': {
+      const question = readString(module.config.question).trim();
+      const options = readStringArray(module.config.options);
+      const correctOptionIndexes = readNumberArray(
+        module.config.correctOptionIndexes,
+      );
+      const allowMultiple = Boolean(module.config.allowMultiple);
+      const selected =
+        inputs.multiChoiceSelectionsByModuleId[module.id] ?? [];
+
+      function setSelected(next: number[]) {
+        onPatchInputs({
+          multiChoiceSelectionsByModuleId: {
+            ...inputs.multiChoiceSelectionsByModuleId,
+            [module.id]: next,
+          },
+        });
+      }
+
+      return (
+        <fieldset className="stq-rrr-multi-choice-preview">
+          <legend>{question || 'Auswahlfrage'}</legend>
+          {options.map((option, index) => {
+            const label = option.trim() || `Option ${index + 1}`;
+            const checked = selected.includes(index);
+            return (
+              <label key={index} className="stq-rrr-check">
+                <input
+                  type={allowMultiple ? 'checkbox' : 'radio'}
+                  name={`multi-choice-${module.id}`}
+                  checked={checked}
+                  onChange={(event) => {
+                    if (allowMultiple) {
+                      setSelected(
+                        event.target.checked
+                          ? [...new Set([...selected, index])]
+                          : selected.filter((entry) => entry !== index),
+                      );
+                    } else {
+                      setSelected([index]);
+                    }
+                  }}
+                />
+                <span>{label}</span>
+              </label>
+            );
+          })}
+          {correctOptionIndexes.length > 1 && !allowMultiple && (
+            <small>
+              Mehrere richtige Optionen sind konfiguriert. Aktiviere
+              Mehrfachauswahl, wenn Spieler mehrere Antworten wählen sollen.
+            </small>
+          )}
+        </fieldset>
+      );
+    }
+    case 'qr_scan':
+      return (
+        <div className="stq-rrr-guide__stack">
+          <QrScanner
+            fallbackAvailable={Boolean(module.fallbackModuleId)}
+            onScan={(value) => onPatchInputs({ qrScanValue: value })}
+          />
+          <label className="stq-rrr-field">
+            <span>Simulierter QR-Wert</span>
+            <input
+              type="text"
+              value={inputs.qrScanValue}
+              onChange={(event) =>
+                onPatchInputs({ qrScanValue: event.target.value })
+              }
+            />
+          </label>
+        </div>
+      );
+    case 'code_word':
+      return (
+        <label className="stq-rrr-field">
+          <span>Codewort eingeben</span>
+          <input
+            type="text"
+            value={inputs.codeWordValue}
+            onChange={(event) =>
+              onPatchInputs({ codeWordValue: event.target.value })
+            }
+          />
+        </label>
+      );
+    case 'sequential_code':
+      return (
+        <label className="stq-rrr-field">
+          <span>Gesammelten Code eingeben</span>
+          <input
+            type="text"
+            value={inputs.sequentialCodeValue}
+            onChange={(event) =>
+              onPatchInputs({ sequentialCodeValue: event.target.value })
+            }
+          />
+        </label>
+      );
+    case 'timer_wait':
+      return (
+        <div className="stq-rrr-editor__empty">
+          Die Wartezeit läuft über die Runtime-Sitzung. Starte den Test und
+          prüfe den Schritt nach der Wartezeit erneut.
+        </div>
+      );
+    case 'photo_check_manual': {
+      const confirmed = inputs.photoCheckManualModuleIds.includes(module.id);
+      const confirmLabel =
+        readString(module.config.confirmLabel).trim() || 'Bestätigt';
+      return (
+        <div className="stq-rrr-guide__choice">
+          <button
+            type="button"
+            className="stq-rrr-editor__button"
+            disabled={confirmed}
+            onClick={() =>
+              onPatchInputs({
+                photoCheckManualModuleIds: [
+                  ...new Set([
+                    ...inputs.photoCheckManualModuleIds,
+                    module.id,
+                  ]),
+                ],
+              })
+            }
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      );
+    }
+    case 'object_found': {
+      const confirmed = inputs.objectFoundModuleIds.includes(module.id);
+      const confirmLabel =
+        readString(module.config.confirmLabel).trim() || 'Gefunden';
+      return (
+        <div className="stq-rrr-guide__choice">
+          <button
+            type="button"
+            className="stq-rrr-editor__button"
+            disabled={confirmed}
+            onClick={() =>
+              onPatchInputs({
+                objectFoundModuleIds: [
+                  ...new Set([...inputs.objectFoundModuleIds, module.id]),
+                ],
+              })
+            }
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      );
+    }
   }
 }
 
@@ -476,12 +766,39 @@ function getPlayerInstruction(module: RrrModule): string {
   switch (module.type) {
     case 'text_answer':
       return 'Der Spieler gibt die Antwort ein.';
+    case 'multi_choice':
+      return (
+        readString(module.config.question).trim() ||
+        'Der Spieler wählt eine oder mehrere Antworten aus.'
+      );
     case 'compass_align':
       return 'Der Spieler richtet das Gerät auf die Zielrichtung aus.';
+    case 'direction_hotcold':
+      return 'Der Spieler dreht sich zur Zielrichtung und erhält warm/kalt-Feedback.';
     case 'hold_still':
       return 'Der Spieler hält das Gerät ruhig.';
     case 'gps_enter':
       return 'Der Spieler steht am richtigen Ort innerhalb des Radius.';
+    case 'proximity_hint':
+      return 'Der Spieler nähert sich dem Zielort und erhält Nähe-Hinweise.';
+    case 'qr_scan':
+      return 'Der Spieler scannt den vorgesehenen QR-Code.';
+    case 'code_word':
+      return 'Der Spieler gibt das gefundene Codewort ein.';
+    case 'sequential_code':
+      return 'Der Spieler gibt den unterwegs gesammelten Code ein.';
+    case 'timer_wait':
+      return 'Der Spieler wartet, bis die konfigurierte Zeit abgelaufen ist.';
+    case 'photo_check_manual':
+      return (
+        readString(module.config.prompt).trim() ||
+        'Der Spieler bestätigt die Foto-Aufgabe.'
+      );
+    case 'object_found':
+      return (
+        readString(module.config.prompt).trim() ||
+        'Der Spieler bestätigt den Fund.'
+      );
   }
 }
 
@@ -489,12 +806,30 @@ function getModuleTypeLabel(type: RrrModuleType): string {
   switch (type) {
     case 'text_answer':
       return 'Textantwort';
+    case 'multi_choice':
+      return 'Auswahlfrage';
     case 'compass_align':
       return 'Richtung';
+    case 'direction_hotcold':
+      return 'Richtung warm/kalt';
     case 'hold_still':
       return 'Stillhalten';
     case 'gps_enter':
       return 'Ort';
+    case 'proximity_hint':
+      return 'Nähe-Hinweis';
+    case 'qr_scan':
+      return 'QR-Code';
+    case 'code_word':
+      return 'Codewort';
+    case 'sequential_code':
+      return 'Gesammelter Code';
+    case 'timer_wait':
+      return 'Warten';
+    case 'photo_check_manual':
+      return 'Foto-Aufgabe';
+    case 'object_found':
+      return 'Objekt gefunden';
   }
 }
 
@@ -528,6 +863,22 @@ function readNumber(value: unknown): number {
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.map((entry) => (typeof entry === 'string' ? entry : ''))
+    : [];
+}
+
+function readNumberArray(value: unknown): number[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is number => Number.isInteger(entry) && entry >= 0)
+    : [];
 }
 
 function normalizeDegrees(value: number): number {

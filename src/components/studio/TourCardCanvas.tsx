@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type {
   DifficultyLevel,
   Locale,
@@ -12,6 +12,10 @@ import { Icon } from './Icon';
 import { DeviceMockup } from './DeviceMockup';
 import { EditPanel, type EditPanelField } from './EditPanel';
 import { ImageAssetPanel } from './ImageAssetPanel';
+import {
+  RightEditDrawer,
+  type RightEditDrawerState,
+} from './mobile/RightEditDrawer';
 
 interface Props {
   draft: TourDraft;
@@ -20,6 +24,9 @@ interface Props {
   onCreateTour?: () => void | Promise<void>;
   otherDrafts?: TourDraft[];
   onSelectDraft?: (draftId: string) => void;
+  onOpenCurrentTour?: () => void;
+  editable?: boolean;
+  mobileSelectionFlow?: boolean;
 }
 
 type ActivePanel = 'cover' | 'title' | 'description' | 'meta' | 'welcome' | null;
@@ -31,21 +38,30 @@ export function TourCardCanvas({
   onCreateTour,
   otherDrafts,
   onSelectDraft,
+  onOpenCurrentTour,
+  editable = true,
+  mobileSelectionFlow = false,
 }: Props) {
   const { t } = useEditorLanguage();
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const [selectedPanel, setSelectedPanel] = useState<ActivePanel>(null);
+  const [rightDrawerState, setRightDrawerState] =
+    useState<RightEditDrawerState>('closed');
   const [snapshot, setSnapshot] = useState<TourDraft['tour'] | null>(null);
   const coverUrl = useBlobUrl(draft.tour.coverBlobId);
   const localized = draft.tour[locale];
 
   function openPanel(panel: Exclude<ActivePanel, null>) {
     setSnapshot(draft.tour);
+    setSelectedPanel(panel);
     setActivePanel(panel);
+    if (mobileSelectionFlow) setRightDrawerState('open');
   }
 
   function closePanel() {
     setSnapshot(null);
     setActivePanel(null);
+    setRightDrawerState('closed');
   }
 
   function cancelPanel() {
@@ -54,6 +70,31 @@ export function TourCardCanvas({
       onChange((prev) => ({ ...prev, tour: original }));
     }
   }
+
+  function selectPanel(panel: Exclude<ActivePanel, null>) {
+    setSelectedPanel(panel);
+    setActivePanel(null);
+    setRightDrawerState('closed');
+  }
+
+  function activateEditable(panel: Exclude<ActivePanel, null>) {
+    if (!editable) return;
+
+    if (mobileSelectionFlow && selectedPanel !== panel) {
+      selectPanel(panel);
+      return;
+    }
+
+    openPanel(panel);
+  }
+
+  useEffect(() => {
+    if (!editable) {
+      setActivePanel(null);
+      setSelectedPanel(null);
+      setRightDrawerState('closed');
+    }
+  }, [editable]);
 
   function patchLocale(patch: Partial<typeof localized>) {
     onChange((prev) => ({
@@ -214,19 +255,37 @@ export function TourCardCanvas({
 
           <Editable
             label={t('studio.welcomeMessageEdit')}
-            onClick={() => openPanel('welcome')}
+            onClick={() => activateEditable('welcome')}
             active={activePanel === 'welcome'}
+            selected={mobileSelectionFlow && selectedPanel === 'welcome'}
+            editable={editable}
           >
             <div className="stq-tour-card-phone-welcome">
               {localized.welcomeMessage || t('studio.welcomeMessagePlaceholder')}
             </div>
           </Editable>
 
-          <div className="stq-tour-card-item">
+          <div
+            className={`stq-tour-card-item${
+              !editable && onOpenCurrentTour ? ' stq-tour-card-item--selectable' : ''
+            }`}
+            role={!editable && onOpenCurrentTour ? 'button' : undefined}
+            tabIndex={!editable && onOpenCurrentTour ? 0 : undefined}
+            onClick={!editable ? onOpenCurrentTour : undefined}
+            onKeyDown={(event) => {
+              if (editable || !onOpenCurrentTour) return;
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onOpenCurrentTour();
+              }
+            }}
+          >
             <Editable
               label={t('studio.coverImageEdit')}
-              onClick={() => openPanel('cover')}
+              onClick={() => activateEditable('cover')}
               active={activePanel === 'cover'}
+              selected={mobileSelectionFlow && selectedPanel === 'cover'}
+              editable={editable}
             >
               <div className="stq-tour-card-cover">
                 {coverUrl || draft.tour.imagePath ? (
@@ -247,8 +306,10 @@ export function TourCardCanvas({
             <div className="stq-tour-card-body">
               <Editable
                 label={t('studio.titleLocationEdit')}
-                onClick={() => openPanel('title')}
+                onClick={() => activateEditable('title')}
                 active={activePanel === 'title'}
+                selected={mobileSelectionFlow && selectedPanel === 'title'}
+                editable={editable}
               >
                 <div className="stq-tour-card-title">
                   {localized.title || (
@@ -269,8 +330,10 @@ export function TourCardCanvas({
 
               <Editable
                 label={t('studio.descriptionEdit')}
-                onClick={() => openPanel('description')}
+                onClick={() => activateEditable('description')}
                 active={activePanel === 'description'}
+                selected={mobileSelectionFlow && selectedPanel === 'description'}
+                editable={editable}
               >
                 <div className="stq-tour-card-description">
                   {descText || (
@@ -283,8 +346,10 @@ export function TourCardCanvas({
 
               <Editable
                 label={t('studio.metaEdit')}
-                onClick={() => openPanel('meta')}
+                onClick={() => activateEditable('meta')}
                 active={activePanel === 'meta'}
+                selected={mobileSelectionFlow && selectedPanel === 'meta'}
+                editable={editable}
               >
                 <div className="stq-tour-card-chips">
                   {localized.duration && (
@@ -363,7 +428,20 @@ export function TourCardCanvas({
         </div>
       </DeviceMockup>
 
-      {panel && (
+      {panel && mobileSelectionFlow && (
+        <RightEditDrawer
+          title={panel.title}
+          fields={panel.fields}
+          state={rightDrawerState}
+          onStateChange={setRightDrawerState}
+          onClose={closePanel}
+          onCancel={cancelPanel}
+        >
+          {panel.body}
+        </RightEditDrawer>
+      )}
+
+      {panel && !mobileSelectionFlow && (
         <EditPanel
           title={panel.title}
           fields={panel.fields}
@@ -390,18 +468,27 @@ function Editable({
   label,
   onClick,
   active,
+  selected = false,
+  editable = true,
 }: {
   children: ReactNode;
   label: string;
   onClick: () => void;
   active: boolean;
+  selected?: boolean;
+  editable?: boolean;
 }) {
+  if (!editable) return <>{children}</>;
+
   return (
     <div
-      className={`stq-editable-region${active ? ' stq-editable-region--active' : ''}`}
+      className={`stq-editable-region${active ? ' stq-editable-region--active' : ''}${
+        selected ? ' stq-editable-region--selected' : ''
+      }`}
       role="button"
       tabIndex={0}
       aria-label={label}
+      aria-pressed={active || selected || undefined}
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

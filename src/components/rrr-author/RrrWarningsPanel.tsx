@@ -40,8 +40,14 @@ export function RrrWarningsPanel({ warnings, expertMode = false }: Props) {
 }
 
 function getWarningMessage(warning: RrrWarning, expertMode: boolean): string {
-  if (expertMode || warning.code !== 'missing_module_reference') {
+  if (expertMode) {
     return warning.message;
   }
-  return 'Die Lösungsregel verweist auf einen fehlenden Baustein.';
+  if (warning.code === 'missing_module_reference') {
+    return 'Die Lösungsregel verweist auf einen fehlenden Baustein.';
+  }
+  if (warning.code === 'missing_fallback_reference') {
+    return 'Die Ersatzlösung verweist auf einen fehlenden Baustein.';
+  }
+  return warning.message;
 }

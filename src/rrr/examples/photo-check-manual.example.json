@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "photo_check_manual_1",
+      "type": "photo_check_manual",
+      "label": "Foto-Aufgabe bestätigen",
+      "config": {
+        "prompt": "Vergleiche dein Foto mit dem Schild.",
+        "confirmLabel": "Bestätigt"
+      }
+    }
+  ],
+  "condition": {
+    "type": "module",
+    "moduleId": "photo_check_manual_1"
+  }
+}

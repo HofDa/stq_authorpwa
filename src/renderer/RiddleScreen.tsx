@@ -63,7 +63,9 @@ interface Props {
       {
         label: string;
         active?: boolean;
+        selected?: boolean;
         icon?: ReactNode;
+        onSelect?: () => void;
         onEdit: () => void;
       }
     >
@@ -360,33 +362,50 @@ function EditableRegion({
   config?: {
     label: string;
     active?: boolean;
+    selected?: boolean;
     icon?: ReactNode;
+    onSelect?: () => void;
     onEdit: () => void;
   };
   className?: string;
   children: ReactNode;
 }) {
-  if (!config) return <>{children}</>;
+  const regionConfig = config;
+  if (!regionConfig) return <>{children}</>;
+
+  const activateRegion = () => {
+    if (
+      regionConfig.onSelect &&
+      !regionConfig.selected &&
+      !regionConfig.active
+    ) {
+      regionConfig.onSelect();
+      return;
+    }
+
+    regionConfig.onEdit();
+  };
 
   return (
     <div
-      className={`stq-editable-region${config.active ? ' stq-editable-region--active' : ''}${
-        className ? ` ${className}` : ''
-      }`}
+      className={`stq-editable-region${regionConfig.active ? ' stq-editable-region--active' : ''}${
+        regionConfig.selected ? ' stq-editable-region--selected' : ''
+      }${className ? ` ${className}` : ''}`}
       role="button"
       tabIndex={0}
-      aria-label={config.label}
-      onClick={config.onEdit}
+      aria-label={regionConfig.label}
+      aria-pressed={regionConfig.active || regionConfig.selected || undefined}
+      onClick={activateRegion}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          config.onEdit();
+          activateRegion();
         }
       }}
     >
       {children}
       <span className="stq-editable-pen" aria-hidden>
-        {config.icon ?? <Icon name="pen" size={12} />}
+        {regionConfig.icon ?? <Icon name="pen" size={12} />}
       </span>
     </div>
   );

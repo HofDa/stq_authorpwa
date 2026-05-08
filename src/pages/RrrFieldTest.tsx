@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { RrrInteraction, RrrModule } from '@/rrr';
+import {
+  createRrrFieldTestReport,
+  downloadRrrFieldTestReport,
+  getRrrWarnings,
+  type RrrInteraction,
+  type RrrModule,
+} from '@/rrr';
+import type { RrrFieldTestIssueTag } from '@/schema';
 import {
   useRrrRuntimeBridge,
   type RrrRuntimeBridgeOptions,
@@ -65,6 +72,8 @@ const FIELD_TEST_INTERACTION: RrrInteraction = {
 export function RrrFieldTest() {
   const [permissionStatus, setPermissionStatus] =
     useState<SensorPermissionGateStatus>('idle');
+  const [reportNotes, setReportNotes] = useState('');
+  const [reportIssueTags, setReportIssueTags] = useState<RrrFieldTestIssueTag[]>([]);
   const adapters = useMemo(
     () => [
       createGeolocationSensorAdapter({
@@ -134,6 +143,29 @@ export function RrrFieldTest() {
     retry(activeModule?.id, {
       resetProgress: activeModule?.retry?.resetOnFail,
     });
+  }
+
+  function handleExportReport() {
+    downloadRrrFieldTestReport(
+      createRrrFieldTestReport({
+        station: {
+          id: 'rrr-field-test',
+          title: 'RRR Field-Test',
+        },
+        interaction: FIELD_TEST_INTERACTION,
+        finalResult: result.status,
+        result,
+        sensors: {
+          gps: sensorState.geolocationStatus,
+          orientation: sensorState.orientationStatus,
+          motion: mockState.isStill ? 'available' : undefined,
+          gpsAccuracyMeters: rawSensorState.accuracy,
+        },
+        warnings: getRrrWarnings(FIELD_TEST_INTERACTION),
+        notes: reportNotes,
+        issueTags: reportIssueTags,
+      }),
+    );
   }
 
   return (
@@ -287,10 +319,60 @@ export function RrrFieldTest() {
             })}
           </ol>
         </article>
+
+        <article className="stq-rrr-field-test__panel">
+          <h2>Testbericht</h2>
+          <label className="stq-rrr-field">
+            <span>Notizen</span>
+            <textarea
+              value={reportNotes}
+              onChange={(event) => setReportNotes(event.target.value)}
+              placeholder="Optional: Beobachtungen aus dem Feldtest"
+            />
+          </label>
+          <div className="stq-rrr-field-test-tags" aria-label="Feldtest-Problem-Tags">
+            {FIELD_TEST_ISSUE_TAG_OPTIONS.map((option) => (
+              <label key={option.value} className="stq-rrr-check">
+                <input
+                  type="checkbox"
+                  checked={reportIssueTags.includes(option.value)}
+                  onChange={(event) =>
+                    setReportIssueTags((current) =>
+                      event.target.checked
+                        ? [...new Set([...current, option.value])]
+                        : current.filter((tag) => tag !== option.value),
+                    )
+                  }
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="stq-rrr-editor__button"
+            onClick={handleExportReport}
+          >
+            Testbericht exportieren
+          </button>
+        </article>
       </div>
     </section>
   );
 }
+
+const FIELD_TEST_ISSUE_TAG_OPTIONS: Array<{
+  value: RrrFieldTestIssueTag;
+  label: string;
+}> = [
+  { value: 'gps_ungenau', label: 'GPS ungenau' },
+  { value: 'kompass_instabil', label: 'Kompass instabil' },
+  { value: 'qr_schlecht_lesbar', label: 'QR schlecht lesbar' },
+  { value: 'aufgabe_unklar', label: 'Aufgabe unklar' },
+  { value: 'ort_schwer_zugaenglich', label: 'Ort schwer zugänglich' },
+  { value: 'ersatzloesung_noetig', label: 'Ersatzlösung nötig' },
+  { value: 'sonstiges', label: 'Sonstiges' },
+];
 
 function getConfiguredGpsRadius(interaction: RrrInteraction): number | undefined {
   const gpsModule = interaction.modules.find(
@@ -311,12 +393,30 @@ function getModuleInstruction(module: RrrModule): string {
   switch (module.type) {
     case 'gps_enter':
       return 'Gehe an den Testpunkt, bis die GPS-Position im Radius liegt.';
+    case 'proximity_hint':
+      return 'Gehe zum Zielort, bis der Nähe-Hinweis den Zielradius meldet.';
     case 'compass_align':
       return 'Drehe dich mit dem Handy nach Osten.';
+    case 'direction_hotcold':
+      return 'Drehe dich mit dem Handy, bis das warm/kalt-Feedback korrekt wird.';
     case 'hold_still':
       return 'Halte das Handy ruhig, bis die Live-Orientierung stabil bleibt.';
     case 'text_answer':
       return 'Gib die erwartete Antwort ein.';
+    case 'multi_choice':
+      return 'Wähle die passende Antwortoption aus.';
+    case 'qr_scan':
+      return 'QR-Scan ist in diesem Feldtest noch nicht verfügbar.';
+    case 'code_word':
+      return 'Gib das erwartete Codewort ein.';
+    case 'sequential_code':
+      return 'Gib den unterwegs gesammelten Code ein.';
+    case 'timer_wait':
+      return 'Warte, bis die konfigurierte Zeit abgelaufen ist.';
+    case 'photo_check_manual':
+      return 'Bestätige die Foto-Aufgabe manuell.';
+    case 'object_found':
+      return 'Bestätige manuell, dass das Objekt gefunden wurde.';
   }
 }
 

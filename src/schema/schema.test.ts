@@ -96,11 +96,42 @@ describe('RiddleEntrySchema', () => {
   });
 
   it('defaults riddleType and solutionInputType to text', () => {
-    const { riddleType: _r, solutionInputType: _s, ...withoutDefaults } =
-      buildValidStation();
+    const {
+      riddleType: _r,
+      solutionInputType: _s,
+      fieldTestStatus: _f,
+      fieldTestIssueTags: _tags,
+      fieldTestNotes: _n,
+      ...withoutDefaults
+    } = buildValidStation();
     const parsed = RiddleEntrySchema.parse(withoutDefaults);
     expect(parsed.riddleType).toBe('text');
     expect(parsed.solutionInputType).toBe('text');
+    expect(parsed.fieldTestStatus).toBe('not_tested');
+    expect(parsed.fieldTestIssueTags).toEqual([]);
+    expect(parsed.fieldTestNotes).toBe('');
+  });
+
+  it('accepts author-only modular field-test metadata', () => {
+    const parsed = RiddleEntrySchema.parse({
+      ...buildValidStation(),
+      riddleType: 'modular',
+      fieldTestStatus: 'tested_with_warnings',
+      fieldTestIssueTags: ['gps_ungenau', 'ersatzloesung_noetig'],
+      fieldTestNotes: 'GPS accuracy was unstable near the wall.',
+      fieldTestTestedAt: '2026-05-08T09:30:00.000Z',
+      interaction: createDefaultRrrInteraction(),
+    });
+
+    expect(parsed.fieldTestStatus).toBe('tested_with_warnings');
+    expect(parsed.fieldTestIssueTags).toEqual([
+      'gps_ungenau',
+      'ersatzloesung_noetig',
+    ]);
+    expect(parsed.fieldTestNotes).toBe(
+      'GPS accuracy was unstable near the wall.',
+    );
+    expect(parsed.fieldTestTestedAt).toBe('2026-05-08T09:30:00.000Z');
   });
 
   it('accepts a modular station with an interaction graph', () => {
@@ -246,6 +277,57 @@ describe('RRR interaction schemas', () => {
         resetOnFail: true,
       },
     });
+  });
+
+  it('accepts fallback module metadata when it references an existing module', () => {
+    expect(
+      RrrInteractionSchema.parse({
+        schemaVersion: 1,
+        modules: [
+          {
+            id: 'face_north',
+            type: 'compass_align',
+            label: 'Face north',
+            config: { targetDegrees: 0, tolerance: 10 },
+            fallbackModuleId: 'north_code',
+          },
+          {
+            id: 'north_code',
+            type: 'code_word',
+            label: 'North code',
+            config: { code: 'north' },
+          },
+        ],
+        condition: { type: 'module', moduleId: 'face_north' },
+      }).modules[0],
+    ).toMatchObject({
+      fallbackModuleId: 'north_code',
+    });
+  });
+
+  it('rejects fallback module metadata when the target is missing', () => {
+    const result = RrrInteractionSchema.safeParse({
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'face_north',
+          type: 'compass_align',
+          label: 'Face north',
+          config: { targetDegrees: 0, tolerance: 10 },
+          fallbackModuleId: 'deleted_code',
+        },
+      ],
+      condition: { type: 'module', moduleId: 'face_north' },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]).toMatchObject({
+        path: ['modules', 0, 'fallbackModuleId'],
+        message:
+          'Module fallback references unknown module "deleted_code".',
+      });
+    }
   });
 
   it('accepts the initial condition graph types', () => {

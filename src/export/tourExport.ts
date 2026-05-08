@@ -3,7 +3,7 @@ import type { ZodIssue } from 'zod';
 import {
   DEFAULT_LOCALE,
   ExportRiddleEntrySchema,
-  TourEntrySchema,
+  ExportTourEntrySchema,
   getPrimaryAcceptedAnswer,
   type ContentBlock,
   type Locale,
@@ -187,7 +187,7 @@ function validateSerialized(
   stations: unknown[],
 ): ExportValidationError[] {
   const errors: ExportValidationError[] = [];
-  const tourResult = TourEntrySchema.safeParse(tourEntry);
+  const tourResult = ExportTourEntrySchema.safeParse(tourEntry);
   if (!tourResult.success) {
     errors.push(...issuesToErrors(tourResult.error.issues, ['tour']));
   }
@@ -231,10 +231,21 @@ function serializeTourEntry(
   const coverPath = tour.coverBlobId
     ? exportPathByBlobId.get(tour.coverBlobId)
     : undefined;
-  const { coverBlobId, ...base } = tour;
   return {
-    ...base,
+    id: tour.id,
+    number: tour.number,
     imagePath: coverPath ?? tour.imagePath,
+    riddlesPath: tour.riddlesPath,
+    distance: tour.distance,
+    unlocked: tour.unlocked,
+    ...(tour.code !== undefined ? { code: tour.code } : {}),
+    ...(tour.hideUnsolvedRiddles !== undefined
+      ? { hideUnsolvedRiddles: tour.hideUnsolvedRiddles }
+      : {}),
+    ...(tour.gpsRangeMeters !== undefined
+      ? { gpsRangeMeters: tour.gpsRangeMeters }
+      : {}),
+    ...(tour.publicMeta ? { publicMeta: tour.publicMeta } : {}),
     en: serializeTourLocale(tour.en, exportPathByBlobId),
     de: serializeTourLocale(tour.de, exportPathByBlobId),
     it: serializeTourLocale(tour.it, exportPathByBlobId),
@@ -264,36 +275,37 @@ function serializeRiddleEntry(
     : undefined;
   const generatedIconPath = iconPathByStationId.get(station.id);
   const generatedMarkerPath = markerPathByStationId.get(station.id);
-  const {
-    imageBlobId,
-    iconKey,
-    iconColorKey,
-    acceptedAnswers,
-    interaction,
-    ...base
-  } = station;
   return {
-    ...base,
-    ...(station.riddleType === 'modular'
-      ? { interactionVersion: RRR_INTERACTION_VERSION, interaction }
-      : {}),
+    id: station.id,
+    number: station.number,
+    position_lat: station.position_lat,
+    position_lng: station.position_lng,
+    polylineString: station.polylineString,
     imagePath: imagePath ?? station.imagePath,
     iconPath: generatedIconPath ?? station.iconPath,
     markerIconPath: generatedMarkerPath ?? station.markerIconPath,
+    riddleType: station.riddleType,
+    solutionInputType: station.solutionInputType,
+    ...(station.riddleType === 'modular'
+      ? {
+          interactionVersion: RRR_INTERACTION_VERSION,
+          interaction: station.interaction,
+        }
+      : {}),
     en: serializeRiddleLocale(
       station.en,
       exportPathByBlobId,
-      getPrimaryAcceptedAnswer(acceptedAnswers, 'en'),
+      getPrimaryAcceptedAnswer(station.acceptedAnswers, 'en'),
     ),
     de: serializeRiddleLocale(
       station.de,
       exportPathByBlobId,
-      getPrimaryAcceptedAnswer(acceptedAnswers, 'de'),
+      getPrimaryAcceptedAnswer(station.acceptedAnswers, 'de'),
     ),
     it: serializeRiddleLocale(
       station.it,
       exportPathByBlobId,
-      getPrimaryAcceptedAnswer(acceptedAnswers, 'it'),
+      getPrimaryAcceptedAnswer(station.acceptedAnswers, 'it'),
     ),
   };
 }

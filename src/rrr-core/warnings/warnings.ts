@@ -4,15 +4,30 @@ export type RrrWarningCode =
   | 'no_modules'
   | 'no_condition'
   | 'missing_module_reference'
+  | 'missing_fallback_reference'
   | 'sequence_no_steps'
   | 'all_of_no_children'
   | 'any_of_no_children'
   | 'text_answer_empty'
+  | 'multi_choice_question_empty'
+  | 'multi_choice_options_empty'
+  | 'multi_choice_correct_empty'
   | 'compass_target_invalid'
   | 'compass_tolerance_narrow'
+  | 'direction_target_invalid'
+  | 'direction_tolerance_narrow'
   | 'gps_missing_coordinates'
   | 'gps_radius_small'
-  | 'hold_duration_long';
+  | 'proximity_missing_coordinates'
+  | 'proximity_radius_small'
+  | 'hold_duration_long'
+  | 'qr_scan_expected_value_empty'
+  | 'code_word_empty'
+  | 'sequential_code_empty'
+  | 'timer_wait_duration_missing'
+  | 'timer_wait_duration_long'
+  | 'photo_check_manual_prompt_empty'
+  | 'object_found_prompt_empty';
 
 export type RrrWarningSeverity = 'info' | 'warning';
 
@@ -26,6 +41,7 @@ export interface RrrWarning {
 const MIN_COMPASS_TOLERANCE_DEGREES = 3;
 const MIN_GPS_RADIUS_METERS = 3;
 const MAX_HOLD_DURATION_MS = 10000;
+const MAX_TIMER_WAIT_DURATION_MS = 60000;
 
 export function getRrrWarnings(interaction: RrrInteraction): RrrWarning[] {
   const warnings: RrrWarning[] = [];
@@ -49,6 +65,7 @@ export function getRrrWarnings(interaction: RrrInteraction): RrrWarning[] {
   for (const module of interaction.modules) {
     warnings.push(...getModuleWarnings(module));
   }
+  warnings.push(...getFallbackWarnings(interaction.modules));
 
   if (interaction.condition) {
     warnings.push(...getConditionWarnings(interaction.condition, interaction.modules));
@@ -72,6 +89,34 @@ function getModuleWarnings(module: RrrModule): RrrWarning[] {
       }
       return [];
     }
+    case 'multi_choice': {
+      const out: RrrWarning[] = [];
+      if (readString(module.config.question).trim() === '') {
+        out.push({
+          code: 'multi_choice_question_empty',
+          message: `Baustein "${module.label}" hat noch keine Frage.`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      if (readStringArray(module.config.options).every((option) => option.trim() === '')) {
+        out.push({
+          code: 'multi_choice_options_empty',
+          message: `Baustein "${module.label}" hat noch keine Antwortoptionen.`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      if (readNumberArray(module.config.correctOptionIndexes).length === 0) {
+        out.push({
+          code: 'multi_choice_correct_empty',
+          message: `Baustein "${module.label}" hat noch keine richtige Option.`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      return out;
+    }
     case 'compass_align': {
       const out: RrrWarning[] = [];
       const targetDegrees = module.config.targetDegrees;
@@ -88,6 +133,28 @@ function getModuleWarnings(module: RrrModule): RrrWarning[] {
         out.push({
           code: 'compass_tolerance_narrow',
           message: `Baustein "${module.label}" hat eine sehr enge Toleranz (< ${MIN_COMPASS_TOLERANCE_DEGREES}°).`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      return out;
+    }
+    case 'direction_hotcold': {
+      const out: RrrWarning[] = [];
+      const targetDegrees = module.config.targetDegrees;
+      if (!isValidDegrees(targetDegrees)) {
+        out.push({
+          code: 'direction_target_invalid',
+          message: `Baustein "${module.label}" braucht eine gültige Zielrichtung.`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      const tolerance = readNumber(module.config.successTolerance);
+      if (tolerance > 0 && tolerance < MIN_COMPASS_TOLERANCE_DEGREES) {
+        out.push({
+          code: 'direction_tolerance_narrow',
+          message: `Baustein "${module.label}" hat eine sehr enge Erfolgstoleranz (< ${MIN_COMPASS_TOLERANCE_DEGREES}°).`,
           severity: 'warning',
           moduleId: module.id,
         });
@@ -115,6 +182,27 @@ function getModuleWarnings(module: RrrModule): RrrWarning[] {
       }
       return out;
     }
+    case 'proximity_hint': {
+      const out: RrrWarning[] = [];
+      if (!isValidCoordinate(module.config.lat) || !isValidCoordinate(module.config.lng)) {
+        out.push({
+          code: 'proximity_missing_coordinates',
+          message: `Baustein "${module.label}" braucht Breiten- und Längengrad.`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      const radiusMeters = readNumber(module.config.successRadiusMeters);
+      if (radiusMeters > 0 && radiusMeters < MIN_GPS_RADIUS_METERS) {
+        out.push({
+          code: 'proximity_radius_small',
+          message: `Baustein "${module.label}" hat einen sehr kleinen Erfolgsradius (< ${MIN_GPS_RADIUS_METERS} m).`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      return out;
+    }
     case 'hold_still': {
       const durationMs = readNumber(module.config.durationMs);
       if (durationMs > MAX_HOLD_DURATION_MS) {
@@ -129,7 +217,116 @@ function getModuleWarnings(module: RrrModule): RrrWarning[] {
       }
       return [];
     }
+    case 'qr_scan': {
+      if (readString(module.config.expectedValue).trim() === '') {
+        return [
+          {
+            code: 'qr_scan_expected_value_empty',
+            message: `Baustein "${module.label}" hat noch keinen erwarteten QR-Wert.`,
+            severity: 'warning',
+            moduleId: module.id,
+          },
+        ];
+      }
+      return [];
+    }
+    case 'code_word': {
+      if (readString(module.config.code).trim() === '') {
+        return [
+          {
+            code: 'code_word_empty',
+            message: `Baustein "${module.label}" hat noch kein Codewort.`,
+            severity: 'warning',
+            moduleId: module.id,
+          },
+        ];
+      }
+      return [];
+    }
+    case 'sequential_code': {
+      if (readString(module.config.code).trim() === '') {
+        return [
+          {
+            code: 'sequential_code_empty',
+            message: `Baustein "${module.label}" hat noch keinen gesammelten Code.`,
+            severity: 'warning',
+            moduleId: module.id,
+          },
+        ];
+      }
+      return [];
+    }
+    case 'timer_wait': {
+      const durationMs = readNumber(module.config.durationMs);
+      if (durationMs <= 0) {
+        return [
+          {
+            code: 'timer_wait_duration_missing',
+            message: `Baustein "${module.label}" braucht eine Wartezeit.`,
+            severity: 'warning',
+            moduleId: module.id,
+          },
+        ];
+      }
+      if (durationMs > MAX_TIMER_WAIT_DURATION_MS) {
+        return [
+          {
+            code: 'timer_wait_duration_long',
+            message: `Baustein "${module.label}" hat eine lange Wartezeit (> ${MAX_TIMER_WAIT_DURATION_MS} ms).`,
+            severity: 'info',
+            moduleId: module.id,
+          },
+        ];
+      }
+      return [];
+    }
+    case 'photo_check_manual': {
+      if (readString(module.config.prompt).trim() === '') {
+        return [
+          {
+            code: 'photo_check_manual_prompt_empty',
+            message: `Baustein "${module.label}" hat noch keine Foto-Aufgabe.`,
+            severity: 'warning',
+            moduleId: module.id,
+          },
+        ];
+      }
+      return [];
+    }
+    case 'object_found': {
+      if (readString(module.config.prompt).trim() === '') {
+        return [
+          {
+            code: 'object_found_prompt_empty',
+            message: `Baustein "${module.label}" hat noch keine Fund-Anweisung.`,
+            severity: 'warning',
+            moduleId: module.id,
+          },
+        ];
+      }
+      return [];
+    }
   }
+}
+
+function getFallbackWarnings(modules: RrrModule[]): RrrWarning[] {
+  const moduleIds = new Set(modules.map((module) => module.id));
+  return modules.flatMap((module) => {
+    if (
+      !module.fallbackModuleId ||
+      moduleIds.has(module.fallbackModuleId)
+    ) {
+      return [];
+    }
+    return [
+      {
+        code: 'missing_fallback_reference' as const,
+        message: `Fallback von "${module.label}" verweist auf den fehlenden Baustein "${module.fallbackModuleId}".`,
+        severity: 'warning' as const,
+        moduleId: module.id,
+      },
+    ];
+  });
 }
 
 function getConditionWarnings(
@@ -192,6 +389,18 @@ function getConditionChildren(
 
 function readString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.map((entry) => (typeof entry === 'string' ? entry : ''))
+    : [];
+}
+
+function readNumberArray(value: unknown): number[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is number => Number.isInteger(entry) && entry >= 0)
+    : [];
 }
 
 function readNumber(value: unknown): number {

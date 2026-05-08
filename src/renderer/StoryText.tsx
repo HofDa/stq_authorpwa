@@ -7,6 +7,8 @@ import { Icon } from '@/components/studio/Icon';
 interface InlineEditable {
   label: string;
   active?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
   onEdit: () => void;
 }
 
@@ -36,6 +38,15 @@ export function StoryText({
     (block) => block.type !== 'image' && block.text.trim().length > 0,
   );
 
+  function activateEditable(editable: InlineEditable) {
+    if (editable.onSelect && !editable.selected && !editable.active) {
+      editable.onSelect();
+      return;
+    }
+
+    editable.onEdit();
+  }
+
   const headingRow = (
     <div
       className={[
@@ -52,19 +63,22 @@ export function StoryText({
     <section className="stq-riddle-section">
       {headingEditable ? (
         <div
-          className={`stq-editable-region${headingEditable.active ? ' stq-editable-region--active' : ''}`}
+          className={`stq-editable-region${headingEditable.active ? ' stq-editable-region--active' : ''}${
+            headingEditable.selected ? ' stq-editable-region--selected' : ''
+          }`}
           role="button"
           tabIndex={0}
           aria-label={headingEditable.label}
+          aria-pressed={headingEditable.active || headingEditable.selected || undefined}
           onClick={(event) => {
             event.stopPropagation();
-            headingEditable.onEdit();
+            activateEditable(headingEditable);
           }}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault();
               event.stopPropagation();
-              headingEditable.onEdit();
+              activateEditable(headingEditable);
             }
           }}
         >
@@ -91,19 +105,22 @@ export function StoryText({
       )}
       {bodyEditable ? (
         <div
-          className={`stq-editable-region${bodyEditable.active ? ' stq-editable-region--active' : ''}`}
+          className={`stq-editable-region${bodyEditable.active ? ' stq-editable-region--active' : ''}${
+            bodyEditable.selected ? ' stq-editable-region--selected' : ''
+          }`}
           role="button"
           tabIndex={0}
           aria-label={bodyEditable.label}
+          aria-pressed={bodyEditable.active || bodyEditable.selected || undefined}
           onClick={(event) => {
             event.stopPropagation();
-            bodyEditable.onEdit();
+            activateEditable(bodyEditable);
           }}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault();
               event.stopPropagation();
-              bodyEditable.onEdit();
+              activateEditable(bodyEditable);
             }
           }}
         >
