@@ -190,7 +190,17 @@ const text: EditorText = {
   "workflow.route": "Route",
   "workflow.ready": "Bereit",
   "workflow.attention": "Braucht Aufmerksamkeit",
-  "workflow.empty": "Leer"
+  "workflow.empty": "Leer",
+  "rrr.module": "Aufgabe",
+  "rrr.module.plural": "Aufgaben",
+  "rrr.condition": "Lösungsregel",
+  "rrr.condition.plural": "Lösungsregeln",
+  "rrr.interaction": "Rätselaufbau",
+  "rrr.type.sequence": "Schritt für Schritt",
+  "rrr.type.all_of": "Alles erledigen",
+  "rrr.type.any_of": "Eine Lösung reicht",
+  "rrr.expertMode": "Expertenmodus",
+  "rrr.expertModeHint": "Zeigt technische Details wie JSON und Debug-Informationen."
 };
 
 export default text;

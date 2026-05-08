@@ -190,7 +190,17 @@ const text: EditorText = {
   "workflow.route": "Percorso",
   "workflow.ready": "Pronto",
   "workflow.attention": "Richiede attenzione",
-  "workflow.empty": "Vuoto"
+  "workflow.empty": "Vuoto",
+  "rrr.module": "Compito",
+  "rrr.module.plural": "Compiti",
+  "rrr.condition": "Regola di soluzione",
+  "rrr.condition.plural": "Regole di soluzione",
+  "rrr.interaction": "Struttura dell’enigma",
+  "rrr.type.sequence": "Passo dopo passo",
+  "rrr.type.all_of": "Completa tutto",
+  "rrr.type.any_of": "Basta una soluzione",
+  "rrr.expertMode": "Modalità esperto",
+  "rrr.expertModeHint": "Mostra dettagli tecnici come JSON e informazioni di debug."
 };
 
 export default text;

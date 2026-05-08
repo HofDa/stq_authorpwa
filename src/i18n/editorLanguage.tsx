@@ -201,7 +201,17 @@ export type EditorTextKey =
   | 'workflow.route'
   | 'workflow.ready'
   | 'workflow.attention'
-  | 'workflow.empty';
+  | 'workflow.empty'
+  | 'rrr.module'
+  | 'rrr.module.plural'
+  | 'rrr.condition'
+  | 'rrr.condition.plural'
+  | 'rrr.interaction'
+  | 'rrr.type.sequence'
+  | 'rrr.type.all_of'
+  | 'rrr.type.any_of'
+  | 'rrr.expertMode'
+  | 'rrr.expertModeHint';
 
 export type EditorText = Record<EditorTextKey, string>;
 

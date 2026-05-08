@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -20,6 +21,7 @@ import {
   type RrrModule,
   type RrrModuleType,
 } from '@/rrr';
+import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { RrrInteractionJsonEditor } from './RrrInteractionJsonEditor';
 import { RrrMockPreview } from './RrrMockPreview';
 import { RrrTemplatePicker } from './RrrTemplatePicker';
@@ -70,9 +72,21 @@ export function RrrInteractionEditor({
   fieldTestIssueTags,
   onChange,
 }: RrrInteractionEditorProps) {
+  const { t } = useEditorLanguage();
   const [moduleTypeToAdd, setModuleTypeToAdd] =
     useState<RrrModuleType>('text_answer');
-  const [expertMode, setExpertMode] = useState(false);
+
+  const [expertMode, setExpertMode] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false; // Default for SSR or non-browser environments
+    }
+    try {
+      const storedValue = localStorage.getItem('stq-rrr-expert-mode');
+      return storedValue === 'true';
+    } catch {
+      return false; // Fallback if localStorage is not accessible
+    }
+  });
   const moduleCount = interaction.modules.length;
   const conditionType = interaction.condition?.type ?? 'none';
   const selectedModulePreset = RRR_MODULE_PRESETS[moduleTypeToAdd];
@@ -84,6 +98,13 @@ export function RrrInteractionEditor({
         return `${path}${issue.message}`;
       });
   const warnings = getRrrWarnings(interaction);
+
+  const handleExpertModeChange = useCallback((checked: boolean) => {
+    setExpertMode(checked);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('stq-rrr-expert-mode', String(checked));
+    }
+  }, []);
 
   function addModule() {
     const module = createRrrModuleFromPreset(
@@ -155,18 +176,18 @@ export function RrrInteractionEditor({
       <div className="stq-rrr-editor__header">
         <div>
           <h3>Modulares Rätsel</h3>
-          <p>
-            Baue ein Rätsel aus mehreren Bausteinen und lege fest, wann es
-            gelöst ist.
-          </p>
+          <p>{t('studio.riddleSettingsHint')}</p>
         </div>
         <label className="stq-rrr-expert-toggle">
           <input
             type="checkbox"
             checked={expertMode}
-            onChange={(event) => setExpertMode(event.target.checked)}
+            onChange={(event) => handleExpertModeChange(event.target.checked)}
           />
-          <span>Expertenmodus</span>
+          <span>{t('rrr.expertMode')}</span>
+          <small className="stq-rrr-field__hint">
+            {t('rrr.expertModeHint')}
+          </small>
         </label>
       </div>
 
@@ -174,11 +195,13 @@ export function RrrInteractionEditor({
         <div>
           <dt>Bausteine</dt>
           <dd>{moduleCount}</dd>
-        </div>
-        <div>
-          <dt>Lösungsregel</dt>
-          <dd>{CONDITION_TYPE_LABELS[conditionType]}</dd>
-        </div>
+        </div>{' '}
+        {expertMode && (
+          <div>
+            <dt>Lösungsregel</dt>
+            <dd>{CONDITION_TYPE_LABELS[conditionType]}</dd>
+          </div>
+        )}
       </dl>
 
       <RrrTemplatePicker
@@ -265,25 +288,27 @@ export function RrrInteractionEditor({
         fieldTestIssueTags={fieldTestIssueTags}
       />
 
-      <RrrWarningsPanel warnings={warnings} expertMode={expertMode} />
-
       {expertMode && (
-        <div
-          className={`stq-rrr-validation ${
-            validation.success ? 'is-valid' : 'is-invalid'
-          }`}
-        >
-          <div className="stq-rrr-validation__header">
-            <strong>{validation.success ? 'Gültig' : 'Ungültig'}</strong>
+        <>
+          <RrrWarningsPanel warnings={warnings} expertMode={expertMode} />
+
+          <div
+            className={`stq-rrr-validation ${
+              validation.success ? 'is-valid' : 'is-invalid'
+            }`}
+          >
+            <div className="stq-rrr-validation__header">
+              <strong>{validation.success ? 'Gültig' : 'Ungültig'}</strong>
+            </div>
+            {!validation.success && (
+              <ul>
+                {validationMessages.map((message) => (
+                  <li key={message}>{message}</li>
+                ))}
+              </ul>
+            )}
           </div>
-          {!validation.success && (
-            <ul>
-              {validationMessages.map((message) => (
-                <li key={message}>{message}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        </>
       )}
 
       {expertMode && (
@@ -516,7 +541,7 @@ function RrrConditionEditor({
       {invalidIds.length > 0 && (
         <div className="stq-rrr-condition__warning">
           {expertMode
-            ? `Ungültige Baustein-Referenz${
+            ? `Ungültige Baustein-Referenz${ // TODO: i18n
                 invalidIds.length === 1 ? '' : 'en'
               }: ${invalidIds.join(', ')}`
             : 'Die Lösungsregel enthält einen gelöschten Baustein.'}
@@ -701,7 +726,7 @@ function RrrModuleEditor({
           <div>
             <strong>{cardMeta.title}</strong>
             <span>{cardMeta.description}</span>
-            {expertMode && <code>{module.id}</code>}
+            {expertMode && <code className="stq-rrr-module__id">{module.id}</code>}
           </div>
         </div>
         <div className="stq-rrr-module__actions">

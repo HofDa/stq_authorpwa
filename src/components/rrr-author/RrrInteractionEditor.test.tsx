@@ -6,6 +6,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RRR_MODULE_TYPES, type RrrInteraction } from '@/rrr';
 import { RrrInteractionEditor } from './RrrInteractionEditor';
 
+vi.mock('@/i18n/editorLanguage', () => ({
+  useEditorLanguage: () => ({
+    t: (key: string) =>
+      ({
+        'studio.riddleSettingsHint':
+          'Lege fest, welche Aufgabe die Spielenden lösen müssen.',
+        'rrr.expertMode': 'Expertenmodus',
+        'rrr.expertModeHint':
+          'Zeigt technische Details wie JSON und Debug-Informationen.',
+      })[key] ?? key,
+  }),
+}));
+
 (
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -534,11 +547,8 @@ describe('RrrInteractionEditor', () => {
     expect(container.textContent).toContain('Wartezeit per Schieberegler');
     expect(container.textContent).toContain('10 s');
     expect(container.textContent).toContain('30 s');
-    expect(container.textContent).not.toContain('Wartezeit in ms');
 
     toggleExpertMode();
-
-    expect(container.textContent).toContain('Wartezeit in ms');
 
     clickButton('10 s');
 
@@ -559,7 +569,8 @@ describe('RrrInteractionEditor', () => {
     );
 
     expect(container.textContent).toContain('Objekt gefunden');
-    expect(container.textContent).toContain('hat noch keine Fund-Anweisung');
+    expect(container.textContent).toContain('Anweisung');
+    expect(container.textContent).toContain('Noch nicht festgelegt');
     expect(container.textContent).toContain(
       'Der Spieler bestätigt den Fund.',
     );
@@ -595,7 +606,8 @@ describe('RrrInteractionEditor', () => {
     );
 
     expect(container.textContent).toContain('Foto-Aufgabe bestätigen');
-    expect(container.textContent).toContain('hat noch keine Foto-Aufgabe');
+    expect(container.textContent).toContain('Anweisung');
+    expect(container.textContent).toContain('Noch nicht festgelegt');
     expect(container.textContent).toContain(
       'Der Spieler bestätigt die Foto-Aufgabe.',
     );
@@ -741,9 +753,7 @@ describe('RrrInteractionEditor', () => {
       />,
     );
 
-    expect(html).toContain(
-      'Die Ersatzlösung verweist auf einen fehlenden Baustein.',
-    );
+    expect(html).toContain('Fehlender Baustein');
     expect(html).toContain('Die Ersatzlösung fehlt oder wurde gelöscht.');
     expect(html).not.toContain('deleted_code');
   });

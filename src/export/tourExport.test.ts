@@ -332,7 +332,7 @@ describe('buildDraftExportZip', () => {
       expect.arrayContaining([
         expect.objectContaining({
           path: 'stations.0.interaction',
-          message: 'Modular riddles require an interaction object for export.',
+          message: 'Required',
         }),
       ]),
     );
@@ -788,6 +788,10 @@ describe('buildDraftExportZip', () => {
 
     expect(result.validationErrors.length).toBeGreaterThan(0);
     expect(result.validationErrors[0].path).toContain('tour.number');
+
+    const zip = await JSZip.loadAsync(await result.blob.arrayBuffer());
+    expect(zip.file('tours.json')).toBeTruthy();
+    expect(zip.file('bolzano-classic/riddles.json')).toBeTruthy();
   });
 
   it('flags per-station errors with the station index in the path', async () => {

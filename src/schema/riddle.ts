@@ -199,43 +199,31 @@ export const RiddleEntrySchema = z.preprocess(
   AuthoringRiddleEntrySchema,
 );
 
-export const ExportRiddleEntrySchema = z
-  .object({
-    id: z.string(),
-    number: z.number().int().nonnegative(),
-    position_lat: z.number(),
-    position_lng: z.number(),
-    polylineString: z.string(),
-    imagePath: z.string(),
-    iconPath: z.string(),
-    markerIconPath: z.string(),
-    riddleType: RiddleTypeSchema.default('text'),
-    solutionInputType: z.enum(['text']).default('text'),
-    interactionVersion: z.literal(RRR_INTERACTION_VERSION).optional(),
-    interaction: RrrInteractionSchema.optional(),
-    en: ExportRiddleLocaleSchema,
-    de: ExportRiddleLocaleSchema,
-    it: ExportRiddleLocaleSchema,
-  })
-  .superRefine((station, ctx) => {
-    if (station.riddleType !== 'modular') {
-      return;
-    }
-    if (!station.interaction) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['interaction'],
-        message: 'Modular riddles require an interaction object for export.',
-      });
-    }
-    if (station.interactionVersion !== RRR_INTERACTION_VERSION) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['interactionVersion'],
-        message: `Modular riddles require interactionVersion ${RRR_INTERACTION_VERSION} for export.`,
-      });
-    }
-  });
+const ExportRiddleBaseSchema = z.object({
+  id: z.string(),
+  number: z.number().int().nonnegative(),
+  position_lat: z.number(),
+  position_lng: z.number(),
+  polylineString: z.string(),
+  imagePath: z.string(),
+  iconPath: z.string(),
+  markerIconPath: z.string(),
+  solutionInputType: z.enum(['text']).default('text'),
+  en: ExportRiddleLocaleSchema,
+  de: ExportRiddleLocaleSchema,
+  it: ExportRiddleLocaleSchema,
+});
+
+export const ExportRiddleEntrySchema = z.discriminatedUnion('riddleType', [
+  ExportRiddleBaseSchema.extend({
+    riddleType: z.literal('text'),
+  }),
+  ExportRiddleBaseSchema.extend({
+    riddleType: z.literal('modular'),
+    interactionVersion: z.literal(RRR_INTERACTION_VERSION),
+    interaction: RrrInteractionSchema,
+  }),
+]);
 
 export type RiddleEntry = z.infer<typeof RiddleEntrySchema>;
 export type RrrFieldTestStatus = z.infer<typeof RrrFieldTestStatusSchema>;

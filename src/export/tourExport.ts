@@ -125,11 +125,38 @@ export async function buildDraftExportZip(
     ),
   );
 
-  const validationErrors = validateSerialized(tourEntry, stations);
-
   const zip = new JSZip();
-  zip.file('tours.json', JSON.stringify([tourEntry], null, 2));
-  zip.file(tourEntry.riddlesPath, JSON.stringify(stations, null, 2));
+  let tourJson: unknown = {};
+  let riddlesJson: unknown[] = [];
+  const validationErrors: ExportValidationError[] = [];
+
+  const tourResult = ExportTourEntrySchema.safeParse(tourEntry);
+  if (!tourResult.success) {
+    validationErrors.push(...issuesToErrors(tourResult.error.issues, ['tour']));
+    tourJson = tourEntry;
+  } else {
+    tourJson = tourResult.data;
+  }
+
+  riddlesJson = stations.map((station, index) => {
+    const result = ExportRiddleEntrySchema.safeParse(station);
+    if (!result.success) {
+      validationErrors.push(
+        ...issuesToErrors(result.error.issues, ['stations', String(index)]),
+      );
+      return station;
+    }
+    return result.data;
+  });
+
+  zip.file('tours.json', JSON.stringify([tourJson], null, 2));
+  // The riddles path is always taken from the draft's tour object,
+  // which is guaranteed to be valid by the draft schema.
+  const riddlesPath = tourResult.success ? tourResult.data.riddlesPath : draft.tour.riddlesPath;
+  zip.file(
+    riddlesPath,
+    JSON.stringify(riddlesJson, null, 2),
+  );
 
   for (const [blobId, path] of exportPathByBlobId.entries()) {
     const stored = blobsById.get(blobId);
@@ -148,8 +175,8 @@ export async function buildDraftExportZip(
     validationErrors,
     validationWarnings: publishingValidation.warnings,
     publishingValidation,
-    tourJson: [tourEntry],
-    riddlesJson: stations,
+    tourJson: [tourJson],
+    riddlesJson,
   };
 }
 
@@ -182,26 +209,6 @@ function publishingIssuesToErrors(
   }));
 }
 
-function validateSerialized(
-  tourEntry: unknown,
-  stations: unknown[],
-): ExportValidationError[] {
-  const errors: ExportValidationError[] = [];
-  const tourResult = ExportTourEntrySchema.safeParse(tourEntry);
-  if (!tourResult.success) {
-    errors.push(...issuesToErrors(tourResult.error.issues, ['tour']));
-  }
-  stations.forEach((station, index) => {
-    const result = ExportRiddleEntrySchema.safeParse(station);
-    if (!result.success) {
-      errors.push(
-        ...issuesToErrors(result.error.issues, ['stations', String(index)]),
-      );
-    }
-  });
-  return errors;
-}
-
 function issuesToErrors(
   issues: ZodIssue[],
   prefix: string[],
@@ -232,20 +239,8 @@ function serializeTourEntry(
     ? exportPathByBlobId.get(tour.coverBlobId)
     : undefined;
   return {
-    id: tour.id,
-    number: tour.number,
+    ...tour,
     imagePath: coverPath ?? tour.imagePath,
-    riddlesPath: tour.riddlesPath,
-    distance: tour.distance,
-    unlocked: tour.unlocked,
-    ...(tour.code !== undefined ? { code: tour.code } : {}),
-    ...(tour.hideUnsolvedRiddles !== undefined
-      ? { hideUnsolvedRiddles: tour.hideUnsolvedRiddles }
-      : {}),
-    ...(tour.gpsRangeMeters !== undefined
-      ? { gpsRangeMeters: tour.gpsRangeMeters }
-      : {}),
-    ...(tour.publicMeta ? { publicMeta: tour.publicMeta } : {}),
     en: serializeTourLocale(tour.en, exportPathByBlobId),
     de: serializeTourLocale(tour.de, exportPathByBlobId),
     it: serializeTourLocale(tour.it, exportPathByBlobId),
@@ -276,20 +271,13 @@ function serializeRiddleEntry(
   const generatedIconPath = iconPathByStationId.get(station.id);
   const generatedMarkerPath = markerPathByStationId.get(station.id);
   return {
-    id: station.id,
-    number: station.number,
-    position_lat: station.position_lat,
-    position_lng: station.position_lng,
-    polylineString: station.polylineString,
+    ...station,
     imagePath: imagePath ?? station.imagePath,
     iconPath: generatedIconPath ?? station.iconPath,
     markerIconPath: generatedMarkerPath ?? station.markerIconPath,
-    riddleType: station.riddleType,
-    solutionInputType: station.solutionInputType,
     ...(station.riddleType === 'modular'
       ? {
           interactionVersion: RRR_INTERACTION_VERSION,
-          interaction: station.interaction,
         }
       : {}),
     en: serializeRiddleLocale(
