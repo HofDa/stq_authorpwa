@@ -1,0 +1,227 @@
+/* RRR mock runtime and guided preview */
+.stq-rrr-mock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  padding: 10px;
+}
+
+.stq-rrr-mock__header,
+.stq-rrr-mock__condition,
+.stq-rrr-mock__module {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-mock__header div,
+.stq-rrr-mock__module div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stq-rrr-mock__header strong,
+.stq-rrr-mock__condition strong,
+.stq-rrr-mock__module strong {
+  color: var(--stq-text);
+  font-size: 14px;
+}
+
+.stq-rrr-mock__header span,
+.stq-rrr-mock__condition span,
+.stq-rrr-mock__module span,
+.stq-rrr-mock__module small {
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.stq-rrr-mock__controls,
+.stq-rrr-mock__result,
+.stq-rrr-mock__modules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stq-rrr-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 10px;
+}
+
+.stq-rrr-guide__step,
+.stq-rrr-guide__feedback {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-guide__step {
+  flex-direction: column;
+}
+
+.stq-rrr-guide__step span,
+.stq-rrr-guide__feedback span {
+  color: #8a7d6e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stq-rrr-guide__step strong,
+.stq-rrr-guide__feedback strong {
+  color: var(--stq-text);
+  font-size: 14px;
+}
+
+.stq-rrr-guide__step small,
+.stq-rrr-guide__instruction {
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.stq-rrr-guide__instruction {
+  margin: 0;
+}
+
+.stq-rrr-guide__choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stq-rrr-guide__stack,
+.stq-qr-scanner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stq-qr-scanner__video {
+  width: 100%;
+  min-height: 180px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-text);
+  object-fit: cover;
+}
+
+.stq-rrr-guide__feedback {
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  padding: 8px 9px;
+}
+
+.stq-rrr-guide__feedback div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stq-rrr-guide__feedback--success {
+  border-color: #cfe3cc;
+  background: #f4faf2;
+}
+
+.stq-rrr-guide__feedback--failed {
+  border-color: #f1c9c4;
+  background: var(--stq-white)7f5;
+}
+
+.stq-rrr-mock__session {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--stq-border);
+}
+
+.stq-rrr-mock__session-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.stq-rrr-mock__session-controls button {
+  border: 1px solid #d9cfc3;
+  background: var(--stq-white)af3;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stq-rrr-mock__session-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stq-rrr-mock__expert {
+  border-top: 1px dashed var(--stq-border);
+  padding-top: 10px;
+}
+
+.stq-rrr-mock__expert summary {
+  cursor: pointer;
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stq-rrr-mock__expert[open] summary {
+  margin-bottom: 8px;
+}
+
+.stq-rrr-mock__session-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.stq-rrr-mock__session-stats > div {
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 6px 10px;
+}
+
+.stq-rrr-mock__session-stats dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8a7d6e;
+}
+
+.stq-rrr-mock__session-stats dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.stq-rrr-mock__condition,
+.stq-rrr-mock__module {
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 9px 10px;
+}
+

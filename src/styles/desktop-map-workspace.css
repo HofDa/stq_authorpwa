@@ -1,0 +1,231 @@
+/* Desktop map workspace controls */
+
+.stq-desktop-field-map-shell {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(160, 70, 61, 0.18);
+  border-radius: 22px;
+  box-shadow: var(--stq-shadow-card);
+  background: #e8ece8;
+}
+
+.stq-desktop-field-map-shell .stq-map-shell,
+.stq-desktop-field-map-shell .stq-map-shell .maplibregl-map {
+  border-radius: 22px;
+}
+
+.stq-desktop-field-map-topbar {
+  left: 18px;
+  right: 18px;
+  top: 16px;
+  z-index: 20;
+}
+
+.stq-desktop-field-routebar {
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 20;
+  width: auto;
+  max-width: 680px;
+  margin: 0;
+}
+
+.stq-desktop-map-workspace {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid rgba(160, 70, 61, 0.18);
+  border-radius: 10px;
+  background: #e8dfdb;
+}
+
+.stq-desktop-map-workspace .stq-map-shell,
+.stq-desktop-map-workspace .stq-map-shell .maplibregl-map {
+  border-radius: 10px;
+}
+
+.stq-desktop-map-topbar {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.stq-desktop-map-title,
+.stq-desktop-map-button,
+.stq-desktop-map-layers-menu,
+.stq-desktop-map-station-card,
+.stq-desktop-map-error {
+  pointer-events: auto;
+}
+
+.stq-desktop-map-title {
+  display: grid;
+  min-width: 220px;
+  gap: 2px;
+  border: 1px solid rgba(231, 221, 211, 0.74);
+  border-radius: 10px;
+  background: var(--stq-glass-white-94);
+  padding: 9px 12px;
+  box-shadow: 0 8px 20px var(--stq-shadow-brown-12);
+}
+
+.stq-desktop-map-title span {
+  color: var(--stq-primary);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stq-desktop-map-title strong {
+  overflow: hidden;
+  color: var(--stq-text);
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stq-desktop-map-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border: 1px solid rgba(231, 221, 211, 0.9);
+  border-radius: 10px;
+  background: var(--stq-glass-white-94);
+  color: var(--stq-text);
+  padding: 0 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px var(--stq-shadow-brown-12);
+  cursor: pointer;
+}
+
+.stq-desktop-map-button:hover {
+  border-color: var(--stq-primary);
+  color: var(--stq-primary);
+}
+
+.stq-desktop-map-button--primary {
+  background: var(--stq-primary);
+  border-color: var(--stq-primary);
+  color: white;
+}
+
+.stq-desktop-map-button--primary:hover {
+  color: white;
+  filter: brightness(1.04);
+}
+
+.stq-desktop-map-layers {
+  position: relative;
+  margin-left: auto;
+}
+
+.stq-desktop-map-layers-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  min-width: 150px;
+  gap: 4px;
+  border: 1px solid var(--stq-border);
+  border-radius: 10px;
+  background: white;
+  padding: 6px;
+  box-shadow: 0 14px 30px var(--stq-shadow-brown-18);
+}
+
+.stq-desktop-map-layers-menu button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--stq-text);
+  padding: 0 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stq-desktop-map-layers-menu button:hover,
+.stq-desktop-map-layers-menu button.is-active {
+  background: rgba(160, 70, 61, 0.08);
+  color: var(--stq-primary);
+}
+
+.stq-desktop-map-error {
+  position: absolute;
+  top: 68px;
+  left: 18px;
+  z-index: 20;
+  max-width: 420px;
+  border: 1px solid var(--stq-error);
+  border-radius: 10px;
+  background: var(--stq-glass-white-94);
+  color: var(--stq-error);
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stq-desktop-map-station-card {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, calc(100% - 36px));
+  border: 1px solid rgba(231, 221, 211, 0.88);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--stq-text);
+  padding: 10px;
+  font: inherit;
+  text-align: left;
+  box-shadow: 0 16px 34px var(--stq-shadow-brown-18);
+  cursor: pointer;
+}
+
+.stq-desktop-map-station-card > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.stq-desktop-map-station-card strong,
+.stq-desktop-map-station-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stq-desktop-map-station-card strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.stq-desktop-map-station-card small {
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+

@@ -1,0 +1,67 @@
+/* ── Editable region hover overlay ──────────────────────────────────────── */
+.stq-editable-region {
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    outline-color 120ms ease,
+    background-color 120ms ease;
+  outline: 1px dashed transparent;
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.stq-editable-region:hover,
+.stq-editable-region--active,
+.stq-editable-region--selected {
+  outline-color: var(--stq-primary);
+  background: transparent;
+  z-index: 50;
+}
+
+.stq-editable-pen {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--stq-primary);
+  color: white;
+  border: 2px solid var(--stq-bg);
+  box-shadow: 0 2px 6px rgba(42, 25, 17, 0.22);
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.stq-editable-region:hover .stq-editable-pen,
+.stq-editable-region--active .stq-editable-pen,
+.stq-editable-region--selected .stq-editable-pen {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.stq-riddle-answer-edit-target {
+  width: 100%;
+  padding: 4px 0;
+}
+
+.stq-riddle-hint-edit-target {
+  width: 100%;
+  margin-top: 16px;
+  padding: 0;
+}
+
+.stq-riddle-hint-edit-target .stq-riddle-hint {
+  margin-top: 0;
+}
+

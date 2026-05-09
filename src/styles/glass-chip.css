@@ -1,0 +1,20 @@
+/* ───── Glassmorphic chip overlay (used for floating tour-name pill) ───── */
+
+.studio-chip--glass {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  color: var(--stq-text);
+  box-shadow: 0 4px 14px rgba(70, 40, 30, 0.10);
+}
+
+.studio-chip--glass:hover {
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+
+@keyframes stq-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

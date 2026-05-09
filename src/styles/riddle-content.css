@@ -1,0 +1,273 @@
+/* Riddle content, history and rendered blocks */
+.stq-riddle-sheet-handle {
+  width: 56px;
+  height: 6px;
+  margin: 4px auto 34px;
+  border-radius: 9999px;
+  background: rgba(26, 26, 26, 0.48);
+}
+
+.stq-riddle-section {
+  position: relative;
+  padding: 0 0 32px;
+}
+
+.stq-render-target {
+  position: relative;
+}
+
+.stq-story-lorem {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--riddle-ink);
+}
+
+.stq-story-lorem p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.stq-riddle-heading {
+  margin: 0 0 22px;
+  color: var(--riddle-ink);
+  font-family: var(--stq-font-ui);
+  font-size: 31px;
+  font-weight: 800;
+  line-height: 1.18;
+}
+
+.stq-riddle-heading-row {
+  position: relative;
+}
+
+.stq-riddle-heading-row--with-action .stq-riddle-heading {
+  padding-left: 58px;
+}
+
+.stq-riddle-heading-actions {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  display: flex;
+  gap: 8px;
+}
+
+.stq-riddle-heading-action {
+  --heading-action-color: var(--riddle-primary);
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--heading-action-color), white 46%);
+  border-radius: 9999px;
+  background: var(--heading-action-color);
+  color: white;
+  padding: 0;
+  box-shadow: 0 10px 22px var(--stq-shadow-brown-12);
+  backdrop-filter: blur(10px);
+}
+
+.stq-riddle-heading-action--story {
+  --heading-action-color: var(--stq-primary);
+}
+
+.stq-riddle-heading-action--intro {
+  --heading-action-color: var(--stq-primary);
+}
+
+.stq-riddle-heading-action--facts {
+  --heading-action-color: #4f6385;
+}
+
+.stq-riddle-heading-action--riddle {
+  --heading-action-color: #7b4f89;
+}
+
+.stq-riddle-heading-action--success {
+  --heading-action-color: var(--stq-success);
+}
+
+.stq-riddle-screen--map-overlay .stq-riddle-heading {
+  margin-bottom: 38px;
+  font-size: 31px;
+  line-height: 1.18;
+}
+
+.stq-riddle-subheading {
+  margin: 30px 0 16px;
+  color: var(--riddle-ink);
+  font-family: var(--stq-font-ui);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.22;
+}
+
+.stq-riddle-story-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  margin: 0 0 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 10px 22px rgba(70, 40, 30, 0.10);
+}
+
+.stq-riddle-story-image--placeholder {
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(160, 70, 61, 0.34);
+  background:
+    linear-gradient(135deg, rgba(160, 70, 61, 0.06), rgba(255, 255, 255, 0.72)),
+    var(--stq-bg);
+  color: rgba(26, 26, 26, 0.55);
+  font-family: var(--stq-font-ui);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.stq-riddle-story-text-placeholder {
+  display: flex;
+  align-items: flex-start;
+  min-height: 132px;
+  margin: 0 0 26px;
+  border: 1px dashed rgba(160, 70, 61, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.56);
+  padding: 18px;
+  color: rgba(26, 26, 26, 0.5);
+  font-family: var(--stq-font-ui);
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+.stq-riddle-story-text-placeholder span {
+  font-family: var(--stq-font-ui);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.stq-riddle-copy {
+  color: var(--riddle-ink);
+  font-family: var(--stq-font-ui);
+  font-size: 25px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.stq-riddle-screen--map-overlay .stq-riddle-copy {
+  font-size: 26px;
+  line-height: 1.45;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.stq-riddle-screen--map-overlay .stq-riddle-story-image {
+  margin-bottom: 22px;
+}
+
+.stq-riddle-screen--map-overlay .stq-riddle-copy p {
+  margin-bottom: 38px;
+}
+
+.stq-riddle-copy p {
+  margin: 0 0 26px;
+}
+
+.stq-riddle-styled-paragraph {
+  border-left: 4px solid rgba(160, 70, 61, 0.46);
+  border-radius: 0 8px 8px 0;
+  background: rgba(160, 70, 61, 0.06);
+  padding: 12px 14px;
+}
+
+.stq-riddle-line-centered {
+  text-align: center;
+}
+
+.stq-riddle-inline-image {
+  display: block;
+  width: 100%;
+  margin: 24px 0;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.stq-riddle-history {
+  position: relative;
+  margin: 6px 0 38px;
+  border: 1px solid rgba(231, 221, 211, 0.95);
+  border-radius: 8px;
+  background: transparent;
+}
+
+.stq-riddle-history-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 104px;
+  padding: 20px 22px;
+}
+
+.stq-riddle-history-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 0 0 0 58px;
+  border: 0;
+  background: transparent;
+  color: var(--riddle-ink);
+  font-family: var(--stq-font-ui);
+  font-size: 24px;
+  font-weight: 800;
+  text-align: left;
+  transform: translateY(0);
+  transition: transform 140ms ease;
+}
+
+.stq-riddle-history-actions {
+  position: absolute;
+  top: 8px;
+  left: 0;
+}
+
+.stq-riddle-history-actions .stq-riddle-heading-actions {
+  position: static;
+}
+
+.stq-riddle-history-icon {
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: var(--riddle-primary);
+  color: white;
+  transform: rotate(90deg);
+  transform-origin: center;
+  transition: transform 140ms ease;
+}
+
+.stq-riddle-history-trigger[aria-expanded="true"] .stq-riddle-history-icon {
+  transform: rotate(270deg);
+}
+
+.stq-riddle-history-trigger[aria-expanded="true"] {
+  transform: translateY(8px);
+}
+
+.stq-riddle-history-body {
+  padding: 18px 22px 30px;
+}
+
+.stq-riddle-history-body .stq-riddle-heading {
+  margin-bottom: 18px;
+}
+

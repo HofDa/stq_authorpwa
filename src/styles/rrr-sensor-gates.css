@@ -1,0 +1,80 @@
+/* RRR sensor gate notices */
+.stq-sensor-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  padding: 12px;
+  color: var(--stq-ink-soft);
+}
+
+.stq-sensor-gate--error {
+  border-color: rgba(186, 26, 26, 0.26);
+  background: var(--stq-white)8f7;
+}
+
+.stq-sensor-gate__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-sensor-gate__header div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-sensor-gate__header strong {
+  color: var(--stq-text);
+  font-size: 15px;
+}
+
+.stq-sensor-gate__header span,
+.stq-sensor-gate__status {
+  color: var(--stq-ink-soft);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.stq-sensor-gate__requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stq-sensor-gate__requirements li {
+  border: 1px solid var(--stq-border);
+  border-radius: 9999px;
+  background: var(--stq-surface-warm);
+  color: var(--stq-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 7px 9px;
+}
+
+.stq-sensor-gate__status {
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 8px 9px;
+}
+
+.stq-sensor-gate--error .stq-sensor-gate__status {
+  border-color: rgba(186, 26, 26, 0.2);
+  background: var(--stq-white)0ee;
+  color: var(--stq-danger-ink);
+}
+
+.stq-sensor-gate__button {
+  align-self: flex-start;
+}
+

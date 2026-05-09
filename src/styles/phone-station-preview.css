@@ -1,0 +1,129 @@
+/* Phone station preview screen */
+.stq-map-preview-station-screen {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+}
+
+.stq-phone-station-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 20%),
+    #e8dfdb;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 100%;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(248, 239, 232, 0.2), rgba(248, 239, 232, 0.7)),
+    #e8dfdb;
+  pointer-events: auto;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-floating-title {
+  position: absolute;
+  top: 43px;
+  right: 14px;
+  bottom: auto;
+  left: 14px;
+  min-height: 45px;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  padding: 8px 10px;
+  z-index: 24;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-floating-title h1 {
+  font-size: 12px;
+  line-height: 1.16;
+}
+
+.stq-phone-station-screen .stq-riddle-title-back {
+  width: 30px;
+  height: 30px;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-sheet {
+  position: absolute;
+  top: 110px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-height: none;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: 12px 12px 0 0;
+  background: var(--stq-bg);
+  box-shadow: 0 -16px 34px var(--stq-shadow-brown-22);
+  padding: 14px 16px 96px;
+  pointer-events: auto;
+}
+
+.stq-phone-station-screen .stq-riddle-screen--map-overlay .stq-riddle-sheet-handle {
+  width: 28px;
+  height: 4px;
+  margin: 0 auto 16px;
+  background: rgba(26, 26, 26, 0.2);
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-hero {
+  margin: 0 0 10px;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-image {
+  border-radius: 8px;
+  background: var(--stq-white)af9;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-image img,
+.stq-phone-station-screen .stq-riddle-map-card-image-placeholder {
+  aspect-ratio: 16 / 9.6;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-icon {
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+}
+
+.stq-phone-station-screen .stq-riddle-map-card-icon .stq-riddle-center-icon img,
+.stq-phone-station-screen .stq-riddle-map-card-icon > img {
+  width: 24px;
+  height: 24px;
+}
+
+.stq-phone-station-screen .stq-riddle-heading {
+  margin-bottom: 10px;
+  font-size: 19px;
+  line-height: 1.14;
+}
+
+.stq-phone-station-screen .stq-riddle-copy p {
+  margin: 0 0 11px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stq-phone-station-screen .stq-riddle-section {
+  padding-bottom: 18px;
+}
+
+.stq-phone-station-screen .stq-riddle-history-trigger {
+  min-height: 34px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+

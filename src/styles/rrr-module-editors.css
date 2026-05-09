@@ -1,0 +1,633 @@
+/* RRR module-specific editors */
+.stq-rrr-report-export {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px dashed var(--stq-border);
+  padding-top: 10px;
+}
+
+.stq-rrr-multi-choice-editor__options,
+.stq-rrr-multi-choice-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stq-rrr-multi-choice-editor__option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.stq-rrr-multi-choice-editor__option > input {
+  min-width: 0;
+}
+
+.stq-rrr-multi-choice-preview {
+  margin: 0;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 10px;
+}
+
+.stq-rrr-multi-choice-preview legend {
+  color: var(--stq-text);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  padding: 0 4px;
+}
+
+.stq-rrr-multi-choice-preview small {
+  color: #7a706a;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.stq-rrr-compass-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stq-rrr-compass-picker__main {
+  display: grid;
+  grid-template-columns: minmax(132px, 160px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.stq-rrr-compass-picker__dial {
+  position: relative;
+  width: min(160px, 100%);
+  aspect-ratio: 1;
+  border: 1px solid #e2d4c7;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, var(--stq-white) 0 9%, transparent 10%),
+    radial-gradient(circle at center, var(--stq-surface-warm) 0 54%, var(--stq-white) 55% 100%);
+  box-shadow: inset 0 0 0 8px var(--stq-white);
+  color: var(--stq-text);
+  cursor: crosshair;
+}
+
+.stq-rrr-compass-picker__dial:focus-visible {
+  outline: 2px solid rgba(160, 70, 61, 0.45);
+  outline-offset: 3px;
+}
+
+.stq-rrr-compass-picker__cardinal {
+  position: absolute;
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stq-rrr-compass-picker__cardinal--north {
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.stq-rrr-compass-picker__cardinal--east {
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+}
+
+.stq-rrr-compass-picker__cardinal--south {
+  bottom: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.stq-rrr-compass-picker__cardinal--west {
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+}
+
+.stq-rrr-compass-picker__needle {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 4px;
+  height: 42%;
+  border-radius: 9999px;
+  background: var(--stq-primary);
+  transform: translateX(-50%) rotate(var(--stq-rrr-compass-degrees));
+  transform-origin: 50% 100%;
+}
+
+.stq-rrr-compass-picker__needle::before {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid var(--stq-primary);
+  border-left: 7px solid transparent;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.stq-rrr-compass-picker__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--stq-white);
+  border-radius: 50%;
+  background: var(--stq-primary);
+  box-shadow: 0 0 0 1px rgba(160, 70, 61, 0.24);
+  transform: translate(-50%, -50%);
+}
+
+.stq-rrr-compass-picker__readout {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid #eee4da;
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 12px;
+}
+
+.stq-rrr-compass-picker__readout span,
+.stq-rrr-compass-picker__readout small {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.stq-rrr-compass-picker__readout strong {
+  color: var(--stq-text);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.stq-rrr-compass-picker__presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stq-rrr-compass-picker__preset {
+  min-height: 34px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-ink-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stq-rrr-compass-picker__preset.is-active {
+  border-color: var(--stq-primary);
+  background: var(--stq-primary);
+  color: var(--stq-white);
+}
+
+.stq-rrr-compass-picker__tolerance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 150px);
+  gap: 8px;
+  align-items: start;
+}
+
+.stq-rrr-compass-picker__tolerance input[type="range"] {
+  height: 24px;
+  border: 0;
+  background: transparent;
+  accent-color: var(--stq-primary);
+  padding: 0;
+}
+
+.stq-rrr-gps-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stq-rrr-gps-radius {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #eee4da;
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 12px;
+}
+
+.stq-rrr-gps-radius__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-gps-radius__header div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-rrr-gps-radius__header span {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stq-rrr-gps-radius__header strong {
+  color: var(--stq-text);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.stq-rrr-gps-radius__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid var(--stq-border);
+  border-radius: 9999px;
+  background: var(--stq-white);
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.stq-rrr-gps-radius__badge--precise {
+  border-color: rgba(186, 26, 26, 0.22);
+  background: var(--stq-white)0ee;
+  color: var(--stq-danger-ink);
+}
+
+.stq-rrr-gps-radius__badge--normal {
+  border-color: rgba(160, 70, 61, 0.24);
+  background: var(--stq-white);
+  color: var(--stq-primary);
+}
+
+.stq-rrr-gps-radius__badge--forgiving {
+  border-color: rgba(48, 116, 69, 0.22);
+  background: #eef8ef;
+  color: #27653a;
+}
+
+.stq-rrr-gps-radius input[type="range"] {
+  height: 24px;
+  border: 0;
+  background: transparent;
+  accent-color: var(--stq-primary);
+  padding: 0;
+}
+
+.stq-rrr-gps-radius__calibration {
+  margin: 0;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 8px 9px;
+}
+
+.stq-gps-quality {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 10px;
+}
+
+.stq-gps-quality--good {
+  border-color: rgba(48, 116, 69, 0.22);
+  background: #eef8ef;
+}
+
+.stq-gps-quality--ok {
+  border-color: rgba(160, 70, 61, 0.24);
+  background: var(--stq-white)8f7;
+}
+
+.stq-gps-quality--poor {
+  border-color: rgba(186, 26, 26, 0.22);
+  background: var(--stq-white)0ee;
+}
+
+.stq-gps-quality__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stq-gps-quality__header strong {
+  color: var(--stq-text);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.stq-gps-quality__header span {
+  border: 1px solid rgba(160, 70, 61, 0.24);
+  border-radius: 9999px;
+  background: var(--stq-white);
+  color: var(--stq-primary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+.stq-gps-quality p,
+.stq-gps-quality__warning {
+  margin: 0;
+  color: var(--stq-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.stq-gps-quality__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.stq-gps-quality__facts div {
+  border: 1px solid rgba(231, 221, 211, 0.9);
+  border-radius: 8px;
+  background: var(--stq-white);
+  padding: 7px 8px;
+}
+
+.stq-gps-quality__facts dt {
+  color: var(--stq-text-mute);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stq-gps-quality__facts dd {
+  margin: 2px 0 0;
+  color: var(--stq-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stq-gps-quality__warning {
+  border: 1px solid rgba(186, 26, 26, 0.18);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-danger-ink);
+  padding: 8px;
+}
+
+.stq-rrr-hold-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stq-rrr-hold-duration {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #eee4da;
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 12px;
+}
+
+.stq-rrr-hold-duration__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-hold-duration__header div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-rrr-hold-duration__header span {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stq-rrr-hold-duration__header strong {
+  color: var(--stq-text);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.stq-rrr-hold-duration__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgba(160, 70, 61, 0.24);
+  border-radius: 9999px;
+  background: var(--stq-white);
+  color: var(--stq-primary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.stq-rrr-hold-duration__badge--short {
+  border-color: rgba(48, 116, 69, 0.22);
+  background: #eef8ef;
+  color: #27653a;
+}
+
+.stq-rrr-hold-duration__badge--long {
+  border-color: rgba(138, 61, 18, 0.24);
+  background: var(--stq-white)6ec;
+  color: #8a3d12;
+}
+
+.stq-rrr-hold-duration input[type="range"] {
+  height: 24px;
+  border: 0;
+  background: transparent;
+  accent-color: var(--stq-primary);
+  padding: 0;
+}
+
+.stq-rrr-hold-duration__presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stq-rrr-hold-duration__preset {
+  min-height: 34px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-ink-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stq-rrr-hold-duration__preset.is-active {
+  border-color: var(--stq-primary);
+  background: var(--stq-primary);
+  color: var(--stq-white);
+}
+
+.stq-rrr-text-answer-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stq-rrr-text-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #eee4da;
+  border-radius: 8px;
+  background: var(--stq-surface-warm);
+  padding: 12px;
+}
+
+.stq-rrr-text-answer--empty {
+  border-color: rgba(186, 26, 26, 0.22);
+  background: var(--stq-white)8f7;
+}
+
+.stq-rrr-text-answer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-text-answer__header div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-rrr-text-answer__header span {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stq-rrr-text-answer__header strong {
+  color: var(--stq-text);
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.stq-rrr-text-answer__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgba(160, 70, 61, 0.24);
+  border-radius: 9999px;
+  background: var(--stq-white);
+  color: var(--stq-primary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.stq-rrr-text-answer__badge--empty {
+  border-color: rgba(186, 26, 26, 0.22);
+  background: var(--stq-white)0ee;
+  color: var(--stq-danger-ink);
+}
+
+.stq-rrr-text-answer__warning {
+  margin: 0;
+  border: 1px solid rgba(186, 26, 26, 0.18);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-danger-ink);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 8px 9px;
+}
+
+.stq-rrr-text-answer__toggle {
+  border-top: 1px dashed var(--stq-border);
+  padding-top: 10px;
+}
+
+@media (max-width: 620px) {
+  .stq-rrr-module__header {
+    flex-direction: column;
+  }
+
+  .stq-rrr-module__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .stq-rrr-compass-picker__main,
+  .stq-rrr-compass-picker__tolerance {
+    grid-template-columns: 1fr;
+  }
+
+  .stq-rrr-compass-picker__dial {
+    justify-self: center;
+  }
+
+  .stq-rrr-compass-picker__presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stq-rrr-gps-radius__header {
+    flex-direction: column;
+  }
+
+  .stq-rrr-hold-duration__header {
+    flex-direction: column;
+  }
+
+  .stq-rrr-hold-duration__presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stq-rrr-text-answer__header {
+    flex-direction: column;
+  }
+}
+

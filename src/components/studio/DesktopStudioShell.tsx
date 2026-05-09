@@ -78,8 +78,7 @@ export function DesktopStudioShell({
         width: '100%',
         display: 'grid',
         gridTemplateColumns: `${sidebarWidth}px 6px minmax(0, 1fr)`,
-        background:
-          'radial-gradient(circle at 20% 0%, #2c2724 0%, #16130f 60%)',
+        background: 'var(--stq-color-bg)',
         overflow: 'hidden',
       }}
     >
@@ -111,7 +110,7 @@ export function DesktopStudioShell({
         onDoubleClick={() => setSidebarWidth(280)}
         style={{
           cursor: 'col-resize',
-          background: 'rgba(255, 255, 255, 0.04)',
+          background: 'var(--stq-color-border-soft)',
           touchAction: 'none',
           userSelect: 'none',
         }}
@@ -126,12 +125,12 @@ export function DesktopStudioShell({
             left: sidebarWidth + 24,
             maxWidth: 720,
             width: `calc(100% - ${sidebarWidth + 48}px)`,
-            background: '#1f1a17',
-            border: '1px solid var(--stq-error)',
+            background: 'var(--stq-color-surface)',
+            border: '1px solid var(--stq-color-danger)',
             borderRadius: 8,
             padding: '10px 14px',
             fontSize: 12,
-            color: 'var(--stq-error)',
+            color: 'var(--stq-color-danger)',
             whiteSpace: 'pre-wrap',
             zIndex: 40,
             boxShadow: 'none',

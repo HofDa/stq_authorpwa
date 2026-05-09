@@ -1,0 +1,33 @@
+/* Edit panel footer actions */
+.stq-edit-panel-button {
+  min-height: 38px;
+  padding: 9px 18px;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stq-edit-panel-button--primary {
+  background: var(--stq-primary);
+  border-color: var(--stq-primary);
+  color: var(--stq-white);
+}
+
+.stq-edit-panel-button--primary:hover {
+  background: var(--stq-primary-700);
+  border-color: var(--stq-primary-700);
+}
+
+.stq-edit-panel-button--ghost {
+  background: transparent;
+  border-color: var(--stq-border);
+  color: var(--stq-text);
+}
+
+.stq-edit-panel-button--ghost:hover {
+  background: #f5f0eb;
+}
+

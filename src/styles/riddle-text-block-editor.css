@@ -1,0 +1,101 @@
+/* Riddle text block editor helpers */
+.stq-riddle-visual-modal {
+  width: min(100%, 760px);
+}
+
+@media (max-width: 600px) {
+
+  .stq-riddle-visual-modal {
+    padding: 16px;
+  }
+}
+
+.stq-riddle-text-blocks {
+  gap: 10px;
+}
+
+.stq-riddle-text-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stq-riddle-text-block-row {
+  border: 1px solid rgba(231, 221, 211, 0.78);
+  border-radius: 12px;
+  background: rgba(255, 250, 249, 0.68);
+  padding: 10px;
+}
+
+.stq-riddle-text-block-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stq-riddle-text-block-controls button,
+.stq-riddle-text-block-add button {
+  border: 1px solid rgba(160, 70, 61, 0.24);
+  border-radius: 9999px;
+  background: white;
+  color: var(--stq-primary);
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stq-riddle-text-block-controls button {
+  min-height: 42px;
+}
+
+.stq-riddle-text-block-row textarea {
+  min-height: 96px;
+}
+
+.stq-riddle-text-block-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stq-riddle-text-block-add button {
+  min-height: 34px;
+}
+
+@keyframes stq-riddle-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes stq-riddle-sheet-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 420px) {
+  .stq-riddle-hero {
+    height: 55dvh;
+    min-height: 330px;
+  }
+
+  .stq-riddle-floating-title {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .stq-riddle-sheet {
+    border-radius: 30px 30px 0 0;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .stq-riddle-heading {
+    font-size: 28px;
+  }
+
+  .stq-riddle-copy {
+    font-size: 23px;
+  }
+}
+

@@ -1,0 +1,62 @@
+/* Native app shell and tour start cards */
+.stq-fake-native-app-shell {
+  min-height: 100%;
+  background: var(--stq-bg);
+  color: var(--stq-text);
+}
+
+.stq-fake-phone-frame {
+  width: min(100%, 430px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--stq-bg);
+  overflow: hidden;
+}
+
+.stq-new-tour-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 82px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(160, 70, 61, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--stq-primary);
+  padding: 18px;
+  text-align: left;
+  box-shadow: 0 10px 22px rgba(70, 40, 30, 0.07);
+}
+
+.stq-new-tour-card span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  background: var(--stq-primary);
+  color: white;
+}
+
+.stq-new-tour-card strong {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.stq-station-rail-track::-webkit-scrollbar {
+  display: none;
+}
+
+.stq-tour-start-btn {
+  width: 100%;
+  min-height: 64px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--stq-primary);
+  color: white;
+  font-size: 21px;
+  font-weight: 800;
+  box-shadow: 0 12px 26px rgba(160, 70, 61, 0.24);
+}

@@ -1,0 +1,176 @@
+/* Phone station sheet */
+.stq-phone-station-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 26;
+  height: calc(100% - 110px);
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: var(--stq-bg);
+  box-shadow: 0 -16px 34px var(--stq-shadow-brown-22);
+}
+
+.stq-phone-station-sheet-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-height: 37px;
+  background: rgba(248, 239, 232, 0.96);
+  padding: 7px 14px 5px;
+}
+
+.stq-phone-station-sheet-handle {
+  width: 28px;
+  height: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(26, 26, 26, 0.2);
+  padding: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.stq-phone-station-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.stq-phone-station-sheet-hint {
+  color: rgba(70, 40, 30, 0.42);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stq-phone-station-sheet-scroll {
+  height: calc(100% - 37px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.stq-phone-station-sheet-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay {
+  position: relative;
+  min-height: 100%;
+  overflow: visible;
+  background: transparent;
+}
+
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay .stq-riddle-sheet {
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 16px 96px;
+}
+
+.stq-phone-station-sheet .stq-riddle-screen--map-overlay .stq-riddle-sheet-handle {
+  display: none;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-hero {
+  margin: 0 0 10px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-image {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--stq-white)af9;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-image img,
+.stq-phone-station-sheet .stq-riddle-map-card-image-placeholder {
+  aspect-ratio: 16 / 9.6;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-actions {
+  top: 8px;
+  right: 8px;
+  left: auto;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-action {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-action--image,
+.stq-phone-station-sheet .stq-riddle-map-card-action--danger {
+  background: var(--stq-primary);
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-icon {
+  top: 10px;
+  right: 28px;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-card-icon .stq-riddle-center-icon img,
+.stq-phone-station-sheet .stq-riddle-map-card-icon > img {
+  width: 24px;
+  height: 24px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-icon-action--icon {
+  right: -16px;
+  bottom: auto;
+  top: -12px;
+}
+
+.stq-phone-station-sheet .stq-riddle-map-icon-action::before {
+  width: 21px;
+  height: 21px;
+  background: var(--stq-primary);
+}
+
+.stq-phone-station-sheet .stq-riddle-heading {
+  margin-bottom: 10px;
+  font-size: 19px;
+  line-height: 1.14;
+}
+
+.stq-phone-station-sheet .stq-riddle-heading-row--with-action .stq-riddle-heading {
+  padding-left: 0;
+  padding-right: 38px;
+}
+
+.stq-phone-station-sheet .stq-riddle-heading-actions {
+  right: 0;
+  left: auto;
+}
+
+.stq-phone-station-sheet .stq-riddle-heading-action {
+  width: 26px;
+  height: 26px;
+  background: var(--stq-primary);
+}
+
+.stq-phone-station-sheet .stq-riddle-copy p {
+  margin: 0 0 11px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stq-phone-station-sheet .stq-riddle-section {
+  padding-bottom: 18px;
+}
+
+.stq-phone-station-sheet .stq-riddle-history-trigger {
+  min-height: 34px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+

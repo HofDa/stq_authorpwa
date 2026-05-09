@@ -1,0 +1,187 @@
+/* Phone map dock and progress rail */
+.stq-phone-map-sheet {
+  position: absolute;
+  right: 14px;
+  bottom: 92px;
+  left: 14px;
+  z-index: 20;
+  border: 1px solid var(--stq-border);
+  border-radius: 18px;
+  background: var(--stq-glass-white-96);
+  padding: 10px 14px 16px;
+  box-shadow: 0 14px 28px var(--stq-shadow-brown-18);
+}
+
+.stq-phone-map-dock {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 42px;
+  z-index: 24;
+  min-height: 66px;
+  overflow: visible;
+  border-radius: 999px;
+  background: var(--stq-glass-white-96);
+  padding: 12px 12px;
+  box-shadow: 0 12px 28px var(--stq-shadow-brown-18);
+  scrollbar-width: none;
+}
+
+.stq-phone-map-dock::-webkit-scrollbar {
+  display: none;
+}
+
+.stq-phone-map-dock-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 40px);
+  min-height: 42px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  cursor: grab;
+  touch-action: pan-x;
+  user-select: none;
+}
+
+.stq-phone-map-dock-track:active {
+  cursor: grabbing;
+}
+
+.stq-phone-map-dock-track::-webkit-scrollbar {
+  display: none;
+}
+
+.stq-phone-map-progress-item,
+.stq-phone-map-dock-info,
+.stq-phone-map-dock-next {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  align-self: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--stq-primary-hover);
+  padding: 0;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.stq-phone-map-progress-select {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.stq-phone-map-dock-info {
+  width: 28px;
+  height: 28px;
+  margin-top: 0;
+  font-size: 14px;
+}
+
+.stq-phone-map-dock-info.is-active {
+  background: var(--stq-primary);
+  color: var(--stq-white)8f2;
+  box-shadow: 0 7px 16px var(--stq-shadow-brown-20);
+}
+
+.stq-phone-map-progress-item {
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+.stq-phone-map-progress-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(0);
+  z-index: 1;
+}
+
+.stq-phone-map-progress-number {
+  position: absolute;
+  top: auto;
+  right: auto;
+  bottom: 2%;
+  left: 2%;
+  display: grid;
+  place-items: center;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  background: var(--stq-text);
+  color: white;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 900;
+  transform: none;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.stq-phone-map-progress-item.is-active {
+  background: transparent;
+  box-shadow: inset 0 0 0 3px var(--stq-primary);
+  transform: translateY(-1px);
+}
+
+.stq-phone-map-progress-item.is-active .stq-phone-map-progress-icon {
+  transform: scale(1.04);
+}
+
+.stq-phone-map-progress-item.is-editing {
+  overflow: visible;
+}
+
+.stq-phone-map-progress-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--stq-bg);
+  border-radius: 999px;
+  background: var(--stq-primary);
+  color: white;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(42, 25, 17, 0.22);
+  cursor: pointer;
+  z-index: 5;
+}
+
+.stq-phone-map-workspace .stq-station-marker-delete {
+  top: -9px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
