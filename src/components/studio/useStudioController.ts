@@ -9,6 +9,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import {
   createId,
   emptyStation,
+  type RiddleEntry,
   type Locale,
   type TourDraft,
 } from '@/schema';
@@ -79,16 +80,40 @@ export function useStudioController({
     [draft.stations, selectedId],
   );
 
-  const addStation = useCallback(() => {
+  const addStation = useCallback((coordinate?: {
+    lat: number;
+    lng: number;
+  }) => {
     const stationId = createId('stn');
     onChange((prev) => {
       const number = prev.stations.length + 1;
-      const station = emptyStation(stationId, number);
+      const station: RiddleEntry = {
+        ...emptyStation(stationId, number),
+        ...(coordinate
+          ? {
+              position_lat: coordinate.lat,
+              position_lng: coordinate.lng,
+            }
+          : {}),
+      };
       return { ...prev, stations: [...prev.stations, station] };
     });
     setSelectedId(stationId);
     setActiveSection('stations');
   }, [onChange]);
+
+  const deleteStation = useCallback(
+    (stationId: string) => {
+      onChange((prev) => {
+        const next = prev.stations
+          .filter((station) => station.id !== stationId)
+          .map((station, index) => ({ ...station, number: index + 1 }));
+        return { ...prev, stations: next };
+      });
+      setSelectedId((current) => (current === stationId ? null : current));
+    },
+    [onChange],
+  );
 
   const reorderStations = useCallback(
     (sourceId: string, targetId: string) => {
@@ -217,6 +242,7 @@ export function useStudioController({
     t,
     actions: {
       addStation,
+      deleteStation,
       backToTours,
       changeLanguage,
       changeSection,

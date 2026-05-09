@@ -77,6 +77,7 @@ export function MapLibreAuthorMap({
   onRoutePointCoordinateChange,
   onViewportCenterChange,
   onMapClick,
+  onRouteClick,
 }: AuthorMapProps) {
   const initialBasemapRef = useRef<AuthorMapBasemapKey>(basemap);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -97,11 +98,15 @@ export function MapLibreAuthorMap({
   // Capture the latest `onSelectStation` so the marker effect doesn't have to
   // re-run (and re-create every marker) when the parent supplies a fresh
   // arrow-function reference on each render.
-  const onSelectStationRef = useLatest(onSelectStation);
-  const onDeleteStationRef = useLatest(onDeleteStation);
+  const onSelectStationRef = useRef(onSelectStation);
+  onSelectStationRef.current = onSelectStation;
+  const onDeleteStationRef = useRef(onDeleteStation);
+  onDeleteStationRef.current = onDeleteStation;
   const onStationCoordinateChangeRef = useLatest(onStationCoordinateChange);
   const onRoutePointCoordinateChangeRef = useLatest(onRoutePointCoordinateChange);
   const onMapClickRef = useLatest(onMapClick);
+  const onRouteClickRef = useRef(onRouteClick);
+  onRouteClickRef.current = onRouteClick;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -259,12 +264,16 @@ export function MapLibreAuthorMap({
       return;
     }
 
+    let lastLat: number | null = null;
+    let lastLng: number | null = null;
     const emitCenter = () => {
       const center = map.getCenter();
+      if (lastLat === center.lat && lastLng === center.lng) return;
+      lastLat = center.lat;
+      lastLng = center.lng;
       onViewportCenterChange({ lat: center.lat, lng: center.lng });
     };
 
-    emitCenter();
     map.on('moveend', emitCenter);
 
     return () => {
@@ -451,6 +460,7 @@ export function MapLibreAuthorMap({
       const suffix = sanitizeLayerSuffix(route.id);
       const sourceId = `stq-author-map-route-source-${suffix}`;
       const layerId = `stq-author-map-route-layer-${suffix}`;
+      const hitLayerId = `stq-author-map-route-hit-${suffix}`;
 
       map.addSource(sourceId, {
         type: 'geojson',
@@ -481,7 +491,42 @@ export function MapLibreAuthorMap({
         },
       });
 
-      nextRouteLayers.push({ layerId, sourceId });
+      // Wider transparent hit layer makes the line easier to click.
+      map.addLayer({
+        id: hitLayerId,
+        type: 'line',
+        source: sourceId,
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+        },
+        paint: {
+          'line-color': '#000',
+          'line-opacity': 0,
+          'line-width': Math.max(route.style.weight + 14, 18),
+        },
+      });
+
+      const routeId = route.id;
+      const handleRouteClick = (event: maplibregl.MapMouseEvent) => {
+        if (!onRouteClickRef.current) return;
+        event.preventDefault();
+        onRouteClickRef.current(routeId, {
+          lat: event.lngLat.lat,
+          lng: event.lngLat.lng,
+        });
+      };
+      const handleRouteMouseEnter = () => {
+        map.getCanvas().style.cursor = 'pointer';
+      };
+      const handleRouteMouseLeave = () => {
+        map.getCanvas().style.cursor = '';
+      };
+      map.on('click', hitLayerId, handleRouteClick);
+      map.on('mouseenter', hitLayerId, handleRouteMouseEnter);
+      map.on('mouseleave', hitLayerId, handleRouteMouseLeave);
+
+      nextRouteLayers.push({ layerId, sourceId, hitLayerId, handleRouteClick, handleRouteMouseEnter, handleRouteMouseLeave });
 
       if (route.endpointMarkers) {
         for (const point of getRouteEndpointPoints(route.points)) {

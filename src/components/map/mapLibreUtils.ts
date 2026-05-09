@@ -4,6 +4,10 @@ import type { AuthorMapCoordinate } from './mapTypes';
 export interface RouteLayerRef {
   layerId: string;
   sourceId: string;
+  hitLayerId?: string;
+  handleRouteClick?: (event: maplibregl.MapMouseEvent) => void;
+  handleRouteMouseEnter?: () => void;
+  handleRouteMouseLeave?: () => void;
 }
 
 export function removeStationMarkers(markers: maplibregl.Marker[]) {
@@ -22,6 +26,28 @@ export function removeRouteLayers(
   routeLayers: RouteLayerRef[],
 ) {
   for (const routeLayer of routeLayers) {
+    if (routeLayer.hitLayerId) {
+      if (routeLayer.handleRouteClick) {
+        map.off('click', routeLayer.hitLayerId, routeLayer.handleRouteClick);
+      }
+      if (routeLayer.handleRouteMouseEnter) {
+        map.off(
+          'mouseenter',
+          routeLayer.hitLayerId,
+          routeLayer.handleRouteMouseEnter,
+        );
+      }
+      if (routeLayer.handleRouteMouseLeave) {
+        map.off(
+          'mouseleave',
+          routeLayer.hitLayerId,
+          routeLayer.handleRouteMouseLeave,
+        );
+      }
+      if (map.getLayer(routeLayer.hitLayerId)) {
+        map.removeLayer(routeLayer.hitLayerId);
+      }
+    }
     removeLayerAndSource(map, routeLayer.layerId, routeLayer.sourceId);
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { calculateRouteLengthMeters } from '@/map/routePlanning';
 import { hasUsableStationCoordinate } from '@/utils/coordinates';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
@@ -16,6 +16,8 @@ import type { BaseWorkspaceProps } from './workspaceTypes';
 interface Props extends BaseWorkspaceProps {
   selectedId: string | null;
   onSelectStation: (id: string) => void;
+  editable?: boolean;
+  topRightPill?: ReactNode;
 }
 
 const FIELD_ROUTE_COLOR = '#2196f3';
@@ -27,7 +29,10 @@ export function RouteWorkspace({
   draft,
   locale,
   selectedId,
+  onSelectStation,
   onChange,
+  editable = true,
+  topRightPill,
 }: Props) {
   const { t } = useEditorLanguage();
   const [focusEnabled, setFocusEnabled] = useState(false);
@@ -35,7 +40,9 @@ export function RouteWorkspace({
   const [selectedSegmentFromId, setSelectedSegmentFromId] = useState<string | null>(
     null,
   );
-  const routeStartStationIdRef = useRef<string | null>(null);
+  const [pendingSegmentPoints, setPendingSegmentPoints] = useState<
+    RecordedRoutePoint[] | null
+  >(null);
 
   // Segment selection lives entirely inside this workspace. The arrow
   // between station N and N+1 in the dock selects station N as the
@@ -56,6 +63,14 @@ export function RouteWorkspace({
     }
     setSelectedSegmentFromId(validSegmentOrigins[0] ?? null);
   }, [validSegmentOrigins, selectedSegmentFromId]);
+  useEffect(() => {
+    setPendingSegmentPoints(null);
+  }, [selectedSegmentFromId]);
+  useEffect(() => {
+    if (!editable) {
+      setPendingSegmentPoints(null);
+    }
+  }, [editable]);
 
   const segmentFromIndex = selectedSegmentFromId
     ? draft.stations.findIndex((station) => station.id === selectedSegmentFromId)
@@ -92,46 +107,39 @@ export function RouteWorkspace({
   // Find the [start, end] slice of recordedRoute that belongs to the
   // currently selected segment. Slice is inclusive of the anchor points.
   // If either endpoint anchor isn't found, returns null.
-  const segmentSlice = useMemo(() => {
-    if (!selectedStation || !nextStation) return null;
-    if (
-      !hasUsableStationCoordinate(selectedStation) ||
-      !hasUsableStationCoordinate(nextStation)
-    ) {
-      return null;
-    }
-    const fromCoord = {
-      lat: selectedStation.position_lat,
-      lng: selectedStation.position_lng,
-    };
-    const toCoord = {
-      lat: nextStation.position_lat,
-      lng: nextStation.position_lng,
-    };
+  const segmentSlice = useMemo(
+    () =>
+      selectedStation && nextStation
+        ? findSegmentSlice(draft.recordedRoute, selectedStation, nextStation)
+        : null,
+    [selectedStation, nextStation, draft.recordedRoute],
+  );
+  const savedSelectedSegmentPoints = useMemo(
+    () =>
+      segmentSlice
+        ? draft.recordedRoute.slice(segmentSlice.start, segmentSlice.end + 1)
+        : null,
+    [segmentSlice, draft.recordedRoute],
+  );
+  const activeSegmentPoints = useMemo(
+    () => pendingSegmentPoints ?? savedSelectedSegmentPoints ?? [],
+    [pendingSegmentPoints, savedSelectedSegmentPoints],
+  );
 
-    let start = -1;
-    for (let i = 0; i < draft.recordedRoute.length; i += 1) {
-      if (distanceMeters(draft.recordedRoute[i], fromCoord) <= ROUTE_STATION_SNAP_METERS) {
-        start = i;
-        break;
-      }
-    }
-    if (start === -1) return null;
-
-    let end = -1;
-    for (let i = start + 1; i < draft.recordedRoute.length; i += 1) {
-      if (distanceMeters(draft.recordedRoute[i], toCoord) <= ROUTE_STATION_SNAP_METERS) {
-        end = i;
-        break;
-      }
-    }
-    if (end === -1) return null;
-    return { start, end };
-  }, [selectedStation, nextStation, draft.recordedRoute]);
-
+  const recordedSegmentSlices = useMemo(
+    () => getRecordedSegmentSlices(draft.stations, draft.recordedRoute),
+    [draft.stations, draft.recordedRoute],
+  );
+  const drawableSegmentSlices = useMemo(
+    () =>
+      recordedSegmentSlices.filter(
+        (slice) => slice.end - slice.start > 1,
+      ),
+    [recordedSegmentSlices],
+  );
   const routePointMarkers = useMemo<AuthorMapRoutePointMarker[]>(
     () =>
-      draft.recordedRoute
+      activeSegmentPoints
         .map((point, index) => ({ point, index }))
         .filter(({ point }) => !findNearbyStation(point, stationsWithCoordinates))
         .map(({ point, index }) => ({
@@ -140,29 +148,115 @@ export function RouteWorkspace({
           color: FIELD_ROUTE_COLOR,
           draggable: true,
         })),
-    [draft.recordedRoute, stationsWithCoordinates],
+    [activeSegmentPoints, stationsWithCoordinates],
   );
 
   const routes = useMemo<AuthorMapRoute[]>(() => {
     const list: AuthorMapRoute[] = [];
 
-    if (selectedRouteSegment) {
+    // Default solid blue connector between every consecutive station pair
+    // that has no drawn route yet. The user refines by clicking points and
+    // confirming with the check button.
+    for (let index = 0; index < draft.stations.length - 1; index += 1) {
+      const fromStation = draft.stations[index];
+      const toStation = draft.stations[index + 1];
+      if (
+        !hasUsableStationCoordinate(fromStation) ||
+        !hasUsableStationCoordinate(toStation)
+      ) {
+        continue;
+      }
+      const existingSlice = findSegmentSlice(
+        draft.recordedRoute,
+        fromStation,
+        toStation,
+      );
+      if (existingSlice && existingSlice.end - existingSlice.start > 1) {
+        continue;
+      }
+      if (
+        pendingSegmentPoints &&
+        selectedStation?.id === fromStation.id &&
+        nextStation?.id === toStation.id
+      ) {
+        continue;
+      }
       list.push({
-        id: 'studio-route-segment-guide',
-        points: [selectedRouteSegment.from, selectedRouteSegment.to],
+        id: `studio-route-segment-default-${index}`,
+        points: [
+          { lat: fromStation.position_lat, lng: fromStation.position_lng },
+          { lat: toStation.position_lat, lng: toStation.position_lng },
+        ],
         style: {
           color: FIELD_ROUTE_COLOR,
           weight: 5,
-          opacity: 0.8,
-          dashArray: '6 7',
+          opacity: 0.85,
         },
       });
     }
 
-    if (draft.recordedRoute.length >= 2) {
+    for (let index = 0; index < draft.stations.length - 1; index += 1) {
+      const fromStation = draft.stations[index];
+      const toStation = draft.stations[index + 1];
+      if (
+        !hasUsableStationCoordinate(fromStation) ||
+        !hasUsableStationCoordinate(toStation)
+      ) {
+        continue;
+      }
+      const slice = findSegmentSlice(
+        draft.recordedRoute,
+        fromStation,
+        toStation,
+      );
+      if (!slice || slice.end - slice.start <= 1) continue;
+      if (
+        pendingSegmentPoints &&
+        selectedStation?.id === fromStation.id &&
+        nextStation?.id === toStation.id
+      ) {
+        continue;
+      }
+      const points = draft.recordedRoute
+        .slice(slice.start, slice.end + 1)
+        .map(toAuthorMapCoordinate);
       list.push({
-        id: 'studio-recorded-route',
-        points: draft.recordedRoute.map(toAuthorMapCoordinate),
+        id: `studio-recorded-route-segment-${index}`,
+        points,
+        style: {
+          color: FIELD_ROUTE_COLOR,
+          weight: 6,
+          opacity: 0.95,
+        },
+      });
+    }
+
+    if (
+      pendingSegmentPoints &&
+      pendingSegmentPoints.length >= 1 &&
+      selectedStation &&
+      nextStation &&
+      hasUsableStationCoordinate(selectedStation) &&
+      hasUsableStationCoordinate(nextStation)
+    ) {
+      const fromAnchor = {
+        lat: selectedStation.position_lat,
+        lng: selectedStation.position_lng,
+      };
+      const toAnchor = {
+        lat: nextStation.position_lat,
+        lng: nextStation.position_lng,
+      };
+      const interior = pendingSegmentPoints
+        .map(toAuthorMapCoordinate)
+        .filter(
+          (point) =>
+            !isNearStation(point, selectedStation) &&
+            !isNearStation(point, nextStation),
+        );
+      list.push({
+        id: 'studio-recorded-route-pending-segment',
+        points: [fromAnchor, ...interior, toAnchor],
         style: {
           color: FIELD_ROUTE_COLOR,
           weight: 6,
@@ -172,16 +266,27 @@ export function RouteWorkspace({
     }
 
     return list;
-  }, [selectedRouteSegment, draft.recordedRoute]);
+  }, [
+    draft.stations,
+    drawableSegmentSlices,
+    pendingSegmentPoints,
+    segmentSlice,
+    selectedStation,
+    nextStation,
+    draft.recordedRoute,
+  ]);
 
   const fitPoints = useMemo<AuthorMapCoordinate[]>(() => {
     const stationPoints = stationsWithCoordinates.map((station) => ({
       lat: station.position_lat,
       lng: station.position_lng,
     }));
-    const routePoints = draft.recordedRoute.map(toAuthorMapCoordinate);
+    const routePoints = [
+      ...draft.recordedRoute.map(toAuthorMapCoordinate),
+      ...activeSegmentPoints.map(toAuthorMapCoordinate),
+    ];
     return [...stationPoints, ...routePoints];
-  }, [stationsWithCoordinates, draft.recordedRoute]);
+  }, [stationsWithCoordinates, draft.recordedRoute, activeSegmentPoints]);
 
   const fitSignature = useMemo(
     () =>
@@ -192,55 +297,50 @@ export function RouteWorkspace({
   );
 
   function appendRoutePoint(coordinate: AuthorMapCoordinate) {
-    const snapped = snapToStation(coordinate, nextStation);
+    if (!editable) {
+      return;
+    }
+    if (!selectedStation || !hasUsableStationCoordinate(selectedStation)) {
+      return;
+    }
+    const nearbyStation = findNearbyStation(coordinate, stationsWithCoordinates);
+    const snapped = nearbyStation
+      ? { lat: nearbyStation.position_lat, lng: nearbyStation.position_lng }
+      : coordinate;
     const point: RecordedRoutePoint = {
       lat: snapped.lat,
       lng: snapped.lng,
       timestamp: Date.now(),
     };
 
-    // If the selected segment is fully anchored already (both station
-    // anchors exist in recordedRoute), insert the new waypoint just
-    // before the destination anchor. This lets the author edit any
-    // segment, not only the last one.
-    if (segmentSlice) {
-      onChange((prev) => {
-        const route = [...prev.recordedRoute];
-        const insertAt = segmentSlice.end;
-        const previous = route[insertAt - 1];
-        if (
-          previous &&
-          distanceMeters(previous, point) <= ROUTE_DUPLICATE_POINT_METERS
-        ) {
-          return prev;
-        }
-        route.splice(insertAt, 0, point);
-        return { ...prev, recordedRoute: route };
-      });
-      return;
-    }
-
-    // Fallback (no anchors yet for this segment): start a fresh segment
-    // by anchoring at the selected station and pushing the tapped point.
-    const shouldAnchorAtStart =
-      selectedStation && routeStartStationIdRef.current !== selectedStation.id;
-
-    onChange((prev) => {
-      const next = [...prev.recordedRoute];
-      if (shouldAnchorAtStart) {
-        ensureAnchoredAtStation(next, selectedStation, point.timestamp - 1);
+    setPendingSegmentPoints((current) => {
+      const base =
+        current ??
+        savedSelectedSegmentPoints?.slice() ??
+        [stationAnchorPoint(selectedStation, point.timestamp - 1)];
+      const next = [...base];
+      const insertAt =
+        nextStation &&
+        next.length > 1 &&
+        isNearStation(next[next.length - 1], nextStation)
+          ? next.length - 1
+          : next.length;
+      const previous = next[insertAt - 1];
+      if (
+        previous &&
+        distanceMeters(previous, point) <= ROUTE_DUPLICATE_POINT_METERS
+      ) {
+        return current ?? base;
       }
-      appendIfNotDuplicate(next, point);
-      return { ...prev, recordedRoute: next };
+      next.splice(insertAt, 0, point);
+      return next;
     });
-
-    if (shouldAnchorAtStart && selectedStation) {
-      routeStartStationIdRef.current = selectedStation.id;
-    }
   }
 
-  function finishSegment() {
+  function saveSegment() {
     if (
+      !editable ||
+      !pendingSegmentPoints ||
       !selectedStation ||
       !nextStation ||
       !hasUsableStationCoordinate(selectedStation) ||
@@ -249,21 +349,43 @@ export function RouteWorkspace({
       return;
     }
     const now = Date.now();
-    const endPoint: RecordedRoutePoint = {
-      lat: nextStation.position_lat,
-      lng: nextStation.position_lng,
-      timestamp: now,
-    };
-    const shouldAnchorAtStart = routeStartStationIdRef.current !== selectedStation.id;
+    const segment = normalizeSegmentForSave(
+      pendingSegmentPoints,
+      selectedStation,
+      nextStation,
+      now,
+    );
+    if (segment.length < 2) {
+      return;
+    }
     onChange((prev) => {
-      const next = [...prev.recordedRoute];
-      if (shouldAnchorAtStart) {
-        ensureAnchoredAtStation(next, selectedStation, now - 1);
+      const nextRoute = [...prev.recordedRoute];
+      const existingSlice = findSegmentSlice(
+        nextRoute,
+        selectedStation,
+        nextStation,
+      );
+      if (existingSlice) {
+        nextRoute.splice(
+          existingSlice.start,
+          existingSlice.end - existingSlice.start + 1,
+          ...segment,
+        );
+        return { ...prev, recordedRoute: nextRoute };
       }
-      appendIfNotDuplicate(next, endPoint);
-      return { ...prev, recordedRoute: next };
+
+      const fromAnchorIndex = findNearestStationAnchorIndex(
+        nextRoute,
+        selectedStation,
+      );
+      if (fromAnchorIndex >= 0) {
+        nextRoute.splice(fromAnchorIndex, 1, ...segment);
+      } else {
+        nextRoute.push(...segment);
+      }
+      return { ...prev, recordedRoute: nextRoute };
     });
-    routeStartStationIdRef.current = nextStation.id;
+    setPendingSegmentPoints(null);
     // Advance the in-workspace segment selection to the next pair, if any.
     const nextNextIndex = segmentFromIndex + 1;
     if (
@@ -280,10 +402,6 @@ export function RouteWorkspace({
   function handleStationSelect(stationId: string) {
     const station = draft.stations.find((s) => s.id === stationId);
     if (!station || !hasUsableStationCoordinate(station)) return;
-    if (nextStation && station.id === nextStation.id) {
-      finishSegment();
-      return;
-    }
     appendRoutePoint({
       lat: station.position_lat,
       lng: station.position_lng,
@@ -300,55 +418,43 @@ export function RouteWorkspace({
   ) {
     const index = Number(routePointId);
     if (!Number.isInteger(index) || index < 0) return;
-    onChange((prev) => {
-      if (index >= prev.recordedRoute.length) return prev;
-      return {
-        ...prev,
-        recordedRoute: prev.recordedRoute.map((point, i) =>
-          i === index
-            ? { ...point, lat: coordinate.lat, lng: coordinate.lng, timestamp: Date.now() }
-            : point,
-        ),
-      };
+    setPendingSegmentPoints((current) => {
+      const base = current ?? savedSelectedSegmentPoints?.slice();
+      if (!base || index >= base.length) return current;
+      return base.map((point, i) =>
+        i === index
+          ? { ...point, lat: coordinate.lat, lng: coordinate.lng, timestamp: Date.now() }
+          : point,
+      );
     });
   }
 
-  // Remove the last interior point of the selected segment (i.e. the
-  // last point strictly between the anchor and the next-station anchor).
-  // If no interior points exist, removing the next-station anchor "opens"
-  // the segment so the author can re-record it.
+  // Remove the last pending point. Saved segments are first copied into a
+  // pending edit so undo does not mutate the stored route until Save.
   function undoLast() {
-    if (!segmentSlice) {
-      // No anchors yet — fall back to popping the global tail.
-      onChange((prev) => ({
-        ...prev,
-        recordedRoute: prev.recordedRoute.slice(0, -1),
-      }));
-      routeStartStationIdRef.current = null;
-      return;
-    }
-    const { start, end } = segmentSlice;
-    onChange((prev) => {
-      const route = prev.recordedRoute;
-      if (end - start > 1) {
-        const removeAt = end - 1; // last interior point
-        return {
-          ...prev,
-          recordedRoute: [...route.slice(0, removeAt), ...route.slice(removeAt + 1)],
-        };
+    setPendingSegmentPoints((current) => {
+      const base = current ?? savedSelectedSegmentPoints?.slice();
+      if (!base || base.length <= 1) return current;
+      const next = [...base];
+      if (
+        nextStation &&
+        next.length > 2 &&
+        isNearStation(next[next.length - 1], nextStation)
+      ) {
+        next.splice(next.length - 2, 1);
+      } else {
+        next.pop();
       }
-      // No interior points: drop the trailing anchor so the segment opens.
-      return {
-        ...prev,
-        recordedRoute: [...route.slice(0, end), ...route.slice(end + 1)],
-      };
+      return next.length > 0 ? next : null;
     });
-    routeStartStationIdRef.current = null;
   }
 
-  // Erase the selected segment only: keep both anchors, drop everything
-  // strictly between them. If anchors aren't yet present we no-op.
+  // Delete the selected segment only: keep both station anchors for adjacent
+  // segment lookup, but remove every drawable point between them. Segment
+  // rendering ignores anchor-only slices so this does not reconnect as a
+  // straight line.
   function clearSegment() {
+    setPendingSegmentPoints(null);
     if (!segmentSlice) return;
     const { start, end } = segmentSlice;
     if (end - start <= 1) return;
@@ -359,7 +465,6 @@ export function RouteWorkspace({
         ...prev.recordedRoute.slice(end),
       ],
     }));
-    routeStartStationIdRef.current = null;
   }
 
   function toggleFocus() {
@@ -374,8 +479,30 @@ export function RouteWorkspace({
   }
 
   const totalDistance = useMemo(
-    () => calculateRouteLengthMeters(draft.recordedRoute),
-    [draft.recordedRoute],
+    () =>
+      drawableSegmentSlices.reduce(
+        (total, slice) => {
+          if (
+            pendingSegmentPoints &&
+            segmentSlice &&
+            slice.start === segmentSlice.start &&
+            slice.end === segmentSlice.end
+          ) {
+            return total;
+          }
+          return (
+            total +
+            calculateRouteLengthMeters(
+              draft.recordedRoute.slice(slice.start, slice.end + 1),
+            )
+          );
+        },
+        0,
+      ) +
+      (pendingSegmentPoints
+        ? calculateRouteLengthMeters(pendingSegmentPoints)
+        : 0),
+    [drawableSegmentSlices, pendingSegmentPoints, segmentSlice, draft.recordedRoute],
   );
 
   const fromLabel = selectedStation
@@ -384,63 +511,105 @@ export function RouteWorkspace({
   const toLabel = nextStation
     ? nextStation[locale].location || `${t('studio.station')} ${nextStation.number}`
     : '—';
+  const canSaveSegment =
+    Boolean(
+      editable &&
+        pendingSegmentPoints &&
+        selectedStation &&
+        nextStation &&
+        hasUsableStationCoordinate(selectedStation) &&
+        hasUsableStationCoordinate(nextStation),
+    ) &&
+    normalizeSegmentForSave(
+      pendingSegmentPoints ?? [],
+      selectedStation!,
+      nextStation!,
+      Date.now(),
+    ).length >= 2;
+
+  const routeEditorTools = (
+    <>
+      <button
+        type="button"
+        className={focusEnabled ? 'is-active' : ''}
+        onClick={toggleFocus}
+        disabled={!focusEnabled && fitPoints.length < 2}
+        aria-label="Focus route"
+        aria-pressed={focusEnabled}
+      >
+        <Icon name="compass" size={15} />
+      </button>
+      <button
+        type="button"
+        onClick={saveSegment}
+        disabled={!canSaveSegment}
+        aria-label="Save segment"
+      >
+        <Icon name="check" size={15} />
+      </button>
+      <button
+        type="button"
+        onClick={undoLast}
+        disabled={
+          pendingSegmentPoints
+            ? pendingSegmentPoints.length <= 1
+            : !savedSelectedSegmentPoints || savedSelectedSegmentPoints.length <= 1
+        }
+        aria-label="Undo last point in this segment"
+      >
+        <Icon name="chevron-left" size={15} />
+      </button>
+      <button
+        type="button"
+        onClick={clearSegment}
+        disabled={
+          !segmentSlice || segmentSlice.end - segmentSlice.start <= 1
+        }
+        aria-label="Delete current segment"
+      >
+        <Icon name="trash" size={15} />
+      </button>
+    </>
+  );
 
   return (
     <PhoneMapMockup
       draft={draft}
       locale={locale}
       selectedId={selectedId}
-      onSelectStation={handleStationSelect}
+      onSelectStation={editable ? handleStationSelect : onSelectStation}
       detail={t('workflow.route')}
       routes={routes}
-      routePointMarkers={routePointMarkers}
-      onRoutePointCoordinateChange={handleRoutePointDrag}
-      onMapClick={handleMapClick}
-      showLayersControl
-      toolbar={
-        <>
-          <button
-            type="button"
-            className={focusEnabled ? 'is-active' : ''}
-            onClick={toggleFocus}
-            disabled={!focusEnabled && fitPoints.length < 2}
-            aria-label="Focus route"
-            aria-pressed={focusEnabled}
-          >
-            <Icon name="compass" size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={finishSegment}
-            disabled={!nextStation || !hasUsableStationCoordinate(nextStation)}
-            aria-label="Finish segment"
-          >
-            <Icon name="check" size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={undoLast}
-            disabled={
-              segmentSlice
-                ? segmentSlice.end - segmentSlice.start <= 0
-                : draft.recordedRoute.length === 0
-            }
-            aria-label="Undo last point in this segment"
-          >
-            <Icon name="chevron-left" size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={clearSegment}
-            disabled={
-              !segmentSlice || segmentSlice.end - segmentSlice.start <= 1
-            }
-            aria-label="Clear this segment"
-          >
-            <Icon name="trash" size={15} />
-          </button>
-        </>
+      routePointMarkers={editable ? routePointMarkers : undefined}
+      onRoutePointCoordinateChange={
+        editable ? handleRoutePointDrag : undefined
       }
+      onMapClick={editable ? handleMapClick : undefined}
+      onRouteClick={
+        editable
+          ? (routeId) => {
+              const match = routeId.match(/-(\d+)$/);
+              if (!match) return;
+              const segmentIndex = Number(match[1]);
+              const fromStation = draft.stations[segmentIndex];
+              if (!fromStation) return;
+              setSelectedSegmentFromId(fromStation.id);
+            }
+          : undefined
+      }
+      topRightPill={
+        topRightPill || editable ? (
+          <>
+            {topRightPill}
+            {editable && (
+              <div className="stq-mobile-map-edit-actions">
+                {routeEditorTools}
+              </div>
+            )}
+          </>
+        ) : undefined
+      }
+      showLayersControl
       fitToCoordinates={focusEnabled && fitPoints.length > 1 ? fitPoints : undefined}
       fitTrigger={focusEnabled ? `${focusTrigger ?? 'on'}:${fitSignature}` : undefined}
       bottomSheet={
@@ -452,15 +621,16 @@ export function RouteWorkspace({
           </small>
         </div>
       }
-      segmentArrows={{
-        selectedFromId: selectedSegmentFromId,
-        onSelect: (fromStationId) => {
-          setSelectedSegmentFromId(fromStationId);
-          // Switching segments invalidates the start-anchor ref so the
-          // first tap on the new segment re-anchors at its origin.
-          routeStartStationIdRef.current = null;
-        },
-      }}
+      segmentArrows={
+        editable
+          ? {
+              selectedFromId: selectedSegmentFromId,
+              onSelect: (fromStationId) => {
+                setSelectedSegmentFromId(fromStationId);
+              },
+            }
+          : undefined
+      }
     />
   );
 }
@@ -476,34 +646,149 @@ function snapToStation(
     : coordinate;
 }
 
-function appendIfNotDuplicate(
-  points: RecordedRoutePoint[],
-  point: RecordedRoutePoint,
-) {
-  const previous = points[points.length - 1];
-  if (previous && distanceMeters(previous, point) <= ROUTE_DUPLICATE_POINT_METERS) {
-    return;
-  }
-  points.push(point);
-}
-
-function ensureAnchoredAtStation(
-  points: RecordedRoutePoint[],
-  station: RiddleEntry | null,
+function stationAnchorPoint(
+  station: RiddleEntry,
   timestamp: number,
-) {
-  if (!station || !hasUsableStationCoordinate(station)) return;
-  const anchor: RecordedRoutePoint = {
+): RecordedRoutePoint {
+  return {
     lat: station.position_lat,
     lng: station.position_lng,
     timestamp,
   };
-  const previous = points[points.length - 1];
-  if (previous && distanceMeters(previous, anchor) <= ROUTE_STATION_SNAP_METERS) {
-    points[points.length - 1] = anchor;
-    return;
+}
+
+function normalizeSegmentForSave(
+  points: RecordedRoutePoint[],
+  from: RiddleEntry,
+  to: RiddleEntry,
+  timestamp: number,
+): RecordedRoutePoint[] {
+  const segment = points.slice();
+  const fromAnchor = stationAnchorPoint(from, timestamp - 1);
+  const toAnchor = stationAnchorPoint(to, timestamp);
+
+  if (segment.length === 0 || !isNearStation(segment[0], from)) {
+    segment.unshift(fromAnchor);
+  } else {
+    segment[0] = { ...segment[0], lat: fromAnchor.lat, lng: fromAnchor.lng };
   }
-  points.push(anchor);
+
+  const last = segment[segment.length - 1];
+  if (!last || !isNearStation(last, to)) {
+    segment.push(toAnchor);
+  } else {
+    segment[segment.length - 1] = {
+      ...last,
+      lat: toAnchor.lat,
+      lng: toAnchor.lng,
+    };
+  }
+
+  return segment;
+}
+
+interface RecordedSegmentSlice {
+  start: number;
+  end: number;
+}
+
+function findSegmentSlice(
+  recordedRoute: RecordedRoutePoint[],
+  from: RiddleEntry,
+  to: RiddleEntry,
+): RecordedSegmentSlice | null {
+  if (!hasUsableStationCoordinate(from) || !hasUsableStationCoordinate(to)) {
+    return null;
+  }
+
+  let start = -1;
+  for (let index = 0; index < recordedRoute.length; index += 1) {
+    if (isNearStation(recordedRoute[index], from)) {
+      start = index;
+      break;
+    }
+  }
+  if (start === -1) return null;
+
+  let end = -1;
+  for (let index = start + 1; index < recordedRoute.length; index += 1) {
+    if (isNearStation(recordedRoute[index], to)) {
+      end = index;
+      break;
+    }
+  }
+  if (end === -1) return null;
+
+  return { start, end };
+}
+
+function getRecordedSegmentSlices(
+  stations: RiddleEntry[],
+  recordedRoute: RecordedRoutePoint[],
+): RecordedSegmentSlice[] {
+  const slices: RecordedSegmentSlice[] = [];
+  let searchStart = 0;
+
+  for (let index = 0; index < stations.length - 1; index += 1) {
+    const from = stations[index];
+    const to = stations[index + 1];
+    if (!hasUsableStationCoordinate(from) || !hasUsableStationCoordinate(to)) {
+      continue;
+    }
+
+    const fromCoord = { lat: from.position_lat, lng: from.position_lng };
+    const toCoord = { lat: to.position_lat, lng: to.position_lng };
+    let start = -1;
+    for (let routeIndex = searchStart; routeIndex < recordedRoute.length; routeIndex += 1) {
+      if (distanceMeters(recordedRoute[routeIndex], fromCoord) <= ROUTE_STATION_SNAP_METERS) {
+        start = routeIndex;
+        break;
+      }
+    }
+    if (start === -1) continue;
+
+    let end = -1;
+    for (let routeIndex = start + 1; routeIndex < recordedRoute.length; routeIndex += 1) {
+      if (distanceMeters(recordedRoute[routeIndex], toCoord) <= ROUTE_STATION_SNAP_METERS) {
+        end = routeIndex;
+        break;
+      }
+    }
+    if (end === -1) continue;
+
+    slices.push({ start, end });
+    searchStart = end;
+  }
+
+  return slices;
+}
+
+function findNearestStationAnchorIndex(
+  recordedRoute: RecordedRoutePoint[],
+  station: RiddleEntry,
+): number {
+  if (!hasUsableStationCoordinate(station)) return -1;
+
+  for (let index = recordedRoute.length - 1; index >= 0; index -= 1) {
+    if (isNearStation(recordedRoute[index], station)) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+function isNearStation(
+  point: { lat: number; lng: number },
+  station: RiddleEntry,
+): boolean {
+  if (!hasUsableStationCoordinate(station)) return false;
+  return (
+    distanceMeters(point, {
+      lat: station.position_lat,
+      lng: station.position_lng,
+    }) <= ROUTE_STATION_SNAP_METERS
+  );
 }
 
 function findNearbyStation(

@@ -15,6 +15,7 @@ interface StudioStationNavProps {
   onAddStation: () => void;
   onReorderStations: (sourceId: string, targetId: string) => void;
   onToggleReorder: () => void;
+  onDeleteStation?: (stationId: string) => void;
 }
 
 export function StudioStationNav({
@@ -27,6 +28,7 @@ export function StudioStationNav({
   onAddStation,
   onReorderStations,
   onToggleReorder,
+  onDeleteStation,
 }: StudioStationNavProps) {
   const { t } = useEditorLanguage();
   const draggingStationIdRef = useRef<string | null>(null);
@@ -122,19 +124,53 @@ export function StudioStationNav({
                   {getFieldTestStatusBadgeLabel(fieldTestStatus, issueTagCount)}
                 </span>
               )}
+              {onDeleteStation && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="stq-author-nav-item__delete"
+                  aria-label={`${t('studio.station')} ${station.number} löschen`}
+                  title="Station löschen"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    const label = getStationLocationLabel(
+                      station,
+                      locale,
+                      `${t('studio.station')} ${station.number}`,
+                    );
+                    if (
+                      window.confirm(
+                        `Station „${label}" wird unwiderruflich entfernt.`,
+                      )
+                    ) {
+                      onDeleteStation(station.id);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      const label = getStationLocationLabel(
+                        station,
+                        locale,
+                        `${t('studio.station')} ${station.number}`,
+                      );
+                      if (
+                        window.confirm(
+                          `Station „${label}" wird unwiderruflich entfernt.`,
+                        )
+                      ) {
+                        onDeleteStation(station.id);
+                      }
+                    }
+                  }}
+                >
+                  ×
+                </span>
+              )}
             </button>
           );
         })}
-        <button
-          type="button"
-          className="stq-author-nav-item stq-author-nav-item--add"
-          onClick={onAddStation}
-        >
-          <span className="stq-author-nav-item__plus">+</span>
-          <span className="stq-author-nav-item__label">
-            {t('studio.addStation')}
-          </span>
-        </button>
       </div>
     </div>
   );

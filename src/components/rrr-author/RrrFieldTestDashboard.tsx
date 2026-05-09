@@ -54,16 +54,16 @@ export function RrrFieldTestDashboard({ draft, onSelectStation }: Props) {
   }));
 
   return (
-    <section
+    <details
       className="stq-rrr-field-test-dashboard"
       aria-label="RRR field-test dashboard"
     >
-      <div className="stq-rrr-field-test-dashboard__header">
+      <summary className="stq-rrr-field-test-dashboard__header">
         <div>
           <strong>RRR-Feldtest-Status</strong>
           <span>{modularStations.length} modulare Stationen</span>
         </div>
-      </div>
+      </summary>
 
       <dl className="stq-rrr-field-test-dashboard__stats">
         <div>
@@ -124,7 +124,7 @@ export function RrrFieldTestDashboard({ draft, onSelectStation }: Props) {
           );
         })}
       </div>
-    </section>
+    </details>
   );
 }
 

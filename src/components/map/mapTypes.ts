@@ -155,6 +155,7 @@ export interface AuthorMapProps {
   ) => void;
   onViewportCenterChange?: (center: AuthorMapCoordinate) => void;
   onMapClick?: (coordinate: AuthorMapCoordinate) => void;
+  onRouteClick?: (routeId: string, coordinate: AuthorMapCoordinate) => void;
 }
 
 export const AUTHOR_MAP_SELECTION_STYLE_PLANNER: AuthorMapSelectionStyle = {

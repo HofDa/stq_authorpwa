@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import type { TourDraft } from '@/schema';
 import { StudioHeader } from './StudioHeader';
 import { JumpPalette } from './JumpPalette';
@@ -35,6 +36,40 @@ export function DesktopStudioShell({
     actions,
   } = useStudioController({ draft, onChange });
 
+  const SIDEBAR_MIN = 220;
+  const SIDEBAR_MAX = 560;
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window === 'undefined') return 280;
+    const stored = Number(window.localStorage.getItem('stq.studio.sidebarWidth'));
+    return Number.isFinite(stored) && stored >= SIDEBAR_MIN && stored <= SIDEBAR_MAX
+      ? stored
+      : 280;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('stq.studio.sidebarWidth', String(sidebarWidth));
+  }, [sidebarWidth]);
+  const draggingRef = useRef(false);
+  function startResize(event: React.PointerEvent<HTMLDivElement>) {
+    draggingRef.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const onMove = (moveEvent: PointerEvent) => {
+      if (!draggingRef.current) return;
+      const next = Math.max(
+        SIDEBAR_MIN,
+        Math.min(SIDEBAR_MAX, moveEvent.clientX),
+      );
+      setSidebarWidth(next);
+    };
+    const onUp = () => {
+      draggingRef.current = false;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
   return (
     <div
       className="stq-author-tool-shell"
@@ -42,7 +77,7 @@ export function DesktopStudioShell({
         height: '100vh',
         width: '100%',
         display: 'grid',
-        gridTemplateColumns: '280px minmax(0, 1fr)',
+        gridTemplateColumns: `${sidebarWidth}px 6px minmax(0, 1fr)`,
         background:
           'radial-gradient(circle at 20% 0%, #2c2724 0%, #16130f 60%)',
         overflow: 'hidden',
@@ -64,7 +99,22 @@ export function DesktopStudioShell({
         onAddStation={actions.addStation}
         onReorderStations={actions.reorderStations}
         onToggleReorder={actions.toggleReorder}
+        onDeleteStation={actions.deleteStation}
         onExport={actions.exportDraft}
+      />
+
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Seitenleiste vergrößern"
+        onPointerDown={startResize}
+        onDoubleClick={() => setSidebarWidth(280)}
+        style={{
+          cursor: 'col-resize',
+          background: 'rgba(255, 255, 255, 0.04)',
+          touchAction: 'none',
+          userSelect: 'none',
+        }}
       />
 
       {exportError && (
@@ -73,9 +123,9 @@ export function DesktopStudioShell({
           style={{
             position: 'absolute',
             top: 24,
-            left: 304,
+            left: sidebarWidth + 24,
             maxWidth: 720,
-            width: 'calc(100% - 328px)',
+            width: `calc(100% - ${sidebarWidth + 48}px)`,
             background: '#1f1a17',
             border: '1px solid var(--stq-error)',
             borderRadius: 8,
@@ -129,6 +179,10 @@ export function DesktopStudioShell({
           onSelectDraft={onSelectDraft}
           drafts={drafts}
           onSelectTourOverview={actions.selectTourOverview}
+          routeEditMode
+          stationsEditMode
+          onDeleteStation={actions.deleteStation}
+          onOpenOutro={() => actions.changeSection('outro')}
         />
       </div>
       {jumpOpen && (

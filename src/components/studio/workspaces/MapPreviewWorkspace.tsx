@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   type Locale,
   type RiddleEntry,
@@ -24,6 +24,7 @@ import {
   type RightEditDrawerState,
 } from '../mobile/RightEditDrawer';
 import { StationIconPreview } from '@/components/stations/StationVisualPreview';
+import type { AuthorMapCoordinate } from '@/components/map/mapTypes';
 import { PhoneMapMockup } from './PhoneMapMockup';
 import { MapStationSheet, type MapSheetState } from './MapStationSheet';
 import {
@@ -37,12 +38,20 @@ interface Props {
   locale: Locale;
   selectedId: string | null;
   onSelectStation: (id: string) => void;
-  onAddStation: () => void;
+  onAddStation: (coordinate?: AuthorMapCoordinate) => void;
   onTitleBack?: () => void;
+  onOpenOutro?: () => void;
   onChange: (patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft)) => void;
   editMode?: boolean;
-  onEditModeToggle?: () => void;
+  markerEditMode?: boolean;
+  topRightPill?: ReactNode;
   mobileSelectionFlow?: boolean;
+  /** When true, renders a floating "+" button to add a station at viewport center. */
+  showAddStationFab?: boolean;
+  /** When true, renders a floating "−" button to enter delete-station mode. */
+  showDeleteStationFab?: boolean;
+  /** Called with the station id to delete (after user confirmation). */
+  onDeleteStation?: (stationId: string) => void;
 }
 
 const SECTION_LABELS: Record<RendererSectionKey, string> = {
@@ -57,11 +66,17 @@ export function MapPreviewWorkspace({
   locale,
   selectedId,
   onSelectStation: onSelectStationProp,
+  onAddStation,
   onTitleBack,
+  onOpenOutro,
   onChange,
   editMode = true,
-  onEditModeToggle,
+  markerEditMode = false,
+  topRightPill,
   mobileSelectionFlow = false,
+  showAddStationFab = false,
+  showDeleteStationFab = false,
+  onDeleteStation,
 }: Props) {
   const { t } = useEditorLanguage();
   const [sheetState, setSheetState] = useState<MapSheetState>('closed');
@@ -72,6 +87,27 @@ export function MapPreviewWorkspace({
     useState<StationEditPanelKey | null>(null);
   const [rightDrawerState, setRightDrawerState] =
     useState<RightEditDrawerState>('closed');
+  const [viewportCenter, setViewportCenter] =
+    useState<AuthorMapCoordinate | null>(null);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const deleteModeRef = useRef(deleteMode);
+  deleteModeRef.current = deleteMode;
+
+  useEffect(() => {
+    if (!showDeleteStationFab) {
+      setDeleteMode(false);
+      setPendingDeleteId(null);
+    }
+  }, [showDeleteStationFab]);
+
+  useEffect(() => {
+    if (deleteMode) {
+      setSheetState('closed');
+      setActiveStationPanel(null);
+      setRightDrawerState('closed');
+    }
+  }, [deleteMode]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -79,16 +115,18 @@ export function MapPreviewWorkspace({
       setActiveStationPanel(null);
       setSelectedEditableRegion(null);
       setRightDrawerState('closed');
+    } else if (!deleteModeRef.current) {
+      setSheetState('expanded');
     }
   }, [selectedId]);
 
   useEffect(() => {
-    if (!editMode) {
+    if (!editMode && !markerEditMode) {
       setActiveStationPanel(null);
       setSelectedEditableRegion(null);
       setRightDrawerState('closed');
     }
-  }, [editMode]);
+  }, [editMode, markerEditMode]);
 
   const selectedStation =
     draft.stations.find((station) => station.id === selectedId) ??
@@ -155,12 +193,20 @@ export function MapPreviewWorkspace({
     ? draft.stations.findIndex((station) => station.id === selectedStation.id)
     : -1;
 
-  function selectStationAt(index: number) {
-    const station = draft.stations[index];
-    if (station) onSelectStation(station.id);
-  }
-
   function onSelectStation(stationId: string) {
+    if (deleteModeRef.current) {
+      setPendingDeleteId(stationId);
+      return;
+    }
+    if (markerEditMode) {
+      onSelectStationProp(stationId);
+      setSheetState('closed');
+      setActiveStationPanel(null);
+      setSelectedEditableRegion(null);
+      setRightDrawerState('closed');
+      return;
+    }
+
     if (mobileSelectionFlow && editMode && stationId === selectedStation?.id) {
       setSheetState('expanded');
       openStationPanel('marker');
@@ -191,6 +237,14 @@ export function MapPreviewWorkspace({
     setRightDrawerState('closed');
   }
 
+  function addStationAtViewportCenter() {
+    onAddStation(viewportCenter ?? undefined);
+    setSheetState('closed');
+    setActiveStationPanel(null);
+    setSelectedEditableRegion(null);
+    setRightDrawerState('closed');
+  }
+
   function editableRegion(
     panel: StationEditPanelKey,
     label: string,
@@ -207,6 +261,35 @@ export function MapPreviewWorkspace({
       onEdit: () => openStationPanel(panel),
     };
   }
+
+  const composedTopRightPill =
+    topRightPill || showAddStationFab || showDeleteStationFab ? (
+      <div className="stq-mobile-map-edit-actions">
+        {topRightPill}
+        {showAddStationFab && (
+          <button
+            type="button"
+            onClick={addStationAtViewportCenter}
+            aria-label={t('studio.addStation')}
+            title={t('studio.addStation')}
+          >
+            <Icon name="plus" size={15} />
+          </button>
+        )}
+        {showDeleteStationFab && (
+          <button
+            type="button"
+            className={deleteMode ? 'is-active' : ''}
+            onClick={() => setDeleteMode((value) => !value)}
+            aria-label={deleteMode ? 'Löschen beenden' : 'Station löschen'}
+            aria-pressed={deleteMode}
+            title={deleteMode ? 'Löschen beenden' : 'Station löschen'}
+          >
+            <Icon name="trash" size={15} />
+          </button>
+        )}
+      </div>
+    ) : undefined;
 
   const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
   const mobileContextToolbar =
@@ -243,17 +326,25 @@ export function MapPreviewWorkspace({
         detail={t('studio.map')}
         onTitleBack={onTitleBack}
         toolbar={mobileContextToolbar}
-        dockLeadingAction={
-          onEditModeToggle
-            ? {
-                ariaLabel: editMode ? 'Bearbeiten beenden' : 'Bearbeiten',
-                active: editMode,
-                icon: <Icon name="edit" size={15} />,
-                onClick: onEditModeToggle,
-              }
+        topRightPill={composedTopRightPill}
+        onViewportCenterChange={setViewportCenter}
+        draggableStationIds={
+          markerEditMode && !deleteMode
+            ? draft.stations.map((station) => station.id)
             : undefined
         }
-        hideZoomControls
+        deletableStationIds={
+          deleteMode ? draft.stations.map((station) => station.id) : undefined
+        }
+        onDeleteStation={(stationId) => setPendingDeleteId(stationId)}
+        onStationCoordinateChange={(stationId, coordinate) => {
+          patchStation(stationId, (station) => ({
+            ...station,
+            position_lat: coordinate.lat,
+            position_lng: coordinate.lng,
+          }));
+        }}
+        showLayersControl
         bottomSheet={
           sheetVisible && selectedStation ? (
             <MapStationSheet
@@ -323,10 +414,11 @@ export function MapPreviewWorkspace({
                   setSelectedEditableRegion(null);
                   setRightDrawerState('closed');
                 }}
-                onPrev={() => selectStationAt(selectedStationIndex - 1)}
-                onNext={() => selectStationAt(selectedStationIndex + 1)}
-                isFirst={selectedStationIndex <= 0}
-                isLast={selectedStationIndex >= draft.stations.length - 1}
+                onSolved={() => {
+                  if (selectedStationIndex >= draft.stations.length - 1) {
+                    onOpenOutro?.();
+                  }
+                }}
                 editableRegions={
                   editMode
                     ? {
@@ -376,6 +468,47 @@ export function MapPreviewWorkspace({
           {stationPanel.body}
         </EditPanel>
       )}
+
+      {pendingDeleteId && (() => {
+        const target = draft.stations.find((s) => s.id === pendingDeleteId);
+        if (!target) return null;
+        const label =
+          target[locale].location || `${t('studio.station')} ${target.number}`;
+        return (
+          <div
+            className="stq-confirm-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Station löschen bestätigen"
+          >
+            <div className="stq-confirm-dialog">
+              <h3 className="stq-confirm-dialog__title">Station löschen?</h3>
+              <p className="stq-confirm-dialog__body">
+                „{label}" wird unwiderruflich entfernt.
+              </p>
+              <div className="stq-confirm-dialog__actions">
+                <button
+                  type="button"
+                  className="stq-confirm-dialog__btn"
+                  onClick={() => setPendingDeleteId(null)}
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="button"
+                  className="stq-confirm-dialog__btn stq-confirm-dialog__btn--danger"
+                  onClick={() => {
+                    onDeleteStation?.(pendingDeleteId);
+                    setPendingDeleteId(null);
+                  }}
+                >
+                  Löschen
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }

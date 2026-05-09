@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { TourDraft } from '@/schema';
 import { useStudioController } from '../useStudioController';
 import { Icon } from '../Icon';
 import { TourCardCanvas } from '../TourCardCanvas';
 import { IntroPhonePreview } from '../workspaces/IntroPhonePreview';
 import { MapPreviewWorkspace } from '../workspaces/MapPreviewWorkspace';
+import { RouteWorkspace } from '../workspaces/RouteWorkspace';
 
 export interface MobileStudioShellProps {
   draft: TourDraft;
@@ -24,7 +25,9 @@ export function MobileStudioShell({
   const [editMode, setEditMode] = useState(false);
   const [overviewEditMode, setOverviewEditMode] = useState(false);
   const [introEditMode, setIntroEditMode] = useState(false);
-  const [view, setView] = useState<'map' | 'overview' | 'intro'>('map');
+  const [outroEditMode, setOutroEditMode] = useState(false);
+  const [routeEditMode, setRouteEditMode] = useState(false);
+  const [view, setView] = useState<'map' | 'overview' | 'intro' | 'outro'>('map');
   const [introDraftId, setIntroDraftId] = useState<string | null>(null);
   const { locale, selectedId, drafts, actions } = useStudioController({
     draft,
@@ -39,8 +42,40 @@ export function MobileStudioShell({
   function openIntro(draftId: string) {
     setOverviewEditMode(false);
     setIntroEditMode(false);
+    setOutroEditMode(false);
     setIntroDraftId(draftId);
     setView('intro');
+  }
+
+  function openOutro() {
+    setEditMode(false);
+    setRouteEditMode(false);
+    setOutroEditMode(false);
+    setView('outro');
+  }
+
+  const mapEditPill = editMode ? (
+    <div className="stq-mobile-map-edit-actions">
+      <button
+        type="button"
+        className={routeEditMode ? 'is-active' : ''}
+        onClick={() => setRouteEditMode((value) => !value)}
+        aria-label={
+          routeEditMode ? 'Route bearbeiten beenden' : 'Route bearbeiten'
+        }
+        aria-pressed={routeEditMode}
+        title={routeEditMode ? 'Route bearbeiten beenden' : 'Route bearbeiten'}
+      >
+        <Icon name="flag" size={15} />
+      </button>
+    </div>
+  ) : undefined;
+
+  function toggleMapEditMode() {
+    setEditMode((value) => {
+      if (value) setRouteEditMode(false);
+      return !value;
+    });
   }
 
   return (
@@ -68,38 +103,27 @@ export function MobileStudioShell({
             editable={overviewEditMode}
             mobileSelectionFlow={overviewEditMode}
           />
-          <aside
-            className="stq-mobile-studio__edit-drawer"
-            data-state={overviewEditMode ? 'open' : 'closed'}
-            aria-label="Bearbeiten"
-          >
-            <button
-              type="button"
-              className="stq-mobile-studio__edit-drawer-handle"
-              onClick={() => setOverviewEditMode((value) => !value)}
-              aria-label={overviewEditMode ? 'Bearbeiten beenden' : 'Bearbeiten'}
-              aria-expanded={overviewEditMode}
-              aria-pressed={overviewEditMode}
-            >
-              <Icon name="edit" size={17} />
-            </button>
-          </aside>
+          <FloatingEditButton
+            active={overviewEditMode}
+            onClick={() => setOverviewEditMode((value) => !value)}
+          />
         </section>
-      ) : view === 'intro' ? (
+      ) : view === 'intro' || view === 'outro' ? (
         <section
           className="stq-mobile-studio__workspace"
-          aria-label="Intro-Seite"
+          aria-label={view === 'outro' ? 'Outro-Seite' : 'Intro-Seite'}
         >
           <IntroPhonePreview
             draft={introDraft}
             locale={locale}
             onChange={introDraft.draftId === draft.draftId ? onChange : () => undefined}
-            mode="intro"
-            editable={introEditMode}
-            mobileSelectionFlow={introEditMode}
+            mode={view}
+            editable={view === 'outro' ? outroEditMode : introEditMode}
+            mobileSelectionFlow={view === 'outro' ? outroEditMode : introEditMode}
             onBack={() => {
               setIntroEditMode(false);
-              setView('overview');
+              setOutroEditMode(false);
+              setView(view === 'outro' ? 'map' : 'overview');
             }}
             onStartTour={() => {
               setIntroEditMode(false);
@@ -108,40 +132,78 @@ export function MobileStudioShell({
               }
               setView('map');
             }}
+            onSelectTourOverview={() => {
+              setOutroEditMode(false);
+              setView('overview');
+            }}
           />
-          <aside
-            className="stq-mobile-studio__edit-drawer"
-            data-state={introEditMode ? 'open' : 'closed'}
-            aria-label="Bearbeiten"
-          >
-            <button
-              type="button"
-              className="stq-mobile-studio__edit-drawer-handle"
-              onClick={() => setIntroEditMode((value) => !value)}
-              aria-label={introEditMode ? 'Bearbeiten beenden' : 'Bearbeiten'}
-              aria-expanded={introEditMode}
-              aria-pressed={introEditMode}
-            >
-              <Icon name="edit" size={17} />
-            </button>
-          </aside>
+          <FloatingEditButton
+            active={view === 'outro' ? outroEditMode : introEditMode}
+            onClick={() =>
+              view === 'outro'
+                ? setOutroEditMode((value) => !value)
+                : setIntroEditMode((value) => !value)
+            }
+          />
         </section>
       ) : (
         <section className="stq-mobile-studio__workspace" aria-label="Mobile Studio Arbeitsbereich">
-        <MapPreviewWorkspace
-          draft={draft}
-          locale={locale}
-          selectedId={selectedId}
-          onSelectStation={actions.selectStationOnly}
-          onAddStation={actions.addStation}
-          onTitleBack={() => setView('overview')}
-          onChange={onChange}
-          editMode={editMode}
-          onEditModeToggle={() => setEditMode((value) => !value)}
-          mobileSelectionFlow={editMode}
-        />
+          {editMode && routeEditMode ? (
+            <RouteWorkspace
+              draft={draft}
+              locale={locale}
+              selectedId={selectedId}
+              onSelectStation={actions.selectStationOnly}
+              onChange={onChange}
+              topRightPill={mapEditPill}
+            />
+          ) : (
+            <MapPreviewWorkspace
+              draft={draft}
+              locale={locale}
+              selectedId={selectedId}
+              onSelectStation={actions.selectStationOnly}
+              onAddStation={actions.addStation}
+              onTitleBack={() => setView('overview')}
+              onOpenOutro={openOutro}
+              onChange={onChange}
+              editMode={false}
+              markerEditMode={editMode}
+              topRightPill={mapEditPill}
+              mobileSelectionFlow={false}
+              showAddStationFab={editMode && !routeEditMode}
+            />
+          )}
+          <FloatingEditButton
+            active={editMode}
+            onClick={toggleMapEditMode}
+          />
       </section>
       )}
     </main>
+  );
+}
+
+function FloatingEditButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      className={`stq-mobile-studio__floating-edit-button${
+        active ? ' is-active' : ''
+      }`}
+      onClick={onClick}
+      aria-label={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
+      aria-pressed={active}
+    >
+      {children ?? <Icon name="edit" size={19} />}
+    </button>
   );
 }

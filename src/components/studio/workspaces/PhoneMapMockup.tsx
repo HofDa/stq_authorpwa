@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AuthorMap } from '@/components/map/AuthorMap';
 import {
   AUTHOR_MAP_BASEMAPS,
@@ -97,6 +97,7 @@ export interface PhoneMapMockupProps {
 
   /** Click anywhere on the map (used for inserting a new route point). */
   onMapClick?: (coordinate: AuthorMapCoordinate) => void;
+  onRouteClick?: (routeId: string, coordinate: AuthorMapCoordinate) => void;
 
   /** Hide the title pill at the top of the phone screen. */
   hideTitlePill?: boolean;
@@ -136,6 +137,7 @@ export function PhoneMapMockup({
   routePointMarkers,
   onRoutePointCoordinateChange,
   onMapClick,
+  onRouteClick,
   hideTitlePill = false,
   onTitleBack,
   hideZoomControls = false,
@@ -148,6 +150,57 @@ export function PhoneMapMockup({
   const [mapControlAction, setMapControlAction] =
     useState<AuthorMapControlAction | null>(null);
   const dockRef = useRef<HTMLDivElement | null>(null);
+
+  // Enable click-and-drag horizontal scrolling on the dock progress track.
+  useEffect(() => {
+    const track = dockRef.current;
+    if (!track) return;
+    let isDown = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0 && event.pointerType === 'mouse') return;
+      isDown = true;
+      moved = false;
+      startX = event.clientX;
+      startScroll = track.scrollLeft;
+      track.setPointerCapture(event.pointerId);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (!isDown) return;
+      const dx = event.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      track.scrollLeft = startScroll - dx;
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      if (!isDown) return;
+      isDown = false;
+      try {
+        track.releasePointerCapture(event.pointerId);
+      } catch {
+        /* noop */
+      }
+      if (moved) {
+        const suppress = (e: Event) => {
+          e.stopPropagation();
+          e.preventDefault();
+          track.removeEventListener('click', suppress, true);
+        };
+        track.addEventListener('click', suppress, true);
+      }
+    };
+    track.addEventListener('pointerdown', onPointerDown);
+    track.addEventListener('pointermove', onPointerMove);
+    track.addEventListener('pointerup', onPointerUp);
+    track.addEventListener('pointercancel', onPointerUp);
+    return () => {
+      track.removeEventListener('pointerdown', onPointerDown);
+      track.removeEventListener('pointermove', onPointerMove);
+      track.removeEventListener('pointerup', onPointerUp);
+      track.removeEventListener('pointercancel', onPointerUp);
+    };
+  }, []);
 
   const selected =
     draft.stations.find((station) => station.id === selectedId) ??
@@ -216,6 +269,7 @@ export function PhoneMapMockup({
             routePointMarkers={routePointMarkers}
             onRoutePointCoordinateChange={onRoutePointCoordinateChange}
             onMapClick={onMapClick}
+            onRouteClick={onRouteClick}
             draggableStationIds={draggableStationIds}
             deletableStationIds={deletableStationIds}
             onDeleteStation={onDeleteStation}
@@ -347,20 +401,42 @@ export function PhoneMapMockup({
                       role="listitem"
                     >
                       {arrowMode ? (
-                        <span
-                          className="stq-phone-map-progress-select"
-                          aria-label={`${t('studio.station')} ${station.number}`}
-                        >
-                          <span className="stq-phone-map-progress-number">
-                            {station.number}
-                          </span>
-                          <span
-                            className="stq-phone-map-progress-icon"
-                            aria-hidden
+                        nextStation ? (
+                          <button
+                            type="button"
+                            className={`stq-phone-map-progress-select${
+                              arrowSelected ? ' is-active' : ''
+                            }`}
+                            onClick={() => segmentArrows!.onSelect(station.id)}
+                            aria-label={`${t('studio.station')} ${station.number} → ${nextStation.number}`}
+                            aria-pressed={arrowSelected || undefined}
                           >
-                            {stationIconEmoji(station)}
+                            <span className="stq-phone-map-progress-number">
+                              {station.number}
+                            </span>
+                            <span
+                              className="stq-phone-map-progress-icon"
+                              aria-hidden
+                            >
+                              {stationIconEmoji(station)}
+                            </span>
+                          </button>
+                        ) : (
+                          <span
+                            className="stq-phone-map-progress-select"
+                            aria-label={`${t('studio.station')} ${station.number}`}
+                          >
+                            <span className="stq-phone-map-progress-number">
+                              {station.number}
+                            </span>
+                            <span
+                              className="stq-phone-map-progress-icon"
+                              aria-hidden
+                            >
+                              {stationIconEmoji(station)}
+                            </span>
                           </span>
-                        </span>
+                        )
                       ) : (
                         <button
                           type="button"

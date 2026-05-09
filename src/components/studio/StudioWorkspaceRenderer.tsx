@@ -1,4 +1,5 @@
 import type { Locale, TourDraft } from '@/schema';
+import type { AuthorMapCoordinate } from '@/components/map/mapTypes';
 import type { StudioWorkflowSection } from './workflow/workflowTypes';
 import { MapPreviewWorkspace } from './workspaces/MapPreviewWorkspace';
 import { PlanWorkspace } from './workspaces/PlanWorkspace';
@@ -14,11 +15,15 @@ interface StudioWorkspaceRendererProps {
     patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
   ) => void;
   onSelectStation: (id: string) => void;
-  onAddStation: () => void;
+  onAddStation: (coordinate?: AuthorMapCoordinate) => void;
   onCreateTour?: () => void | Promise<void>;
   onSelectDraft?: (draftId: string) => void;
   drafts?: TourDraft[];
   onSelectTourOverview: () => void;
+  routeEditMode?: boolean;
+  stationsEditMode?: boolean;
+  onDeleteStation?: (stationId: string) => void;
+  onOpenOutro?: () => void;
 }
 
 export function StudioWorkspaceRenderer(props: StudioWorkspaceRendererProps) {
@@ -31,6 +36,12 @@ export function StudioWorkspaceRenderer(props: StudioWorkspaceRendererProps) {
         onSelectStation={props.onSelectStation}
         onAddStation={props.onAddStation}
         onChange={props.onChange}
+        onOpenOutro={props.onOpenOutro}
+        editMode
+        markerEditMode={props.stationsEditMode ?? true}
+        showAddStationFab={props.stationsEditMode ?? false}
+        showDeleteStationFab={props.stationsEditMode ?? false}
+        onDeleteStation={props.onDeleteStation}
       />
     );
   }
@@ -82,6 +93,7 @@ function renderWorkspaceBody(props: StudioWorkspaceRendererProps) {
           selectedId={props.selectedId}
           onSelectStation={props.onSelectStation}
           onChange={props.onChange}
+          editable={props.routeEditMode}
         />
       );
     case 'stations':

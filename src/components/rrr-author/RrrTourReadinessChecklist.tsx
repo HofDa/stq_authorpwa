@@ -65,13 +65,13 @@ export function RrrTourReadinessChecklist({
   ];
 
   return (
-    <section
+    <details
       className={`stq-rrr-tour-readiness ${
         ready ? 'stq-rrr-tour-readiness--ready' : ''
       }`}
       aria-label="RRR readiness checklist"
     >
-      <div className="stq-rrr-tour-readiness__header">
+      <summary className="stq-rrr-tour-readiness__header">
         <div>
           <strong>RRR-Feldtest-Check</strong>
           <span>
@@ -83,7 +83,7 @@ export function RrrTourReadinessChecklist({
         <span className="stq-rrr-tour-readiness__badge">
           {ready ? 'Bereit' : 'Prüfen'}
         </span>
-      </div>
+      </summary>
 
       <ul className="stq-rrr-tour-readiness__checks">
         {checklist.map((item) => (
@@ -126,6 +126,6 @@ export function RrrTourReadinessChecklist({
           ))}
         </div>
       )}
-    </section>
+    </details>
   );
 }
