@@ -1,57 +1,120 @@
-# Agent Guide — SouthTyrolQuests Author PWA
+# Agent Guide
 
-## Purpose
+## Project
 
-This repository is the mobile-first authoring PWA for SouthTyrolQuests. It creates tour JSON, riddle JSON, route data and media exports that the SouthTyrolQuests Flutter player app can consume unchanged.
+SouthTyrolQuests Authoring App
 
-The main agent should act as an orchestrator. Implementation, QA, UI review and architecture review should be split into focused subagent-style tasks when the scope is larger than a small one-file change.
+This project is a mobile-first authoring environment for creating GPS-guided riddle tours, station content, and modular interactive riddles.
 
-## Default working mode
+The system combines:
+- tour/station authoring
+- multilingual content editing
+- mobile preview
+- modular riddle runtime
+- sensor-based interactions
+- map/GPS logic
+- PWA/offline behavior
 
-1. Read the files in `AI/` before changing code.
-2. Create an updated plan for the current task.
-3. Keep changes PR-sized and reversible.
-4. Prefer minimal diffs over broad rewrites.
-5. Preserve public JSON contracts unless the task explicitly requests a migration.
-6. Run relevant validation before claiming success.
-7. Update `AI/CURRENT_STATE.md`, `AI/DECISIONS.md` or `AI/KNOWN_ISSUES.md` when the work changes project knowledge.
+## Core Rules
 
-## Project priorities
+- Read the AI folder before changing code.
+- Prefer small PR-sized changes.
+- Preserve existing architecture unless explicitly asked to change it.
+- Avoid broad rewrites.
+- Avoid unrelated cleanup.
+- Use minimal diffs.
+- Preserve JSON contracts.
+- Verify behavior before claiming success.
+- Update AI memory files after meaningful changes.
 
-- Mobile-first authoring experience.
-- Offline-capable field use.
-- Stable JSON export for the Flutter app.
-- Clean separation between authoring UI, schema, storage, map code, RRR runtime and browser sensor adapters.
-- Production-ready code with simple, understandable patterns.
+## Main Agent Role
 
-## Non-negotiables
+The main agent acts as orchestrator.
 
-- Do not access browser APIs inside framework-independent RRR core logic.
-- Do not couple runtime/domain logic directly to React components.
-- Do not introduce one-off local design colors when shared CSS tokens exist.
-- Do not rewrite working systems unless a migration plan is part of the task.
-- Do not change exported JSON structures casually.
-- Do not remove tests just to make a task pass.
+Responsibilities:
+- understand the global architecture
+- create an updated plan
+- split large tasks into focused subagent tasks
+- choose the right specialist agent
+- identify risks
+- verify changes
+- update project memory files
 
-## Preferred validation commands
+## Subagent Usage
 
-Use the relevant subset for the change:
+Use subagents for focused work.
 
-```bash
-npm run lint
-npm run typecheck
-npm run test
-npm run build
-```
+Recommended roles:
 
-For UI work, also verify manually in the browser, especially mobile viewport behavior.
+- `architecture-guardian`
+- `runtime-engineer`
+- `sensor-engineer`
+- `mobile-studio`
+- `ui-designer`
+- `authoring-ux`
+- `schema-guardian`
+- `pwa-offline`
+- `qa-auditor`
+- `performance-guardian`
+- `map-gps`
+- `interaction-designer`
+- `content-flow`
+- `accessibility`
+- `security-privacy`
+- `release-manager`
 
-## Output expected from agents
+## Important Project Constraints
 
-Every larger task should end with:
+- mobile-first
+- offline-capable
+- schema-driven interactions
+- modular Reactive Riddle Runtime
+- reusable riddle modules
+- stable multilingual JSON structure
+- clean separation between editor UI and runtime execution
+- no direct sensor access from UI components
+- no runtime logic inside visual components
 
-- what changed
-- files touched
-- validation run
-- risks or untested areas
-- suggested next safe PR
+## Coding Rules
+
+- no slop code
+- no dead code
+- no spaghetti code
+- no unnecessary abstractions
+- no utility explosion
+- no hidden global state
+- no broad refactors disguised as cleanup
+
+## Design Rules
+
+- token-based styling
+- no hardcoded colors when tokens exist
+- consistent spacing
+- clear hierarchy
+- mobile-friendly touch targets
+- accessible controls
+- readable multilingual layouts
+
+## Verification Rules
+
+Before claiming success, run or explain:
+
+- lint
+- typecheck
+- build
+- relevant unit tests
+- UI smoke checks
+- mobile viewport checks if relevant
+- PWA/offline checks if relevant
+- schema compatibility checks if relevant
+
+## Memory Update Rules
+
+Update these files when useful:
+
+- `AI/CURRENT_STATE.md`
+- `AI/DECISIONS.md`
+- `AI/KNOWN_ISSUES.md`
+- `AI/ROADMAP.md`
+
+Do not update them for tiny cosmetic changes unless they affect architecture, workflow, runtime behavior, or known risks.
