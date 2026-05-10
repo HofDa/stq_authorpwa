@@ -84,23 +84,6 @@ export function RouteWorkspace({
       ? draft.stations[segmentFromIndex + 1]
       : null;
 
-  const selectedRouteSegment = useMemo(
-    () =>
-      selectedStation &&
-      nextStation &&
-      hasUsableStationCoordinate(selectedStation) &&
-      hasUsableStationCoordinate(nextStation)
-        ? {
-            from: {
-              lat: selectedStation.position_lat,
-              lng: selectedStation.position_lng,
-            },
-            to: { lat: nextStation.position_lat, lng: nextStation.position_lng },
-          }
-        : null,
-    [selectedStation, nextStation],
-  );
-
   const stationsWithCoordinates = useMemo(
     () => draft.stations.filter(hasUsableStationCoordinate),
     [draft.stations],
@@ -649,17 +632,6 @@ export function RouteWorkspace({
       }
     />
   );
-}
-
-function snapToStation(
-  coordinate: AuthorMapCoordinate,
-  target: RiddleEntry | null,
-): AuthorMapCoordinate {
-  if (!target || !hasUsableStationCoordinate(target)) return coordinate;
-  const targetCoord = { lat: target.position_lat, lng: target.position_lng };
-  return distanceMeters(coordinate, targetCoord) <= ROUTE_STATION_SNAP_METERS
-    ? targetCoord
-    : coordinate;
 }
 
 function stationAnchorPoint(

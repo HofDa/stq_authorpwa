@@ -95,7 +95,6 @@ export function DesktopStudioShell({
         selectedStationId={selectedId}
         reorderMode={reorderMode}
         onSelectStation={actions.selectStation}
-        onAddStation={actions.addStation}
         onReorderStations={actions.reorderStations}
         onToggleReorder={actions.toggleReorder}
         onDeleteStation={actions.deleteStation}

@@ -31,7 +31,6 @@ interface Props {
   selectedStationId: string | null;
   reorderMode: boolean;
   onSelectStation: (stationId: string) => void;
-  onAddStation: () => void;
   onReorderStations: (sourceId: string, targetId: string) => void;
   onToggleReorder: () => void;
   onDeleteStation?: (stationId: string) => void;
@@ -52,7 +51,6 @@ export function StudioHeader({
   selectedStationId,
   reorderMode,
   onSelectStation,
-  onAddStation,
   onReorderStations,
   onToggleReorder,
   onDeleteStation,
@@ -199,7 +197,6 @@ export function StudioHeader({
         selectedStationId={selectedStationId}
         reorderMode={reorderMode}
         onSelectStation={onSelectStation}
-        onAddStation={onAddStation}
         onReorderStations={onReorderStations}
         onDeleteStation={onDeleteStation}
         onToggleReorder={onToggleReorder}
