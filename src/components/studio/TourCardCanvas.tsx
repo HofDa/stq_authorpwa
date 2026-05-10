@@ -29,6 +29,8 @@ interface Props {
   mobileSelectionFlow?: boolean;
   /** Optional control rendered inside the phone-frame header actions slot. */
   headerEditToggle?: ReactNode;
+  /** Optional control rendered as a floating chip outside the phone frame. */
+  floatingEditToggle?: ReactNode;
 }
 
 type ActivePanel = 'cover' | 'title' | 'description' | 'meta' | 'welcome' | null;
@@ -44,6 +46,7 @@ export function TourCardCanvas({
   editable = true,
   mobileSelectionFlow = false,
   headerEditToggle,
+  floatingEditToggle,
 }: Props) {
   const { t } = useEditorLanguage();
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
@@ -431,6 +434,12 @@ export function TourCardCanvas({
           </button>
         </div>
       </DeviceMockup>
+
+      {floatingEditToggle && (
+        <div className="stq-tour-card-canvas__floating-edit">
+          {floatingEditToggle}
+        </div>
+      )}
 
       {panel && mobileSelectionFlow && (
         <RightEditDrawer

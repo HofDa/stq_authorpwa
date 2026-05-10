@@ -531,6 +531,26 @@
   border-radius: 8px;
 }
 
+.stq-tour-card-canvas__floating-edit {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 30;
+}
+
+.stq-tour-card-canvas__floating-edit .stq-mobile-studio__header-edit-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--stq-alpha-white);
+  box-shadow: 0 6px 16px var(--stq-alpha-brown);
+}
+
+.stq-tour-card-canvas__floating-edit .stq-mobile-studio__header-edit-toggle.is-active {
+  background: var(--stq-primary);
+  color: var(--stq-color-surface-cream);
+}
+
 .stq-confirm-overlay {
   position: fixed;
   inset: 0;

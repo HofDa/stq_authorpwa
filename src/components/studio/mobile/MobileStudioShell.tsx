@@ -103,7 +103,7 @@ export function MobileStudioShell({
             onOpenCurrentTour={() => openIntro(draft.draftId)}
             editable={overviewEditMode}
             mobileSelectionFlow={overviewEditMode}
-            headerEditToggle={
+            floatingEditToggle={
               <HeaderEditToggle
                 active={overviewEditMode}
                 onClick={() => setOverviewEditMode((value) => !value)}
