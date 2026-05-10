@@ -175,6 +175,8 @@ export function MobileStudioShell({
               markerEditMode={editMode}
               topRightPill={mapEditPill}
               showAddStationFab={editMode && !routeEditMode}
+              showDeleteStationFab={editMode && !routeEditMode}
+              onDeleteStation={actions.deleteStation}
               onSheetStateChange={(state) =>
                 setStationSheetExpanded(state === 'expanded')
               }
