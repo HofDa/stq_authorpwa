@@ -98,15 +98,12 @@ export function MapLibreAuthorMap({
   // Capture the latest `onSelectStation` so the marker effect doesn't have to
   // re-run (and re-create every marker) when the parent supplies a fresh
   // arrow-function reference on each render.
-  const onSelectStationRef = useRef(onSelectStation);
-  onSelectStationRef.current = onSelectStation;
-  const onDeleteStationRef = useRef(onDeleteStation);
-  onDeleteStationRef.current = onDeleteStation;
+  const onSelectStationRef = useLatest(onSelectStation);
+  const onDeleteStationRef = useLatest(onDeleteStation);
   const onStationCoordinateChangeRef = useLatest(onStationCoordinateChange);
   const onRoutePointCoordinateChangeRef = useLatest(onRoutePointCoordinateChange);
   const onMapClickRef = useLatest(onMapClick);
-  const onRouteClickRef = useRef(onRouteClick);
-  onRouteClickRef.current = onRouteClick;
+  const onRouteClickRef = useLatest(onRouteClick);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -544,7 +541,7 @@ export function MapLibreAuthorMap({
 
     routeLayersRef.current = nextRouteLayers;
     routeEndpointMarkersRef.current = nextEndpointMarkers;
-  }, [routes, styleReady]);
+  }, [routes, styleReady, onRouteClickRef]);
 
   useEffect(() => {
     const map = mapRef.current;

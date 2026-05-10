@@ -68,17 +68,6 @@ Easy to reintroduce when adding new floating chrome to the mobile shell.
 Mitigation:
 New floating wrappers should set `pointer-events: none` and re-enable `pointer-events: auto` on their interactive children. The chip wrapper also pins `width/height: auto !important` to neutralise the legacy rule. Long-term: scope the `> div` rule to a specific descendant rather than every direct child.
 
-### Pre-existing `react-hooks/refs` lint errors in `MapPreviewWorkspace` and `MapLibreAuthorMap`
-
-Symptoms:
-`npm run lint` reports four `Cannot update ref during render` errors against `deleteModeRef.current = deleteMode`, `onRouteClickRef.current = onRouteClick` and similar patterns. Build still passes.
-
-Risk:
-Code is functional today but the rule exists to flag potential render-cycle bugs. A future React version could make these patterns harder to predict.
-
-Mitigation:
-Move the assignments into `useEffect` blocks. Out of scope for any feature PR; needs its own focused cleanup.
-
 ## Resolved issues
 
 ### 2026-05-10 — Map back button and station tap blocked by edit chip wrapper
@@ -104,3 +93,9 @@ Fix: workspace now owns `internalStationEditMode` when `layout === 'mobile'`, su
 Files: `StudioStationNav.tsx`, `StudioHeader.tsx`, `DesktopStudioShell.tsx`, `RouteWorkspace.tsx`.
 Cause: three TS6133 unused-binding errors (`onAddStation` prop chain through three layers, `selectedRouteSegment` useMemo, `snapToStation` helper).
 Fix: removed the dead code consistently across the layers. Commit `fbca996`.
+
+### 2026-05-10 — Four `react-hooks/refs` lint errors in `MapLibreAuthorMap` and `MapPreviewWorkspace`
+
+Files: `src/components/map/MapLibreAuthorMap.tsx`, `src/components/studio/workspaces/MapPreviewWorkspace.tsx`.
+Cause: callback-mirroring refs were assigned inline during render (`onSelectStationRef.current = onSelectStation`, `deleteModeRef.current = deleteMode`, etc.), violating React's "no ref writes during render" rule.
+Fix: switched to the project's existing `useLatest` hook (`src/hooks/useLatest.ts`) which performs the assignment inside `useEffect`. Three sites in `MapLibreAuthorMap` and one in `MapPreviewWorkspace`. Added the now-stable refs to two `useEffect` dep arrays to satisfy `exhaustive-deps` honestly. Lint went from 4 errors + 1 warning to 0 errors + 1 unrelated warning.

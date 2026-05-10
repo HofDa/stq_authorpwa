@@ -6,6 +6,7 @@ import {
 } from '@/schema';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { useBlobUrl } from '@/hooks/useBlobUrl';
+import { useLatest } from '@/hooks/useLatest';
 import { RiddleScreen } from '@/renderer/RiddleScreen';
 import { resolveRendererAssetPath } from '@/renderer/assetPaths';
 import {
@@ -111,8 +112,7 @@ export function MapPreviewWorkspace({
     useState<AuthorMapCoordinate | null>(null);
   const [deleteMode, setDeleteMode] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const deleteModeRef = useRef(deleteMode);
-  deleteModeRef.current = deleteMode;
+  const deleteModeRef = useLatest(deleteMode);
 
   useEffect(() => {
     if (!showDeleteStationFab) {
@@ -142,7 +142,7 @@ export function MapPreviewWorkspace({
       if (!isMountWithStaleSelection) setSheetState('expanded');
     }
     hasReceivedSelectionUpdate.current = true;
-  }, [selectedId, layout]);
+  }, [selectedId, layout, deleteModeRef]);
 
   useEffect(() => {
     if (!effectiveEditMode && !markerEditMode) {
