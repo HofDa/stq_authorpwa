@@ -9,7 +9,7 @@
   overflow: hidden;
   border-radius: 12px 12px 0 0;
   background: var(--stq-bg);
-  box-shadow: 0 -16px 34px var(--stq-shadow-brown-22);
+  box-shadow: 0 -16px 34px var(--stq-alpha-brown);
 }
 
 .stq-phone-station-sheet-toolbar {
@@ -20,7 +20,7 @@
   justify-items: center;
   gap: 5px;
   min-height: 37px;
-  background: rgba(248, 239, 232, 0.96);
+  background: var(--stq-alpha-warm-tint);
   padding: 7px 14px 5px;
 }
 
@@ -29,7 +29,7 @@
   height: 4px;
   border: 0;
   border-radius: 999px;
-  background: rgba(26, 26, 26, 0.2);
+  background: var(--stq-alpha-brown);
   padding: 0;
   cursor: grab;
   touch-action: none;
@@ -40,7 +40,7 @@
 }
 
 .stq-phone-station-sheet-hint {
-  color: rgba(70, 40, 30, 0.42);
+  color: var(--stq-color-text-muted);
   font-size: 8px;
   font-weight: 700;
   line-height: 1;
@@ -85,7 +85,7 @@
 .stq-phone-station-sheet .stq-riddle-map-card-image {
   border: 1px solid transparent;
   border-radius: 8px;
-  background: var(--stq-white)af9;
+  background: var(--stq-color-surface-cream);
 }
 
 .stq-phone-station-sheet .stq-riddle-map-card-image img,

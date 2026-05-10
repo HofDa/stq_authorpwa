@@ -1,75 +1,82 @@
 :root {
+  /* Type */
   --stq-font-ui: "Open Sans", system-ui, sans-serif;
   --stq-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  /* Color system: single source of truth */
+  /* ───────── Brand & state colors (one per semantic role) ───────── */
   --stq-color-primary: #a0463d;
-  --stq-color-primary-700: #8a3a32;
-  --stq-color-primary-hover: #7c332d;
-  --stq-color-primary-soft: rgba(160, 70, 61, 0.12);
+  --stq-color-danger: #c84a3a;
+  --stq-color-danger-text: #8a1f17;
+  --stq-color-success: #4a8a4a;
+  --stq-color-success-border: #cfe3cc;
+  --stq-color-warning: #c48b3c;
+  --stq-color-warning-text: #7c4b00;
+  --stq-color-info-text: #1f5273;
+  --stq-color-route: #2196f3;
+  --stq-color-amber: oklch(0.78 0.13 70);
+  --stq-color-accent: #2f7f9f;
 
+  /* ───────── Surfaces & backgrounds ───────── */
   --stq-color-bg: #f7efe7;
   --stq-color-bg-alt: #f4ebe3;
+  --stq-color-bg-success: #eef8ef;
+  --stq-color-bg-danger: #fff0ee;
 
   --stq-color-surface: #ffffff;
-  --stq-color-surface-soft: #fbf7f1;
   --stq-color-surface-cream: #fff8f2;
 
+  /* ───────── Text & ink ───────── */
   --stq-color-text: #1a1a1a;
   --stq-color-text-soft: #5a5350;
   --stq-color-text-muted: #8a807a;
   --stq-color-text-inverted: #ffffff;
-  --stq-color-ink-warm: #251f1b;
 
+  /* ───────── Borders ───────── */
   --stq-color-border: #e5d8cb;
-  --stq-color-border-soft: rgba(231, 221, 211, 0.72);
 
-  --stq-color-danger: #c84a3a;
-  --stq-color-danger-bg: #fff0ee;
-  --stq-color-danger-text: #8a1f17;
-  --stq-color-success: #4a8a4a;
-  --stq-color-route: #2196f3;
-  --stq-color-amber: oklch(0.78 0.13 70);
-
-  /* Desktop studio sidebar palette */
+  /* ───────── Sidebar (dark studio chrome) ───────── */
   --stq-color-sidebar-bg: #1a1614;
   --stq-color-sidebar-border: #2c2520;
   --stq-color-sidebar-surface: #2a221d;
-  --stq-color-sidebar-surface-hover: #3a302a;
   --stq-color-sidebar-text: #e8d8c8;
-  --stq-color-sidebar-text-strong: #f4e6d7;
-  --stq-color-sidebar-text-muted: #a89888;
-  --stq-color-sidebar-heading: #786356;
-  --stq-color-sidebar-nav: #c4b0a0;
-  --stq-color-sidebar-dot-empty: #4a3f38;
   --stq-color-sidebar-sticky: linear-gradient(180deg, rgba(26, 22, 20, 0.84), #1a1614);
 
-  /* Elevation and glass */
+  /* ───────── Alpha overlays (one per family — 24% canonical) ───────── */
+  --stq-alpha-primary: rgba(160, 70, 61, 0.24);
+  --stq-alpha-brown: rgba(70, 40, 30, 0.24);
+  --stq-alpha-black: rgba(0, 0, 0, 0.24);
+  --stq-alpha-white: rgba(255, 255, 255, 0.95);
+  --stq-alpha-warm-tint: rgba(231, 221, 211, 0.8);
+  --stq-alpha-canvas: rgba(216, 196, 176, 0.4);
+  --stq-alpha-danger: rgba(186, 26, 26, 0.24);
+  --stq-alpha-success: rgba(65, 104, 52, 0.24);
+  --stq-alpha-warning: rgba(196, 139, 60, 0.4);
+  --stq-alpha-route: rgba(33, 150, 243, 0.24);
+  --stq-alpha-amber: rgba(204, 126, 41, 0.8);
+
+  /* Validation tints (semantic, scoped to validation UI) */
+  --stq-alpha-validation-amber: rgba(124, 75, 0, 0.12);
+  --stq-alpha-validation-blue: rgba(57, 105, 138, 0.14);
+  --stq-alpha-validation-orange: rgba(196, 90, 38, 0.16);
+  --stq-alpha-validation-success: rgba(65, 104, 52, 0.34);
+
+  /* Misc raw helpers */
+  --stq-alpha-ink-rgb: rgb(31, 25, 27);
+  --stq-alpha-success-cream-95: rgba(245, 238, 203, 0.95);
+
+  /* ───────── Elevation ───────── */
   --stq-shadow-card: 0 4px 18px rgba(70, 40, 30, 0.07);
-  --stq-shadow-soft: 0 4px 12px rgba(70, 40, 30, 0.08);
-  --stq-shadow-elevated: 0 10px 30px rgba(58, 36, 24, 0.12);
-  --stq-shadow-brown-soft: rgba(70, 40, 30, 0.12);
-  --stq-shadow-brown-medium: rgba(70, 40, 30, 0.16);
-  --stq-shadow-brown-strong: rgba(70, 40, 30, 0.18);
-  --stq-shadow-brown-elevated: rgba(70, 40, 30, 0.2);
-  --stq-shadow-brown-heavy: rgba(70, 40, 30, 0.22);
+  --stq-shadow-soft: 0 4px 12px var(--stq-alpha-brown);
 
-  --stq-glass-white-84: rgba(255, 255, 255, 0.84);
-  --stq-glass-white-94: rgba(255, 255, 255, 0.94);
-  --stq-glass-white-96: rgba(255, 255, 255, 0.96);
-
-  --stq-radius-pill: 999px;
+  /* ───────── Geometry ───────── */
   --stq-right-edit-drawer-width: min(420px, 92vw);
 
-  /* Temporary legacy aliases. Keep old names functional while CSS is migrated. */
+  /* ───────── Legacy short aliases (heavy-use TSX/TS + CSS) ───────── */
   --stq-primary: var(--stq-color-primary);
-  --stq-primary-700: var(--stq-color-primary-700);
-  --stq-primary-hover: var(--stq-color-primary-hover);
-  --stq-primary-soft: var(--stq-color-primary-soft);
   --stq-bg: var(--stq-color-bg);
   --stq-bg-alt: var(--stq-color-bg-alt);
   --stq-border: var(--stq-color-border);
-  --stq-border-soft: var(--stq-color-border-soft);
+  --stq-border-soft: var(--stq-alpha-warm-tint);
   --stq-text: var(--stq-color-text);
   --stq-text-mute: var(--stq-color-text-muted);
   --stq-error: var(--stq-color-danger);
@@ -77,17 +84,5 @@
   --stq-route: var(--stq-color-route);
   --stq-amber: var(--stq-color-amber);
   --stq-white: var(--stq-color-text-inverted);
-  --stq-surface: var(--stq-color-surface);
-  --stq-surface-warm: var(--stq-color-surface-soft);
-  --stq-surface-cream: var(--stq-color-surface-cream);
-  --stq-ink: var(--stq-color-text);
-  --stq-ink-soft: var(--stq-color-text-soft);
-  --stq-ink-warm: var(--stq-color-ink-warm);
-  --stq-danger-bg: var(--stq-color-danger-bg);
   --stq-danger-ink: var(--stq-color-danger-text);
-  --stq-shadow-brown-12: var(--stq-shadow-brown-soft);
-  --stq-shadow-brown-16: var(--stq-shadow-brown-medium);
-  --stq-shadow-brown-18: var(--stq-shadow-brown-strong);
-  --stq-shadow-brown-20: var(--stq-shadow-brown-elevated);
-  --stq-shadow-brown-22: var(--stq-shadow-brown-heavy);
 }

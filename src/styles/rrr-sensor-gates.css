@@ -7,12 +7,12 @@
   border-radius: 8px;
   background: var(--stq-white);
   padding: 12px;
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
 }
 
 .stq-sensor-gate--error {
-  border-color: rgba(186, 26, 26, 0.26);
-  background: var(--stq-white)8f7;
+  border-color: var(--stq-alpha-danger);
+  background: var(--stq-color-surface-cream);
 }
 
 .stq-sensor-gate__header {
@@ -36,7 +36,7 @@
 
 .stq-sensor-gate__header span,
 .stq-sensor-gate__status {
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 13px;
   line-height: 1.35;
 }
@@ -53,7 +53,7 @@
 .stq-sensor-gate__requirements li {
   border: 1px solid var(--stq-border);
   border-radius: 9999px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   color: var(--stq-text);
   font-size: 12px;
   font-weight: 700;
@@ -64,13 +64,13 @@
 .stq-sensor-gate__status {
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 8px 9px;
 }
 
 .stq-sensor-gate--error .stq-sensor-gate__status {
-  border-color: rgba(186, 26, 26, 0.2);
-  background: var(--stq-white)0ee;
+  border-color: var(--stq-alpha-danger);
+  background: var(--stq-color-bg-danger);
   color: var(--stq-danger-ink);
 }
 

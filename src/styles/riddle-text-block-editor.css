@@ -21,9 +21,9 @@
 }
 
 .stq-riddle-text-block-row {
-  border: 1px solid rgba(231, 221, 211, 0.78);
+  border: 1px solid var(--stq-alpha-warm-tint);
   border-radius: 12px;
-  background: rgba(255, 250, 249, 0.68);
+  background: var(--stq-alpha-white);
   padding: 10px;
 }
 
@@ -36,7 +36,7 @@
 
 .stq-riddle-text-block-controls button,
 .stq-riddle-text-block-add button {
-  border: 1px solid rgba(160, 70, 61, 0.24);
+  border: 1px solid var(--stq-alpha-primary);
   border-radius: 9999px;
   background: white;
   color: var(--stq-primary);

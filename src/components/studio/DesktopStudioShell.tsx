@@ -110,7 +110,7 @@ export function DesktopStudioShell({
         onDoubleClick={() => setSidebarWidth(280)}
         style={{
           cursor: 'col-resize',
-          background: 'var(--stq-color-border-soft)',
+          background: 'var(--stq-alpha-warm-tint)',
           touchAction: 'none',
           userSelect: 'none',
         }}

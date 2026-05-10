@@ -27,7 +27,7 @@
 .stq-rrr-condition-status__node span,
 .stq-rrr-condition-status__node small,
 .stq-rrr-condition-status__active {
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -42,7 +42,7 @@
   margin-left: calc(var(--rrr-tree-depth, 0) * 14px);
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 8px 9px;
 }
 
@@ -55,7 +55,7 @@
 
 .stq-rrr-condition-status__active {
   margin-left: calc(var(--rrr-tree-depth, 0) * 14px);
-  color: #7c4b00;
+  color: var(--stq-color-warning-text);
   font-weight: 700;
 }
 
@@ -69,27 +69,27 @@
 }
 
 .stq-rrr-status--success {
-  background: #e8f4e8;
-  color: #416834;
+  background: var(--stq-color-bg-success);
+  color: var(--stq-color-success);
 }
 
 .stq-rrr-status--running {
-  background: var(--stq-white)7e8;
-  color: #7c4b00;
+  background: var(--stq-color-surface-cream);
+  color: var(--stq-color-warning-text);
 }
 
 .stq-rrr-status--failed {
-  background: var(--stq-white)0ee;
-  color: #ba1a1a;
+  background: var(--stq-color-bg-danger);
+  color: var(--stq-color-danger);
 }
 
 .stq-rrr-warnings {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid rgba(196, 139, 60, 0.42);
+  border: 1px solid var(--stq-alpha-warning);
   border-radius: 8px;
-  background: var(--stq-white)7e8;
+  background: var(--stq-color-surface-cream);
   padding: 10px;
 }
 
@@ -101,14 +101,14 @@
 }
 
 .stq-rrr-warnings__header strong {
-  color: #4b3000;
+  color: var(--stq-color-warning-text);
   font-size: 14px;
 }
 
 .stq-rrr-warnings__header span {
   border-radius: 9999px;
-  background: rgba(124, 75, 0, 0.12);
-  color: #7c4b00;
+  background: var(--stq-alpha-validation-amber);
+  color: var(--stq-color-warning-text);
   font-size: 11px;
   font-weight: 800;
   padding: 3px 7px;
@@ -121,7 +121,7 @@
   margin: 0;
   padding-left: 0;
   list-style: none;
-  color: #7c4b00;
+  color: var(--stq-color-warning-text);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -143,19 +143,19 @@
 }
 
 .stq-rrr-warnings__badge--info {
-  background: rgba(57, 105, 138, 0.14);
-  color: #1f5273;
+  background: var(--stq-alpha-validation-blue);
+  color: var(--stq-color-info-text);
 }
 
 .stq-rrr-warnings__badge--warning {
-  background: rgba(196, 90, 38, 0.16);
-  color: #8a3d12;
+  background: var(--stq-alpha-validation-orange);
+  color: var(--stq-color-warning-text);
 }
 
 .stq-rrr-warnings__message code {
   font-family: var(--stq-font-mono, ui-monospace, monospace);
   font-size: 11px;
-  background: rgba(124, 75, 0, 0.1);
+  background: var(--stq-alpha-validation-amber);
   padding: 1px 4px;
   border-radius: 4px;
   margin-right: 6px;
@@ -172,13 +172,13 @@
 }
 
 .stq-rrr-validation.is-valid {
-  border-color: rgba(65, 104, 52, 0.34);
-  background: #f5fbf2;
+  border-color: var(--stq-alpha-validation-success);
+  background: var(--stq-color-bg-success);
 }
 
 .stq-rrr-validation.is-invalid {
-  border-color: rgba(186, 26, 26, 0.32);
-  background: var(--stq-white)7f5;
+  border-color: var(--stq-alpha-danger);
+  background: var(--stq-color-surface-cream);
 }
 
 .stq-rrr-validation__header {
@@ -199,7 +199,7 @@
   gap: 4px;
   margin: 0;
   padding-left: 18px;
-  color: #ba1a1a;
+  color: var(--stq-color-danger);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -229,7 +229,7 @@
 
 .stq-rrr-json-editor__header p {
   margin: 3px 0 0;
-  color: #6b625e;
+  color: var(--stq-color-text-soft);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -240,7 +240,7 @@
   resize: vertical;
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: #1f1a17;
+  background: var(--stq-color-text);
   color: var(--stq-bg);
   padding: 10px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -255,7 +255,7 @@
 }
 
 .stq-rrr-json-editor__status {
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 12px;
 }
 
@@ -265,7 +265,7 @@
   gap: 4px;
   margin: 0;
   padding-left: 18px;
-  color: #ba1a1a;
+  color: var(--stq-color-danger);
   font-size: 12px;
   line-height: 1.35;
 }

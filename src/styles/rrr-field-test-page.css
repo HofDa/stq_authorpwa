@@ -34,7 +34,7 @@
 .stq-rrr-field-test__header span {
   display: block;
   margin-top: 4px;
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 13px;
   font-weight: 700;
 }
@@ -50,10 +50,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border: 1px solid rgba(138, 61, 18, 0.24);
+  border: 1px solid var(--stq-alpha-warning);
   border-radius: 8px;
-  background: var(--stq-white)6ec;
-  color: #8a3d12;
+  background: var(--stq-color-surface-cream);
+  color: var(--stq-color-warning-text);
   padding: 10px;
 }
 
@@ -95,7 +95,7 @@
 }
 
 .stq-rrr-field-test__panel > span {
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 13px;
   line-height: 1.35;
 }
@@ -103,8 +103,8 @@
 .stq-rrr-field-test__runtime {
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
-  color: var(--stq-ink-soft);
+  background: var(--stq-color-surface-cream);
+  color: var(--stq-color-text-soft);
   font-size: 13px;
   font-weight: 800;
   line-height: 1.35;
@@ -112,14 +112,14 @@
 }
 
 .stq-rrr-field-test__runtime--success {
-  border-color: rgba(48, 116, 69, 0.22);
-  background: #eef8ef;
-  color: #27653a;
+  border-color: var(--stq-alpha-success);
+  background: var(--stq-color-bg-success);
+  color: var(--stq-color-success);
 }
 
 .stq-rrr-field-test__runtime--failed {
-  border-color: rgba(186, 26, 26, 0.22);
-  background: var(--stq-white)0ee;
+  border-color: var(--stq-alpha-danger);
+  background: var(--stq-color-bg-danger);
   color: var(--stq-danger-ink);
 }
 
@@ -132,9 +132,9 @@
 
 .stq-rrr-field-test__facts div {
   min-width: 0;
-  border: 1px solid #eee4da;
+  border: 1px solid var(--stq-color-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 8px 9px;
 }
 
@@ -168,15 +168,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid #eee4da;
+  border: 1px solid var(--stq-color-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 9px;
 }
 
 .stq-rrr-field-test__steps li.is-active {
-  border-color: rgba(160, 70, 61, 0.4);
-  background: var(--stq-white)8f7;
+  border-color: var(--stq-alpha-primary);
+  background: var(--stq-color-surface-cream);
 }
 
 .stq-rrr-field-test__steps li > span {

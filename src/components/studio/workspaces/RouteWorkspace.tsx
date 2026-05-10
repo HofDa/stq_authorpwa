@@ -18,6 +18,7 @@ interface Props extends BaseWorkspaceProps {
   onSelectStation: (id: string) => void;
   editable?: boolean;
   topRightPill?: ReactNode;
+  layout?: 'desktop' | 'mobile';
 }
 
 const FIELD_ROUTE_COLOR = '#2196f3';
@@ -33,6 +34,7 @@ export function RouteWorkspace({
   onChange,
   editable = true,
   topRightPill,
+  layout = 'mobile',
 }: Props) {
   const { t } = useEditorLanguage();
   const [focusEnabled, setFocusEnabled] = useState(false);
@@ -598,7 +600,21 @@ export function RouteWorkspace({
           : undefined
       }
       topRightPill={
-        topRightPill || editable ? (
+        layout === 'desktop'
+          ? undefined
+          : topRightPill || editable ? (
+              <>
+                {topRightPill}
+                {editable && (
+                  <div className="stq-mobile-map-edit-actions">
+                    {routeEditorTools}
+                  </div>
+                )}
+              </>
+            ) : undefined
+      }
+      desktopActions={
+        layout === 'desktop' && (topRightPill || editable) ? (
           <>
             {topRightPill}
             {editable && (

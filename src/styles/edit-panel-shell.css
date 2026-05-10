@@ -2,7 +2,7 @@
 .stq-edit-panel-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--stq-alpha-black);
   z-index: 90;
 }
 
@@ -63,13 +63,13 @@
   border-radius: 8px;
   border: 0;
   background: transparent;
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
 }
 
 .stq-edit-panel-close:hover {
-  background: #f5f0eb;
+  background: var(--stq-color-bg-alt);
   color: var(--stq-text);
 }
 
@@ -99,7 +99,7 @@
 .stq-edit-panel-label {
   font-size: 12px;
   font-weight: 700;
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -127,7 +127,7 @@
 .stq-edit-panel-textarea:focus {
   outline: none;
   border-color: var(--stq-primary);
-  box-shadow: 0 0 0 3px rgba(160, 70, 61, 0.18);
+  box-shadow: 0 0 0 3px var(--stq-alpha-primary);
 }
 
 .stq-edit-panel-input::placeholder,
@@ -149,7 +149,7 @@
   padding: 4px;
   border: 1.5px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
 }
 
 .stq-riddle-type-switch__option {
@@ -157,7 +157,7 @@
   border-radius: 6px;
   padding: 9px 10px;
   background: transparent;
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -175,7 +175,7 @@
   gap: 8px;
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 10px;
 }
 
@@ -208,10 +208,10 @@
   gap: 4px;
   margin-top: 10px;
   padding: 12px;
-  border: 1.5px dashed #d8c8bc;
+  border: 1.5px dashed var(--stq-color-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
-  color: var(--stq-ink-soft);
+  background: var(--stq-color-surface-cream);
+  color: var(--stq-color-text-soft);
   font-size: 13px;
   line-height: 1.35;
 }

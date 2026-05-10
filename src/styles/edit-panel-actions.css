@@ -17,8 +17,8 @@
 }
 
 .stq-edit-panel-button--primary:hover {
-  background: var(--stq-primary-700);
-  border-color: var(--stq-primary-700);
+  background: var(--stq-primary);
+  border-color: var(--stq-primary);
 }
 
 .stq-edit-panel-button--ghost {
@@ -28,6 +28,6 @@
 }
 
 .stq-edit-panel-button--ghost:hover {
-  background: #f5f0eb;
+  background: var(--stq-color-bg-alt);
 }
 

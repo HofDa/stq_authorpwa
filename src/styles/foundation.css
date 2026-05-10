@@ -11,7 +11,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background:
-      radial-gradient(circle at top left, rgba(160, 70, 61, 0.08), transparent 24%),
+      radial-gradient(circle at top left, var(--stq-alpha-primary), transparent 24%),
       radial-gradient(circle at top right, var(--stq-border-soft), transparent 22%),
       linear-gradient(180deg, var(--stq-bg) 0%, var(--stq-bg-alt) 100%);
   }
@@ -40,7 +40,7 @@
   .btn-primary {
     @apply inline-flex min-h-[46px] items-center justify-center rounded-[16px]
            border border-primary bg-primary px-4 py-2 text-labelLg text-white
-           shadow-[0_8px_18px_rgba(160,70,61,0.22)]
+           shadow-[0_8px_18px_var(--stq-alpha-primary)]
            transition hover:brightness-105 active:translate-y-px
            disabled:opacity-60;
   }
@@ -53,7 +53,7 @@
 
   .card {
     @apply rounded-[24px] border border-border bg-white p-4
-           shadow-[0_10px_24px_rgba(70,40,30,0.08)];
+           shadow-[0_10px_24px_var(--stq-alpha-brown)];
   }
 }
 
@@ -68,43 +68,43 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(248, 239, 232, 0.25), rgba(248, 239, 232, 0)),
-    radial-gradient(circle at 15% 10%, rgba(160, 70, 61, 0.08), transparent 30%);
+    linear-gradient(180deg, var(--stq-alpha-warm-tint), transparent),
+    radial-gradient(circle at 15% 10%, var(--stq-alpha-primary), transparent 30%);
 }
 
 .stq-app-bar {
-  background: rgba(248, 239, 232, 0.92);
+  background: var(--stq-alpha-warm-tint);
   backdrop-filter: blur(14px);
-  box-shadow: 0 10px 24px rgba(70, 40, 30, 0.08);
+  box-shadow: 0 10px 24px var(--stq-alpha-brown);
 }
 
 .stq-home-hero {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(160, 70, 61, 0.08)),
-    linear-gradient(180deg, rgba(248, 239, 232, 1), rgba(248, 239, 232, 1));
+    linear-gradient(135deg, var(--stq-alpha-white), var(--stq-alpha-primary)),
+    linear-gradient(180deg, var(--stq-color-bg), var(--stq-color-bg));
 }
 
 .stq-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border: 1px solid rgb(231 221 211);
+  border: 1px solid var(--stq-color-border);
   border-radius: 9999px;
-  background: var(--stq-glass-white-84);
+  background: var(--stq-alpha-white);
   padding: 0.6rem 0.85rem;
   font: 600 14px "Open Sans", system-ui, sans-serif;
 }
 
 .stq-draft-cover {
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), transparent 30%),
-    linear-gradient(135deg, rgba(160, 70, 61, 0.95), rgba(188, 133, 131, 0.92));
+    radial-gradient(circle at top left, var(--stq-alpha-white), transparent 30%),
+    linear-gradient(135deg, var(--stq-alpha-primary), var(--stq-alpha-primary));
 }
 
 .stq-map-shell .maplibregl-map {
   background:
-    radial-gradient(circle at top left, var(--stq-primary-soft), transparent 32%),
-    linear-gradient(180deg, var(--stq-white)dfc 0%, var(--stq-bg-alt) 100%);
+    radial-gradient(circle at top left, var(--stq-alpha-primary), transparent 32%),
+    linear-gradient(180deg, var(--stq-color-surface-cream) 0%, var(--stq-bg-alt) 100%);
 }
 
 /* Marker geometry is locked to fixed pixel dimensions so MapLibre always
@@ -127,7 +127,7 @@
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 8px 14px var(--stq-shadow-brown-20));
+  filter: drop-shadow(0 8px 14px var(--stq-alpha-brown));
 }
 
 .stq-station-marker--draggable {
@@ -149,13 +149,13 @@
   border: 2px solid var(--stq-bg);
   border-radius: 999px;
   background: var(--stq-primary);
-  color: white;
+  color: var(--stq-white);
   padding: 0;
   font: inherit;
   font-size: 12px;
   font-weight: 900;
   line-height: 1;
-  box-shadow: 0 2px 6px rgba(42, 25, 17, 0.22);
+  box-shadow: 0 2px 6px var(--stq-alpha-brown);
   cursor: pointer;
   pointer-events: auto;
   touch-action: manipulation;
@@ -163,6 +163,6 @@
 }
 
 .stq-station-marker--selected svg {
-  filter: drop-shadow(0 12px 18px rgba(33, 150, 243, 0.18));
+  filter: drop-shadow(0 12px 18px var(--stq-alpha-route));
 }
 

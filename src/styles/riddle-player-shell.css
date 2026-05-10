@@ -1,13 +1,13 @@
 /* ───── Native riddle/player screen with author overlay ───── */
 
 .stq-riddle-screen {
-  --riddle-ink: rgb(31, 25, 27);
-  --riddle-muted: rgba(26, 26, 26, 0.68);
+  --riddle-ink: var(--stq-alpha-ink-rgb);
+  --riddle-muted: var(--stq-alpha-brown);
   --riddle-primary: var(--stq-primary);
   position: relative;
   min-height: 100%;
   background:
-    radial-gradient(circle at 50% 0%, rgba(160, 70, 61, 0.06), transparent 34%),
+    radial-gradient(circle at 50% 0%, var(--stq-alpha-primary), transparent 34%),
     var(--stq-bg);
   color: var(--riddle-ink);
   overflow: hidden;
@@ -32,7 +32,7 @@
   min-height: 360px;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(160, 70, 61, 0.16), rgba(70, 40, 30, 0.10)),
+    linear-gradient(135deg, var(--stq-alpha-primary), var(--stq-alpha-brown)),
     var(--stq-bg-alt);
   animation: stq-riddle-fade 240ms ease-out both;
 }
@@ -51,8 +51,8 @@
 
 .stq-riddle-hero-placeholder {
   background:
-    linear-gradient(30deg, var(--stq-shadow-brown-12) 12%, transparent 12% 50%, rgba(70, 40, 30, 0.08) 50% 62%, transparent 62%),
-    linear-gradient(135deg, #eadfda, #d6c9c5);
+    linear-gradient(30deg, var(--stq-alpha-brown) 12%, transparent 12% 50%, var(--stq-alpha-brown) 50% 62%, transparent 62%),
+    linear-gradient(135deg, var(--stq-color-bg-alt), var(--stq-color-bg-alt));
   background-size: 120px 120px, auto;
 }
 
@@ -60,7 +60,7 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.18) 44%, rgba(0, 0, 0, 0.42));
+    linear-gradient(180deg, var(--stq-alpha-black), var(--stq-alpha-black) 44%, var(--stq-alpha-black));
 }
 
 .stq-riddle-center-icon {
@@ -72,8 +72,8 @@
   width: 92px;
   height: 92px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 18px 36px var(--stq-shadow-brown-22);
+  background: var(--stq-alpha-white);
+  box-shadow: 0 18px 36px var(--stq-alpha-brown);
   transform: translate(-50%, -50%);
 }
 
@@ -101,8 +101,8 @@
   margin: -54dvh 16px calc(54dvh - 106px);
   padding: 9px 14px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 14px 30px var(--stq-shadow-brown-22);
+  background: var(--stq-alpha-white);
+  box-shadow: 0 14px 30px var(--stq-alpha-brown);
   backdrop-filter: blur(14px);
   animation: stq-riddle-fade 260ms ease-out both;
 }
@@ -152,8 +152,8 @@
   margin-top: -46px;
   padding: 28px 20px 108px;
   border-radius: 36px 36px 0 0;
-  background: rgba(255, 250, 249, 0.98);
-  box-shadow: 0 -18px 36px var(--stq-shadow-brown-16);
+  background: var(--stq-alpha-white);
+  box-shadow: 0 -18px 36px var(--stq-alpha-brown);
   animation: stq-riddle-sheet-in 260ms ease-out both;
 }
 
@@ -198,11 +198,11 @@
 .stq-riddle-map-card-image-placeholder {
   display: grid;
   place-items: center;
-  border: 1px dashed rgba(160, 70, 61, 0.34);
+  border: 1px dashed var(--stq-alpha-primary);
   background:
-    linear-gradient(135deg, rgba(160, 70, 61, 0.06), rgba(255, 255, 255, 0.72)),
+    linear-gradient(135deg, var(--stq-alpha-primary), var(--stq-alpha-white)),
     var(--stq-bg);
-  color: rgba(26, 26, 26, 0.55);
+  color: var(--stq-color-text-muted);
   font-size: 14px;
   font-weight: 800;
 }
@@ -216,8 +216,8 @@
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 22px var(--stq-shadow-brown-16);
+  background: var(--stq-alpha-white);
+  box-shadow: 0 10px 22px var(--stq-alpha-brown);
   backdrop-filter: blur(10px);
 }
 
@@ -241,10 +241,10 @@
   display: block;
   width: 25px;
   height: 25px;
-  border: 2px solid var(--stq-glass-white-96);
+  border: 2px solid var(--stq-alpha-white);
   border-radius: 9999px;
   background: var(--icon-action-bg, var(--riddle-primary));
-  box-shadow: 0 6px 14px var(--stq-shadow-brown-18);
+  box-shadow: 0 6px 14px var(--stq-alpha-brown);
 }
 
 .stq-riddle-map-icon-action svg {
@@ -252,7 +252,7 @@
 }
 
 .stq-riddle-map-icon-action--icon {
-  --icon-action-bg: #2f7f9f;
+  --icon-action-bg: var(--stq-color-accent);
   right: -13px;
   bottom: -17px;
 }
@@ -314,21 +314,21 @@
   height: 42px;
   border: 1px solid var(--stq-border-soft);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--stq-alpha-white);
   color: var(--riddle-primary);
   padding: 0;
-  box-shadow: 0 10px 22px var(--stq-shadow-brown-16);
+  box-shadow: 0 10px 22px var(--stq-alpha-brown);
   backdrop-filter: blur(10px);
 }
 
 .stq-riddle-map-card-action--image {
-  border-color: rgba(65, 104, 52, 0.45);
+  border-color: var(--stq-alpha-success);
   background: var(--stq-success);
   color: white;
 }
 
 .stq-riddle-map-card-action--danger {
-  border-color: rgba(186, 26, 26, 0.45);
+  border-color: var(--stq-alpha-danger);
   background: var(--stq-error);
   color: white;
 }

@@ -42,6 +42,7 @@ export function StudioWorkspaceRenderer(props: StudioWorkspaceRendererProps) {
         showAddStationFab={props.stationsEditMode ?? false}
         showDeleteStationFab={props.stationsEditMode ?? false}
         onDeleteStation={props.onDeleteStation}
+        layout="desktop"
       />
     );
   }
@@ -94,6 +95,7 @@ function renderWorkspaceBody(props: StudioWorkspaceRendererProps) {
           onSelectStation={props.onSelectStation}
           onChange={props.onChange}
           editable={props.routeEditMode}
+          layout="desktop"
         />
       );
     case 'stations':

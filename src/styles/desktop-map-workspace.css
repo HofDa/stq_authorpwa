@@ -1,15 +1,69 @@
 /* Desktop map workspace controls */
 
+/* Action stack rendered to the right of the phone mockup in desktop layouts */
+.stq-desktop-map-actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 4px;
+}
+
+.stq-desktop-map-actions .stq-mobile-map-edit-actions,
+.stq-desktop-map-actions .stq-mobile-route-editor-tools {
+  display: grid;
+  gap: 8px;
+}
+
+.stq-desktop-map-actions button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--stq-primary);
+  color: var(--stq-white);
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 10px var(--stq-alpha-brown);
+  transition:
+    filter 120ms ease,
+    box-shadow 120ms ease,
+    transform 80ms ease;
+}
+
+.stq-desktop-map-actions button:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.stq-desktop-map-actions button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.stq-desktop-map-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.stq-desktop-map-actions button.is-active {
+  box-shadow:
+    0 2px 6px var(--stq-alpha-brown),
+    0 0 0 4px var(--stq-alpha-primary);
+  filter: brightness(1.04);
+}
+
 .stq-desktop-field-map-shell {
   flex: 1;
   min-height: 0;
   min-width: 0;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(160, 70, 61, 0.18);
+  border: 1px solid var(--stq-alpha-primary);
   border-radius: 22px;
   box-shadow: var(--stq-shadow-card);
-  background: #e8ece8;
+  background: var(--stq-color-bg-alt);
 }
 
 .stq-desktop-field-map-shell .stq-map-shell,
@@ -38,9 +92,9 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border: 1px solid rgba(160, 70, 61, 0.18);
+  border: 1px solid var(--stq-alpha-primary);
   border-radius: 10px;
-  background: #e8dfdb;
+  background: var(--stq-color-bg-alt);
 }
 
 .stq-desktop-map-workspace .stq-map-shell,
@@ -72,11 +126,11 @@
   display: grid;
   min-width: 220px;
   gap: 2px;
-  border: 1px solid rgba(231, 221, 211, 0.74);
+  border: 1px solid var(--stq-alpha-warm-tint);
   border-radius: 10px;
-  background: var(--stq-glass-white-94);
+  background: var(--stq-alpha-white);
   padding: 9px 12px;
-  box-shadow: 0 8px 20px var(--stq-shadow-brown-12);
+  box-shadow: 0 8px 20px var(--stq-alpha-brown);
 }
 
 .stq-desktop-map-title span {
@@ -102,15 +156,15 @@
   justify-content: center;
   gap: 6px;
   min-height: 40px;
-  border: 1px solid rgba(231, 221, 211, 0.9);
+  border: 1px solid var(--stq-alpha-warm-tint);
   border-radius: 10px;
-  background: var(--stq-glass-white-94);
+  background: var(--stq-alpha-white);
   color: var(--stq-text);
   padding: 0 12px;
   font: inherit;
   font-size: 12px;
   font-weight: 800;
-  box-shadow: 0 8px 20px var(--stq-shadow-brown-12);
+  box-shadow: 0 8px 20px var(--stq-alpha-brown);
   cursor: pointer;
 }
 
@@ -122,11 +176,11 @@
 .stq-desktop-map-button--primary {
   background: var(--stq-primary);
   border-color: var(--stq-primary);
-  color: white;
+  color: var(--stq-white);
 }
 
 .stq-desktop-map-button--primary:hover {
-  color: white;
+  color: var(--stq-white);
   filter: brightness(1.04);
 }
 
@@ -144,9 +198,9 @@
   gap: 4px;
   border: 1px solid var(--stq-border);
   border-radius: 10px;
-  background: white;
+  background: var(--stq-color-surface);
   padding: 6px;
-  box-shadow: 0 14px 30px var(--stq-shadow-brown-18);
+  box-shadow: 0 14px 30px var(--stq-alpha-brown);
 }
 
 .stq-desktop-map-layers-menu button {
@@ -165,7 +219,7 @@
 
 .stq-desktop-map-layers-menu button:hover,
 .stq-desktop-map-layers-menu button.is-active {
-  background: rgba(160, 70, 61, 0.08);
+  background: var(--stq-alpha-primary);
   color: var(--stq-primary);
 }
 
@@ -177,7 +231,7 @@
   max-width: 420px;
   border: 1px solid var(--stq-error);
   border-radius: 10px;
-  background: var(--stq-glass-white-94);
+  background: var(--stq-alpha-white);
   color: var(--stq-error);
   padding: 9px 12px;
   font-size: 12px;
@@ -194,14 +248,14 @@
   align-items: center;
   gap: 10px;
   width: min(420px, calc(100% - 36px));
-  border: 1px solid rgba(231, 221, 211, 0.88);
+  border: 1px solid var(--stq-alpha-warm-tint);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--stq-alpha-white);
   color: var(--stq-text);
   padding: 10px;
   font: inherit;
   text-align: left;
-  box-shadow: 0 16px 34px var(--stq-shadow-brown-18);
+  box-shadow: 0 16px 34px var(--stq-alpha-brown);
   cursor: pointer;
 }
 
@@ -224,7 +278,7 @@
 }
 
 .stq-desktop-map-station-card small {
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 12px;
   font-weight: 700;
 }

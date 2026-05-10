@@ -37,7 +37,7 @@
 .stq-rrr-mock__condition span,
 .stq-rrr-mock__module span,
 .stq-rrr-mock__module small {
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -56,7 +56,7 @@
   gap: 10px;
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 10px;
 }
 
@@ -74,7 +74,7 @@
 
 .stq-rrr-guide__step span,
 .stq-rrr-guide__feedback span {
-  color: #8a7d6e;
+  color: var(--stq-color-text-muted);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -89,7 +89,7 @@
 
 .stq-rrr-guide__step small,
 .stq-rrr-guide__instruction {
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -135,13 +135,13 @@
 }
 
 .stq-rrr-guide__feedback--success {
-  border-color: #cfe3cc;
-  background: #f4faf2;
+  border-color: var(--stq-color-success-border);
+  background: var(--stq-color-bg-success);
 }
 
 .stq-rrr-guide__feedback--failed {
-  border-color: #f1c9c4;
-  background: var(--stq-white)7f5;
+  border-color: var(--stq-color-bg-danger);
+  background: var(--stq-color-surface-cream);
 }
 
 .stq-rrr-mock__session {
@@ -161,8 +161,8 @@
 }
 
 .stq-rrr-mock__session-controls button {
-  border: 1px solid #d9cfc3;
-  background: var(--stq-white)af3;
+  border: 1px solid var(--stq-color-border);
+  background: var(--stq-color-surface-cream);
   border-radius: 6px;
   padding: 4px 10px;
   font: inherit;
@@ -181,7 +181,7 @@
 
 .stq-rrr-mock__expert summary {
   cursor: pointer;
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 12px;
   font-weight: 800;
 }
@@ -200,7 +200,7 @@
 .stq-rrr-mock__session-stats > div {
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 6px 10px;
 }
 
@@ -208,7 +208,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #8a7d6e;
+  color: var(--stq-color-text-muted);
 }
 
 .stq-rrr-mock__session-stats dd {
@@ -221,7 +221,7 @@
 .stq-rrr-mock__module {
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 9px 10px;
 }
 

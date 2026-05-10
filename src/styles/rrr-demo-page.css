@@ -33,7 +33,7 @@
   border: 1px solid var(--stq-border);
   border-radius: 9999px;
   background: var(--stq-white);
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 12px;
   font-weight: 800;
   padding: 7px 10px;
@@ -64,7 +64,7 @@
 
 .stq-rrr-demo__panel p {
   margin: 0;
-  color: var(--stq-ink-soft);
+  color: var(--stq-color-text-soft);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -79,7 +79,7 @@
 .stq-rrr-demo__facts div {
   border: 1px solid var(--stq-border);
   border-radius: 8px;
-  background: var(--stq-surface-warm);
+  background: var(--stq-color-surface-cream);
   padding: 8px 9px;
 }
 

@@ -52,6 +52,8 @@ interface Props {
   showDeleteStationFab?: boolean;
   /** Called with the station id to delete (after user confirmation). */
   onDeleteStation?: (stationId: string) => void;
+  /** When 'desktop', floating actions render outside the phone frame. */
+  layout?: 'desktop' | 'mobile';
 }
 
 const SECTION_LABELS: Record<RendererSectionKey, string> = {
@@ -77,6 +79,7 @@ export function MapPreviewWorkspace({
   showAddStationFab = false,
   showDeleteStationFab = false,
   onDeleteStation,
+  layout = 'mobile',
 }: Props) {
   const { t } = useEditorLanguage();
   const [sheetState, setSheetState] = useState<MapSheetState>('closed');
@@ -325,8 +328,20 @@ export function MapPreviewWorkspace({
         onSelectStation={onSelectStation}
         detail={t('studio.map')}
         onTitleBack={onTitleBack}
-        toolbar={mobileContextToolbar}
-        topRightPill={composedTopRightPill}
+        toolbar={layout === 'desktop' ? undefined : mobileContextToolbar}
+        topRightPill={layout === 'desktop' ? undefined : composedTopRightPill}
+        desktopActions={
+          layout === 'desktop'
+            ? composedTopRightPill || mobileContextToolbar
+              ? (
+                  <>
+                    {composedTopRightPill}
+                    {mobileContextToolbar}
+                  </>
+                )
+              : undefined
+            : undefined
+        }
         onViewportCenterChange={setViewportCenter}
         draggableStationIds={
           markerEditMode && !deleteMode

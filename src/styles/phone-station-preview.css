@@ -14,8 +14,8 @@
   height: 100%;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 20%),
-    #e8dfdb;
+    linear-gradient(180deg, var(--stq-alpha-white), transparent 20%),
+    var(--stq-color-bg-alt);
 }
 
 .stq-phone-station-screen .stq-riddle-screen--map-overlay {
@@ -27,8 +27,8 @@
   min-height: 100%;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(248, 239, 232, 0.2), rgba(248, 239, 232, 0.7)),
-    #e8dfdb;
+    linear-gradient(180deg, var(--stq-alpha-warm-tint), var(--stq-alpha-warm-tint)),
+    var(--stq-color-bg-alt);
   pointer-events: auto;
 }
 
@@ -65,7 +65,7 @@
   overflow-y: auto;
   border-radius: 12px 12px 0 0;
   background: var(--stq-bg);
-  box-shadow: 0 -16px 34px var(--stq-shadow-brown-22);
+  box-shadow: 0 -16px 34px var(--stq-alpha-brown);
   padding: 14px 16px 96px;
   pointer-events: auto;
 }
@@ -74,7 +74,7 @@
   width: 28px;
   height: 4px;
   margin: 0 auto 16px;
-  background: rgba(26, 26, 26, 0.2);
+  background: var(--stq-alpha-brown);
 }
 
 .stq-phone-station-screen .stq-riddle-map-card-hero {
@@ -83,7 +83,7 @@
 
 .stq-phone-station-screen .stq-riddle-map-card-image {
   border-radius: 8px;
-  background: var(--stq-white)af9;
+  background: var(--stq-color-surface-cream);
 }
 
 .stq-phone-station-screen .stq-riddle-map-card-image img,

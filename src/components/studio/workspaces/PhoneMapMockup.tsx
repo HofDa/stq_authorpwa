@@ -105,6 +105,13 @@ export interface PhoneMapMockupProps {
   onTitleBack?: () => void;
   /** Hide the zoom +/− controls overlay. */
   hideZoomControls?: boolean;
+
+  /**
+   * Action stack rendered OUTSIDE the phone frame, in the right gutter.
+   * Used in desktop layouts to keep the phone screen clean while still
+   * surfacing add/delete/route tools beside the mockup.
+   */
+  desktopActions?: ReactNode;
 }
 
 /**
@@ -141,6 +148,7 @@ export function PhoneMapMockup({
   hideTitlePill = false,
   onTitleBack,
   hideZoomControls = false,
+  desktopActions,
 }: PhoneMapMockupProps) {
   const { t } = useEditorLanguage();
   const [basemap, setBasemap] = useState<AuthorMapBasemapKey>(
@@ -161,6 +169,11 @@ export function PhoneMapMockup({
     let moved = false;
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0 && event.pointerType === 'mouse') return;
+      // Don't hijack pointer events that started on an interactive child —
+      // capturing them here breaks button clicks (the click target retargets
+      // to the track and the button's onClick never fires).
+      const target = event.target as Element | null;
+      if (target && target.closest('button, a, [role="button"]')) return;
       isDown = true;
       moved = false;
       startX = event.clientX;
@@ -245,8 +258,10 @@ export function PhoneMapMockup({
       style={{
         height: '100%',
         width: '100%',
-        display: 'grid',
-        placeItems: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 16,
         overflow: 'hidden',
         position: 'relative',
       }}
@@ -515,6 +530,9 @@ export function PhoneMapMockup({
           )}
         </div>
       </DeviceMockup>
+      {desktopActions && (
+        <div className="stq-desktop-map-actions">{desktopActions}</div>
+      )}
     </div>
   );
 }
