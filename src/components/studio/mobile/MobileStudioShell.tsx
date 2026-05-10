@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import type { TourDraft } from '@/schema';
 import { useStudioController } from '../useStudioController';
 import { Icon } from '../Icon';
@@ -139,7 +139,7 @@ export function MobileStudioShell({
               setOutroEditMode(false);
               setView('overview');
             }}
-            headerEditToggle={
+            floatingEditToggle={
               <HeaderEditToggle
                 active={view === 'outro' ? outroEditMode : introEditMode}
                 onClick={() =>
@@ -181,44 +181,16 @@ export function MobileStudioShell({
             />
           )}
           {!stationSheetExpanded && (
-            <FloatingEditButton
-              active={editMode}
-              onClick={toggleMapEditMode}
-              placement="above-dock"
-            />
+            <div className="stq-mobile-studio__floating-edit-chip">
+              <HeaderEditToggle
+                active={editMode}
+                onClick={toggleMapEditMode}
+              />
+            </div>
           )}
       </section>
       )}
     </main>
-  );
-}
-
-function FloatingEditButton({
-  active,
-  onClick,
-  children,
-  placement,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children?: ReactNode;
-  placement?: 'above-dock';
-}) {
-  const placementClass = placement
-    ? ` stq-mobile-studio__floating-edit-button--${placement}`
-    : '';
-  return (
-    <button
-      type="button"
-      className={`stq-mobile-studio__floating-edit-button${
-        active ? ' is-active' : ''
-      }${placementClass}`}
-      onClick={onClick}
-      aria-label={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
-      aria-pressed={active}
-    >
-      {children ?? <Icon name="edit" size={19} />}
-    </button>
   );
 }
 

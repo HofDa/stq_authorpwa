@@ -390,6 +390,7 @@
 }
 
 .stq-mobile-studio__workspace {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
@@ -460,45 +461,6 @@
   display: none;
 }
 
-.stq-mobile-studio__floating-edit-button {
-  position: fixed;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: calc(env(safe-area-inset-bottom) + 22px);
-  z-index: 82;
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid var(--stq-alpha-primary);
-  border-radius: 999px;
-  background: var(--stq-primary);
-  color: var(--stq-color-surface-cream);
-  box-shadow: 0 14px 34px var(--stq-alpha-brown);
-  cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    background 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
-}
-
-.stq-mobile-studio__floating-edit-button.is-active {
-  background: var(--stq-primary);
-  box-shadow: 0 16px 38px var(--stq-alpha-brown);
-  transform: translateY(-2px);
-}
-
-
-.stq-mobile-studio__floating-edit-button:focus-visible {
-  outline: 2px solid var(--stq-color-surface-cream);
-  outline-offset: 3px;
-}
-
-/* Lift the FAB above the map's bottom dock (dock top edge ≈ 108px). */
-.stq-mobile-studio__floating-edit-button--above-dock {
-  bottom: calc(env(safe-area-inset-bottom) + 122px);
-}
-
 .stq-mobile-studio__header-edit-toggle {
   display: grid;
   place-items: center;
@@ -524,21 +486,19 @@
   outline-offset: 2px;
 }
 
-.stq-intro-phone__header .stq-mobile-studio__header-edit-toggle {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-}
-
-.stq-tour-card-canvas__floating-edit {
+.stq-mobile-studio__floating-edit-chip {
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
   z-index: 30;
 }
 
-.stq-tour-card-canvas__floating-edit .stq-mobile-studio__header-edit-toggle {
+/* Drop the chip below a sticky phone-frame header. */
+.stq-mobile-studio__floating-edit-chip--below-header {
+  top: calc(env(safe-area-inset-top) + 120px);
+}
+
+.stq-mobile-studio__floating-edit-chip .stq-mobile-studio__header-edit-toggle {
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -546,7 +506,7 @@
   box-shadow: 0 6px 16px var(--stq-alpha-brown);
 }
 
-.stq-tour-card-canvas__floating-edit .stq-mobile-studio__header-edit-toggle.is-active {
+.stq-mobile-studio__floating-edit-chip .stq-mobile-studio__header-edit-toggle.is-active {
   background: var(--stq-primary);
   color: var(--stq-color-surface-cream);
 }

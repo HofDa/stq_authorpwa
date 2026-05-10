@@ -672,6 +672,7 @@
 }
 
 .stq-intro-phone {
+  position: relative;
   min-height: 100%;
   background: var(--stq-color-bg);
   color: var(--stq-color-text);

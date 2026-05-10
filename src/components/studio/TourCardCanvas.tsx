@@ -27,8 +27,6 @@ interface Props {
   onOpenCurrentTour?: () => void;
   editable?: boolean;
   mobileSelectionFlow?: boolean;
-  /** Optional control rendered inside the phone-frame header actions slot. */
-  headerEditToggle?: ReactNode;
   /** Optional control rendered as a floating chip outside the phone frame. */
   floatingEditToggle?: ReactNode;
 }
@@ -45,7 +43,6 @@ export function TourCardCanvas({
   onOpenCurrentTour,
   editable = true,
   mobileSelectionFlow = false,
-  headerEditToggle,
   floatingEditToggle,
 }: Props) {
   const { t } = useEditorLanguage();
@@ -249,7 +246,6 @@ export function TourCardCanvas({
               SouthTyrolQuests
             </span>
             <span className="stq-tour-card-phone-header-actions">
-              {headerEditToggle}
               <span className="stq-tour-card-phone-header-locale">
                 {locale.toUpperCase()}
                 <Icon name="chevron-right" size={10} />
@@ -436,7 +432,7 @@ export function TourCardCanvas({
       </DeviceMockup>
 
       {floatingEditToggle && (
-        <div className="stq-tour-card-canvas__floating-edit">
+        <div className="stq-mobile-studio__floating-edit-chip">
           {floatingEditToggle}
         </div>
       )}

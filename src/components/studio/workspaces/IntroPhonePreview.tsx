@@ -23,8 +23,8 @@ interface Props {
   onSelectTourOverview?: () => void;
   editable?: boolean;
   mobileSelectionFlow?: boolean;
-  /** Optional control rendered inside the phone-frame header, before the locale button. */
-  headerEditToggle?: ReactNode;
+  /** Optional control rendered as a floating chip outside the phone frame. */
+  floatingEditToggle?: ReactNode;
 }
 
 type ActivePanel = 'cover' | 'title' | 'copy' | 'lines' | 'hints' | null;
@@ -39,7 +39,7 @@ export function IntroPhonePreview({
   onSelectTourOverview,
   editable = true,
   mobileSelectionFlow = false,
-  headerEditToggle,
+  floatingEditToggle,
 }: Props) {
   const { t } = useEditorLanguage();
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
@@ -241,11 +241,15 @@ export function IntroPhonePreview({
           <Icon name="chevron-left" size={16} />
         </button>
         <span>{mode === 'outro' ? t('studio.outro') : t('studio.introPage')}</span>
-        {headerEditToggle}
         <button type="button" aria-label={t('studio.language')}>
           {locale.toUpperCase()}
         </button>
       </header>
+      {floatingEditToggle && (
+        <div className="stq-mobile-studio__floating-edit-chip stq-mobile-studio__floating-edit-chip--below-header">
+          {floatingEditToggle}
+        </div>
+      )}
 
       <main className="stq-intro-phone__body">
         {mode === 'intro' && (
