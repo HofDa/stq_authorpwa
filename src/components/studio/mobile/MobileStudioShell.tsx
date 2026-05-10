@@ -172,10 +172,8 @@ export function MobileStudioShell({
               onTitleBack={() => setView('overview')}
               onOpenOutro={openOutro}
               onChange={onChange}
-              editMode={false}
               markerEditMode={editMode}
               topRightPill={mapEditPill}
-              mobileSelectionFlow={false}
               showAddStationFab={editMode && !routeEditMode}
               onSheetStateChange={(state) =>
                 setStationSheetExpanded(state === 'expanded')

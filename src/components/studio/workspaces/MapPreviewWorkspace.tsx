@@ -86,12 +86,20 @@ export function MapPreviewWorkspace({
 }: Props) {
   const { t } = useEditorLanguage();
   const [sheetState, setSheetState] = useState<MapSheetState>('closed');
+  const [internalStationEditMode, setInternalStationEditMode] = useState(false);
   useEffect(() => {
     onSheetStateChange?.(sheetState);
     return () => {
       onSheetStateChange?.('closed');
     };
   }, [sheetState, onSheetStateChange]);
+  useEffect(() => {
+    if (sheetState === 'closed') setInternalStationEditMode(false);
+  }, [sheetState]);
+  const effectiveEditMode =
+    layout === 'mobile' ? internalStationEditMode : editMode;
+  const effectiveSelectionFlow =
+    layout === 'mobile' ? internalStationEditMode : mobileSelectionFlow;
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activeStationPanel, setActiveStationPanel] =
     useState<StationEditPanelKey | null>(null);
@@ -133,12 +141,12 @@ export function MapPreviewWorkspace({
   }, [selectedId]);
 
   useEffect(() => {
-    if (!editMode && !markerEditMode) {
+    if (!effectiveEditMode && !markerEditMode) {
       setActiveStationPanel(null);
       setSelectedEditableRegion(null);
       setRightDrawerState('closed');
     }
-  }, [editMode, markerEditMode]);
+  }, [effectiveEditMode, markerEditMode]);
 
   const selectedStation =
     draft.stations.find((station) => station.id === selectedId) ??
@@ -185,7 +193,7 @@ export function MapPreviewWorkspace({
         : [],
     [locale, selectedStation],
   );
-  const stationPanel = editMode && selectedStation && activeStationPanel
+  const stationPanel = effectiveEditMode && selectedStation && activeStationPanel
     ? getStationEditPanel({
         panel: activeStationPanel,
         station: selectedStation,
@@ -219,7 +227,7 @@ export function MapPreviewWorkspace({
       return;
     }
 
-    if (mobileSelectionFlow && editMode && stationId === selectedStation?.id) {
+    if (effectiveSelectionFlow && effectiveEditMode && stationId === selectedStation?.id) {
       setSheetState('expanded');
       openStationPanel('marker');
       return;
@@ -241,7 +249,7 @@ export function MapPreviewWorkspace({
   function openStationPanel(panel: StationEditPanelKey) {
     setSelectedEditableRegion(panel);
     setActiveStationPanel(panel);
-    if (mobileSelectionFlow) setRightDrawerState('open');
+    if (effectiveSelectionFlow) setRightDrawerState('open');
   }
 
   function closeStationPanel() {
@@ -265,9 +273,9 @@ export function MapPreviewWorkspace({
     return {
       label,
       active: activeStationPanel === panel,
-      selected: mobileSelectionFlow && selectedEditableRegion === panel,
+      selected: effectiveSelectionFlow && selectedEditableRegion === panel,
       icon,
-      onSelect: mobileSelectionFlow
+      onSelect: effectiveSelectionFlow
         ? () => selectEditableRegion(panel)
         : undefined,
       onEdit: () => openStationPanel(panel),
@@ -305,7 +313,7 @@ export function MapPreviewWorkspace({
 
   const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
   const mobileContextToolbar =
-    mobileSelectionFlow && editMode && selectedStation ? (
+    effectiveSelectionFlow && effectiveEditMode && selectedStation ? (
       <>
         <button
           type="button"
@@ -381,6 +389,27 @@ export function MapPreviewWorkspace({
                   setRightDrawerState('closed');
                 }
               }}
+              toolbarTrailing={
+                layout === 'mobile' ? (
+                  <button
+                    type="button"
+                    className={`stq-map-station-sheet-edit-toggle${
+                      internalStationEditMode ? ' is-active' : ''
+                    }`}
+                    onClick={() =>
+                      setInternalStationEditMode((value) => !value)
+                    }
+                    aria-label={
+                      internalStationEditMode
+                        ? 'Bearbeiten beenden'
+                        : 'Bearbeiten'
+                    }
+                    aria-pressed={internalStationEditMode}
+                  >
+                    <Icon name="edit" size={14} />
+                  </button>
+                ) : undefined
+              }
               collapsedHeader={
                 <div className="stq-map-station-sheet-collapsed-row">
                   <div className="stq-map-station-sheet-icon">
@@ -444,7 +473,7 @@ export function MapPreviewWorkspace({
                   }
                 }}
                 editableRegions={
-                  editMode
+                  effectiveEditMode
                     ? {
                         hero: editableRegion('hero', 'Edit station image'),
                         title: editableRegion('title', 'Edit station title'),
@@ -470,7 +499,7 @@ export function MapPreviewWorkspace({
         }
       />
 
-      {stationPanel && mobileSelectionFlow && (
+      {stationPanel && effectiveSelectionFlow && (
         <RightEditDrawer
           title={stationPanel.title}
           fields={stationPanel.fields}
@@ -482,7 +511,7 @@ export function MapPreviewWorkspace({
         </RightEditDrawer>
       )}
 
-      {stationPanel && !mobileSelectionFlow && (
+      {stationPanel && !effectiveSelectionFlow && (
         <EditPanel
           title={stationPanel.title}
           fields={stationPanel.fields}

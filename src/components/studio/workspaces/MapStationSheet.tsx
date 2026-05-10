@@ -7,6 +7,8 @@ interface Props {
   onStateChange: (state: MapSheetState) => void;
   collapsedHeader: ReactNode;
   children: ReactNode;
+  /** Optional control rendered next to the drag handle. */
+  toolbarTrailing?: ReactNode;
 }
 
 export function MapStationSheet({
@@ -14,6 +16,7 @@ export function MapStationSheet({
   onStateChange,
   collapsedHeader,
   children,
+  toolbarTrailing,
 }: Props) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const dragStartY = useRef<number | null>(null);
@@ -82,19 +85,26 @@ export function MapStationSheet({
       aria-label="Station details"
       style={sectionStyle}
     >
-      <button
-        type="button"
-        className="stq-map-station-sheet-handle"
-        aria-label={
-          state === 'expanded' ? 'Collapse station card' : 'Expand station card'
-        }
-        onClick={handleHandleClick}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <span aria-hidden />
-      </button>
+      <div className="stq-map-station-sheet-toolbar">
+        <button
+          type="button"
+          className="stq-map-station-sheet-handle"
+          aria-label={
+            state === 'expanded' ? 'Collapse station card' : 'Expand station card'
+          }
+          onClick={handleHandleClick}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
+          <span aria-hidden />
+        </button>
+        {toolbarTrailing && (
+          <div className="stq-map-station-sheet-toolbar-trailing">
+            {toolbarTrailing}
+          </div>
+        )}
+      </div>
       {state === 'collapsed' ? (
         <div
           className="stq-map-station-sheet-collapsed"
