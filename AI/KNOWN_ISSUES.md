@@ -57,6 +57,50 @@ Tours export successfully but fail in the player.
 Mitigation:
 Update schema tests and document any contract change in `AI/DECISIONS.md`.
 
+### Legacy `.stq-mobile-studio__workspace > div` rule sizes any direct child to 100% × 100%
+
+Symptoms:
+Adding a sibling `<div>` inside the mobile workspace section (e.g. an absolutely-positioned chip wrapper) makes the new div fill the viewport and intercept all pointer events — the underlying back button and station markers stop responding even though the chip itself is small.
+
+Risk:
+Easy to reintroduce when adding new floating chrome to the mobile shell.
+
+Mitigation:
+New floating wrappers should set `pointer-events: none` and re-enable `pointer-events: auto` on their interactive children. The chip wrapper also pins `width/height: auto !important` to neutralise the legacy rule. Long-term: scope the `> div` rule to a specific descendant rather than every direct child.
+
+### Pre-existing `react-hooks/refs` lint errors in `MapPreviewWorkspace` and `MapLibreAuthorMap`
+
+Symptoms:
+`npm run lint` reports four `Cannot update ref during render` errors against `deleteModeRef.current = deleteMode`, `onRouteClickRef.current = onRouteClick` and similar patterns. Build still passes.
+
+Risk:
+Code is functional today but the rule exists to flag potential render-cycle bugs. A future React version could make these patterns harder to predict.
+
+Mitigation:
+Move the assignments into `useEffect` blocks. Out of scope for any feature PR; needs its own focused cleanup.
+
 ## Resolved issues
 
-Add resolved issues here with date, affected files and fix summary.
+### 2026-05-10 — Map back button and station tap blocked by edit chip wrapper
+
+Files: `src/styles/map-workspace.css`.
+Cause: the legacy `.stq-mobile-studio__workspace > div { width: 100%; height: 100% }` rule sized the new floating-edit-chip wrapper to fill the viewport, blocking pointer events on the underlying map.
+Fix: `pointer-events: none` on the chip wrapper, `pointer-events: auto` on its children, plus `width/height: auto !important` to override the legacy rule. Commit `3b91082`.
+
+### 2026-05-10 — Closing route-edit auto-opened the station card
+
+Files: `src/components/studio/workspaces/MapPreviewWorkspace.tsx`.
+Cause: when the user pressed the flag button to leave route-edit, the shell unmounted `RouteWorkspace` and remounted `MapPreviewWorkspace` with the still-set `selectedId`. The workspace's selection effect interpreted any non-null `selectedId` as a signal to expand the sheet, including on initial mount.
+Fix: track whether the effect has already received at least one selection update; suppress the expand on mount when there's a stale selection. Gated to `layout === 'mobile'` so desktop's expand-on-cross-section-arrival behavior is untouched. Commit `5df907b`.
+
+### 2026-05-10 — Mobile map could not enter station-content edit mode
+
+Files: `src/components/studio/workspaces/MapPreviewWorkspace.tsx`, `MapStationSheet.tsx`, `mobile/MobileStudioShell.tsx`.
+Cause: mobile passed `editMode={false}` so `editableRegions` never appeared. The bottom FAB only toggled marker-edit (drag/delete pins).
+Fix: workspace now owns `internalStationEditMode` when `layout === 'mobile'`, surfaced via a toggle inside `MapStationSheet.toolbarTrailing`. Resets when the sheet closes. Commit `1ae1207`.
+
+### 2026-05-10 — Production build broken on `refractor` branch
+
+Files: `StudioStationNav.tsx`, `StudioHeader.tsx`, `DesktopStudioShell.tsx`, `RouteWorkspace.tsx`.
+Cause: three TS6133 unused-binding errors (`onAddStation` prop chain through three layers, `selectedRouteSegment` useMemo, `snapToStation` helper).
+Fix: removed the dead code consistently across the layers. Commit `fbca996`.
