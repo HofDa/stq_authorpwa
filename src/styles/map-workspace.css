@@ -454,6 +454,11 @@
   outline-offset: 3px;
 }
 
+/* Lift the FAB above the map's bottom dock (dock top edge ≈ 108px). */
+.stq-mobile-studio__floating-edit-button--above-dock {
+  bottom: calc(env(safe-area-inset-bottom) + 122px);
+}
+
 .stq-mobile-studio__header-edit-toggle {
   display: grid;
   place-items: center;

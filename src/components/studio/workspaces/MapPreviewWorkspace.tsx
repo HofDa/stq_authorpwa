@@ -54,6 +54,8 @@ interface Props {
   onDeleteStation?: (stationId: string) => void;
   /** When 'desktop', floating actions render outside the phone frame. */
   layout?: 'desktop' | 'mobile';
+  /** Observe the bottom sheet state so callers can hide overlapping affordances. */
+  onSheetStateChange?: (state: MapSheetState) => void;
 }
 
 const SECTION_LABELS: Record<RendererSectionKey, string> = {
@@ -80,9 +82,16 @@ export function MapPreviewWorkspace({
   showDeleteStationFab = false,
   onDeleteStation,
   layout = 'mobile',
+  onSheetStateChange,
 }: Props) {
   const { t } = useEditorLanguage();
   const [sheetState, setSheetState] = useState<MapSheetState>('closed');
+  useEffect(() => {
+    onSheetStateChange?.(sheetState);
+    return () => {
+      onSheetStateChange?.('closed');
+    };
+  }, [sheetState, onSheetStateChange]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activeStationPanel, setActiveStationPanel] =
     useState<StationEditPanelKey | null>(null);

@@ -27,6 +27,7 @@ export function MobileStudioShell({
   const [introEditMode, setIntroEditMode] = useState(false);
   const [outroEditMode, setOutroEditMode] = useState(false);
   const [routeEditMode, setRouteEditMode] = useState(false);
+  const [stationSheetExpanded, setStationSheetExpanded] = useState(false);
   const [view, setView] = useState<'map' | 'overview' | 'intro' | 'outro'>('map');
   const [introDraftId, setIntroDraftId] = useState<string | null>(null);
   const { locale, selectedId, drafts, actions } = useStudioController({
@@ -176,12 +177,18 @@ export function MobileStudioShell({
               topRightPill={mapEditPill}
               mobileSelectionFlow={false}
               showAddStationFab={editMode && !routeEditMode}
+              onSheetStateChange={(state) =>
+                setStationSheetExpanded(state === 'expanded')
+              }
             />
           )}
-          <FloatingEditButton
-            active={editMode}
-            onClick={toggleMapEditMode}
-          />
+          {!stationSheetExpanded && (
+            <FloatingEditButton
+              active={editMode}
+              onClick={toggleMapEditMode}
+              placement="above-dock"
+            />
+          )}
       </section>
       )}
     </main>
@@ -192,17 +199,22 @@ function FloatingEditButton({
   active,
   onClick,
   children,
+  placement,
 }: {
   active: boolean;
   onClick: () => void;
   children?: ReactNode;
+  placement?: 'above-dock';
 }) {
+  const placementClass = placement
+    ? ` stq-mobile-studio__floating-edit-button--${placement}`
+    : '';
   return (
     <button
       type="button"
       className={`stq-mobile-studio__floating-edit-button${
         active ? ' is-active' : ''
-      }`}
+      }${placementClass}`}
       onClick={onClick}
       aria-label={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
       aria-pressed={active}
