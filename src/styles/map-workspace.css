@@ -396,7 +396,6 @@
   height: 100%;
   min-height: 0;
   padding: 0;
-  position: relative;
 }
 
 .stq-mobile-studio__workspace > div {
@@ -491,6 +490,13 @@
   top: max(16px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
   z-index: 30;
+  pointer-events: none;
+  width: auto !important;
+  height: auto !important;
+}
+
+.stq-mobile-studio__floating-edit-chip > * {
+  pointer-events: auto;
 }
 
 /* Drop the chip below a sticky phone-frame header. */
