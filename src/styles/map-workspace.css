@@ -454,6 +454,31 @@
   outline-offset: 3px;
 }
 
+.stq-mobile-studio__header-edit-toggle {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--stq-color-text);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.stq-mobile-studio__header-edit-toggle.is-active {
+  background: var(--stq-primary);
+  color: var(--stq-color-surface-cream);
+}
+
+.stq-mobile-studio__header-edit-toggle:focus-visible {
+  outline: 2px solid var(--stq-primary);
+  outline-offset: 2px;
+}
+
 .stq-confirm-overlay {
   position: fixed;
   inset: 0;

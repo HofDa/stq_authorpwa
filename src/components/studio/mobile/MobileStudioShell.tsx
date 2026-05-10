@@ -102,10 +102,12 @@ export function MobileStudioShell({
             onOpenCurrentTour={() => openIntro(draft.draftId)}
             editable={overviewEditMode}
             mobileSelectionFlow={overviewEditMode}
-          />
-          <FloatingEditButton
-            active={overviewEditMode}
-            onClick={() => setOverviewEditMode((value) => !value)}
+            headerEditToggle={
+              <HeaderEditToggle
+                active={overviewEditMode}
+                onClick={() => setOverviewEditMode((value) => !value)}
+              />
+            }
           />
         </section>
       ) : view === 'intro' || view === 'outro' ? (
@@ -204,6 +206,28 @@ function FloatingEditButton({
       aria-pressed={active}
     >
       {children ?? <Icon name="edit" size={19} />}
+    </button>
+  );
+}
+
+function HeaderEditToggle({
+  active,
+  onClick,
+}: {
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`stq-mobile-studio__header-edit-toggle${
+        active ? ' is-active' : ''
+      }`}
+      onClick={onClick}
+      aria-label={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
+      aria-pressed={active}
+    >
+      <Icon name="edit" size={14} />
     </button>
   );
 }

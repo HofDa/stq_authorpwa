@@ -27,6 +27,8 @@ interface Props {
   onOpenCurrentTour?: () => void;
   editable?: boolean;
   mobileSelectionFlow?: boolean;
+  /** Optional control rendered inside the phone-frame header actions slot. */
+  headerEditToggle?: ReactNode;
 }
 
 type ActivePanel = 'cover' | 'title' | 'description' | 'meta' | 'welcome' | null;
@@ -41,6 +43,7 @@ export function TourCardCanvas({
   onOpenCurrentTour,
   editable = true,
   mobileSelectionFlow = false,
+  headerEditToggle,
 }: Props) {
   const { t } = useEditorLanguage();
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
@@ -243,6 +246,7 @@ export function TourCardCanvas({
               SouthTyrolQuests
             </span>
             <span className="stq-tour-card-phone-header-actions">
+              {headerEditToggle}
               <span className="stq-tour-card-phone-header-locale">
                 {locale.toUpperCase()}
                 <Icon name="chevron-right" size={10} />
