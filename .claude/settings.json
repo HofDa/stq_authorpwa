@@ -6,7 +6,11 @@
       "Read(//home/davidhofer/.nvm/versions/node/**)",
       "Read(//home/davidhofer/.volta/tools/image/**)",
       "Bash(nvm --version)",
-      "Bash(command -v fnm)"
+      "Bash(command -v fnm)",
+      "Bash(grep -nE \"#[0-9a-fA-F]{3,8}\\\\b|rgba?\\\\\\(\\\\s*[0-9][^\\)]*\\\\\\)\" /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/glass-chip.css /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/native-app-cards.css /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/editable-overlay.css /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/rrr-condition-editor.css /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/riddle-text-block-editor.css /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/rrr-author-editor.css /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/rrr-mock-runtime.css /home/davidhofer/Desktop/github_repos_enigma/southtyrolquests-author-pwa/src/styles/rrr-module-cards.css)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }
