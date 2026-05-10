@@ -138,13 +138,15 @@ export function MobileStudioShell({
               setOutroEditMode(false);
               setView('overview');
             }}
-          />
-          <FloatingEditButton
-            active={view === 'outro' ? outroEditMode : introEditMode}
-            onClick={() =>
-              view === 'outro'
-                ? setOutroEditMode((value) => !value)
-                : setIntroEditMode((value) => !value)
+            headerEditToggle={
+              <HeaderEditToggle
+                active={view === 'outro' ? outroEditMode : introEditMode}
+                onClick={() =>
+                  view === 'outro'
+                    ? setOutroEditMode((value) => !value)
+                    : setIntroEditMode((value) => !value)
+                }
+              />
             }
           />
         </section>

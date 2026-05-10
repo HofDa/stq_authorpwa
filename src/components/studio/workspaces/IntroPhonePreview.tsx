@@ -23,6 +23,8 @@ interface Props {
   onSelectTourOverview?: () => void;
   editable?: boolean;
   mobileSelectionFlow?: boolean;
+  /** Optional control rendered inside the phone-frame header, before the locale button. */
+  headerEditToggle?: ReactNode;
 }
 
 type ActivePanel = 'cover' | 'title' | 'copy' | 'lines' | 'hints' | null;
@@ -37,6 +39,7 @@ export function IntroPhonePreview({
   onSelectTourOverview,
   editable = true,
   mobileSelectionFlow = false,
+  headerEditToggle,
 }: Props) {
   const { t } = useEditorLanguage();
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
@@ -238,6 +241,7 @@ export function IntroPhonePreview({
           <Icon name="chevron-left" size={16} />
         </button>
         <span>{mode === 'outro' ? t('studio.outro') : t('studio.introPage')}</span>
+        {headerEditToggle}
         <button type="button" aria-label={t('studio.language')}>
           {locale.toUpperCase()}
         </button>
