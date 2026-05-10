@@ -129,6 +129,7 @@ export function MapPreviewWorkspace({
     }
   }, [deleteMode]);
 
+  const hasReceivedSelectionUpdate = useRef(false);
   useEffect(() => {
     if (!selectedId) {
       setSheetState('closed');
@@ -136,9 +137,12 @@ export function MapPreviewWorkspace({
       setSelectedEditableRegion(null);
       setRightDrawerState('closed');
     } else if (!deleteModeRef.current) {
-      setSheetState('expanded');
+      const isMountWithStaleSelection =
+        layout === 'mobile' && !hasReceivedSelectionUpdate.current;
+      if (!isMountWithStaleSelection) setSheetState('expanded');
     }
-  }, [selectedId]);
+    hasReceivedSelectionUpdate.current = true;
+  }, [selectedId, layout]);
 
   useEffect(() => {
     if (!effectiveEditMode && !markerEditMode) {

@@ -125,15 +125,29 @@
   z-index: 20;
 }
 
+/* Route editor active: stretch the pill and distribute buttons evenly
+   between the top anchor and the route-stats panel. */
+.stq-phone-map-edit-pill:has(.stq-mobile-map-edit-actions--route) {
+  bottom: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: flex-end;
+}
+
+.stq-phone-map-edit-pill:has(.stq-mobile-map-edit-actions--route)
+  .stq-mobile-map-edit-actions--route {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: flex-end;
+  flex: 1;
+  gap: 0;
+}
+
 .stq-mobile-map-edit-actions {
   display: grid;
   gap: 8px;
-}
-
-.stq-mobile-route-editor-tools {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
 }
 
 .stq-phone-map-edit-pill button {

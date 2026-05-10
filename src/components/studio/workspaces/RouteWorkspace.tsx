@@ -589,7 +589,7 @@ export function RouteWorkspace({
               <>
                 {topRightPill}
                 {editable && (
-                  <div className="stq-mobile-map-edit-actions">
+                  <div className="stq-mobile-map-edit-actions stq-mobile-map-edit-actions--route">
                     {routeEditorTools}
                   </div>
                 )}
