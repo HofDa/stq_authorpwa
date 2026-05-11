@@ -80,7 +80,7 @@ Fix: `pointer-events: none` on the chip wrapper, `pointer-events: auto` on its c
 
 Files: `src/components/studio/workspaces/MapPreviewWorkspace.tsx`.
 Cause: when the user pressed the flag button to leave route-edit, the shell unmounted `RouteWorkspace` and remounted `MapPreviewWorkspace` with the still-set `selectedId`. The workspace's selection effect interpreted any non-null `selectedId` as a signal to expand the sheet, including on initial mount.
-Fix: track whether the effect has already received at least one selection update; suppress the expand on mount when there's a stale selection. Gated to `layout === 'mobile'` so desktop's expand-on-cross-section-arrival behavior is untouched. Commit `5df907b`.
+Fix: track whether the effect has already received at least one selection update; suppress the expand on mount when there's a stale selection. Gated to `layout === 'mobile'` so desktop's expand-on-cross-section-arrival behavior is untouched. Commit `5df907b`. Reinforced 2026-05-11 with an explicit `actions.clearSelection()` call when closing route-edit or edit-mode, so the remounting workspace sees `selectedId === null` and the mount-guard heuristic is no longer load-bearing.
 
 ### 2026-05-10 — Mobile map could not enter station-content edit mode
 

@@ -322,40 +322,20 @@ export function MapPreviewWorkspace({
       {topRightPill}
     </div>
   ) : null;
+  const stationBeingEdited = sheetState === 'expanded';
   const composedTopRightPill = onToggleMapEditMode ? (
-    <MapEditPill
-      content={mapEditMode ? pillContent : null}
-      active={Boolean(mapEditMode)}
-      onToggle={onToggleMapEditMode}
-    />
+    stationBeingEdited ? undefined : (
+      <MapEditPill
+        content={mapEditMode ? pillContent : null}
+        active={Boolean(mapEditMode)}
+        onToggle={onToggleMapEditMode}
+      />
+    )
   ) : (
     pillContent ?? undefined
   );
 
   const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
-  const mobileContextToolbar =
-    effectiveSelectionFlow && effectiveEditMode && selectedStation ? (
-      <>
-        <button
-          type="button"
-          className={activeStationPanel === 'station' ? 'is-active' : ''}
-          aria-label={t('studio.editStation')}
-          aria-pressed={activeStationPanel === 'station' || undefined}
-          onClick={() => openStationPanel('station')}
-        >
-          <Icon name="settings" size={16} />
-        </button>
-        <button
-          type="button"
-          className={activeStationPanel === 'marker' ? 'is-active' : ''}
-          aria-label="Marker & GPS"
-          aria-pressed={activeStationPanel === 'marker' || undefined}
-          onClick={() => openStationPanel('marker')}
-        >
-          <Icon name="map-pin" size={16} />
-        </button>
-      </>
-    ) : undefined;
 
   return (
     <>
@@ -366,18 +346,10 @@ export function MapPreviewWorkspace({
         onSelectStation={onSelectStation}
         detail={t('studio.map')}
         onTitleBack={onTitleBack}
-        toolbar={layout === 'desktop' ? undefined : mobileContextToolbar}
         topRightPill={layout === 'desktop' ? undefined : composedTopRightPill}
         desktopActions={
-          layout === 'desktop'
-            ? composedTopRightPill || mobileContextToolbar
-              ? (
-                  <>
-                    {composedTopRightPill}
-                    {mobileContextToolbar}
-                  </>
-                )
-              : undefined
+          layout === 'desktop' && composedTopRightPill
+            ? composedTopRightPill
             : undefined
         }
         onViewportCenterChange={setViewportCenter}

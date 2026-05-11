@@ -152,6 +152,10 @@ export function useStudioController({
     setSelectedId(stationId);
   }, []);
 
+  const clearSelection = useCallback(() => {
+    setSelectedId(null);
+  }, []);
+
   const toggleReorder = useCallback(() => {
     setActiveSection('stations');
     setReorderMode((value) => !value);
@@ -249,6 +253,7 @@ export function useStudioController({
       closeJumpPalette,
       exportDraft,
       reorderStations,
+      clearSelection,
       selectJumpStation,
       selectStation,
       selectStationOnly,

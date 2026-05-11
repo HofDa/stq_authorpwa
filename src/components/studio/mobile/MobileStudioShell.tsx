@@ -54,12 +54,21 @@ export function MobileStudioShell({
     setView('outro');
   }
 
+  function toggleRouteEditMode() {
+    setRouteEditMode((value) => {
+      // Closing route editing should not leave a stale station selection
+      // around that would otherwise pop the station card on the map.
+      if (value) actions.clearSelection();
+      return !value;
+    });
+  }
+
   const mapEditMarkerCluster = editMode ? (
     <div className="stq-mobile-map-edit-actions">
       <button
         type="button"
         className={routeEditMode ? 'is-active' : ''}
-        onClick={() => setRouteEditMode((value) => !value)}
+        onClick={toggleRouteEditMode}
         aria-label={
           routeEditMode ? 'Route bearbeiten beenden' : 'Route bearbeiten'
         }
@@ -73,7 +82,10 @@ export function MobileStudioShell({
 
   function toggleMapEditMode() {
     setEditMode((value) => {
-      if (value) setRouteEditMode(false);
+      if (value) {
+        setRouteEditMode(false);
+        actions.clearSelection();
+      }
       return !value;
     });
   }

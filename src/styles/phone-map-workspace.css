@@ -146,7 +146,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 0;
+}
+
+/* Make the cluster the positioning context so stats can sit at its bottom
+   while the button row stays vertically centered against the toggle. */
+.stq-phone-map-edit-pill__cluster.is-active {
+  position: relative;
+  padding-bottom: 18px;
+}
+
+.stq-phone-map-edit-pill__cluster.is-active .stq-phone-map-edit-pill__stats {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .stq-phone-map-edit-pill__row {

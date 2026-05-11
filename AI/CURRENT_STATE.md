@@ -14,11 +14,13 @@
 
 ## Mobile authoring affordances (current placement)
 
-- **Edit toggle**: a single shared chip pattern (`.stq-mobile-studio__floating-edit-chip`) appears top-right on overview, intro, outro and map. Intro/outro use the `--below-header` modifier so the chip sits below the sticky phone header instead of colliding with it.
-- **Map view**: edit chip is suppressed while the station sheet is in the `expanded` state.
-- **Map edit mode**: surfaces an add (+) and a delete (trash) station button in the right action group; both gated by `editMode && !routeEditMode`.
-- **Route edit mode**: opened via the flag button. The right-edge button group (flag + 4 route tools) stretches and uses `justify-content: space-evenly` between its top anchor and the route-stats panel.
-- **Station/riddle card**: an independent edit toggle lives inside the station sheet's sticky toolbar (`MapStationSheet.toolbarTrailing`). Decoupled from the map's marker-edit FAB. Resets when the sheet closes.
+- **Edit toggle (overview, intro, outro)**: floating chip pattern (`.stq-mobile-studio__floating-edit-chip`) in the bottom-right corner of each phone preview. Intro/outro previews preserve their own back-navigation via the in-frame header.
+- **Edit toggle (map)**: a round `MapEditPill` (`src/components/studio/workspaces/MapEditPill.tsx`) anchored to the left of the zoom controls. When inactive it shows only the round pen toggle; when active the pill grows leftward to expose action buttons. Replaces the previous bottom-right FAB on the map view only.
+- **Map view edit content**: when expanded, the pill contains (left → right) `[plus] [trash] [flag] [pen toggle]`. The plus/trash buttons drive add/delete-station modes; the flag button toggles route-edit mode.
+- **Route view edit content**: when expanded, the pill contains a top row `[route-editor tools] [flag] [pen toggle]` and a bottom row centered under the buttons with compact route stats (distance + point count). Stats are absolutely positioned at the pill bottom; the button row stays vertically centered against the toggle.
+- **Hide-while-editing**: the map pill is suppressed when the station sheet is in the `expanded` state — only station markers and the GPS marker remain on the map. The previous on-map context toolbar (settings cog + map-pin buttons) has been removed as redundant; per-element pencils inside the open station sheet are the entry point into the station/marker panels.
+- **Selection cleanup**: closing route-edit (flag → off) or closing edit mode entirely (pen toggle → off) calls `actions.clearSelection()` so the remounted `MapPreviewWorkspace` doesn't auto-pop a stale station card.
+- **Station/riddle card**: an independent edit toggle lives inside the station sheet's sticky toolbar (`MapStationSheet.toolbarTrailing`). Decoupled from the map pill. Resets when the sheet closes.
 - **CSS tokens**: `src/styles/tokens.css` is the single canonical source for color, alpha overlay, shadow and geometry tokens. No one-off colors elsewhere.
 
 ## In progress / likely next areas
@@ -37,7 +39,7 @@
 - Browser speech recognition behavior varies strongly across browsers and devices.
 - Mobile viewport, drawer and keyboard behavior need real-device checks.
 - Sensor behavior must be tested on Android devices, not only desktop browsers.
-- The `:has()` selector is used in `phone-map-workspace.css` for the route-editor button distribution. Requires Chrome ≥105 / Safari ≥15.4 / Firefox ≥121.
+- The map pill (`MapEditPill`) is positioned absolutely relative to the phone-mockup workspace using fixed offsets calibrated to the zoom-control geometry (`right: calc(18px + 28px + 10px); bottom: 121px`). Changes to zoom-control size or position must be re-checked against the pill's anchor.
 
 ## Recommended next safe PRs
 
