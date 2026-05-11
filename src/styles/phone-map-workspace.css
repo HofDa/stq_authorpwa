@@ -118,35 +118,84 @@
   -webkit-line-clamp: 2;
 }
 
+/* Bottom-right cluster: round edit toggle next to the zoom controls. When
+   active, its content slides out to the left as a horizontal mini-menu. */
 .stq-phone-map-edit-pill {
   position: absolute;
-  top: max(15.4dvh, calc(env(safe-area-inset-top) + 15.4dvh));
-  right: 16px;
+  right: calc(18px + 28px + 10px);
+  bottom: 121px;
   z-index: 20;
 }
 
-/* Route editor active: stretch the pill and distribute buttons evenly
-   between the top anchor and the route-stats panel. */
-.stq-phone-map-edit-pill:has(.stq-mobile-map-edit-actions--route) {
-  bottom: 140px;
+.stq-phone-map-edit-pill__cluster {
   display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border-radius: 999px;
 }
 
-.stq-phone-map-edit-pill:has(.stq-mobile-map-edit-actions--route)
-  .stq-mobile-map-edit-actions--route {
+.stq-phone-map-edit-pill__cluster.is-active {
+  padding: 4px 4px 4px 10px;
+  background: var(--stq-alpha-white);
+  box-shadow: 0 8px 22px var(--stq-alpha-brown);
+}
+
+.stq-phone-map-edit-pill__stack {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
-  align-items: flex-end;
-  flex: 1;
-  gap: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.stq-phone-map-edit-pill__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.stq-phone-map-edit-pill__stats {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 0 2px;
+  color: var(--stq-text);
+  white-space: nowrap;
+}
+
+.stq-phone-map-edit-pill__stats strong {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stq-phone-map-edit-pill__stats small {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--stq-color-text-soft);
+}
+
+.stq-phone-map-edit-pill__cluster .stq-mobile-map-edit-actions--route {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.stq-phone-map-edit-pill button.stq-phone-map-edit-pill__toggle.is-active {
+  box-shadow:
+    0 2px 6px var(--stq-alpha-brown),
+    inset 0 0 0 2px var(--stq-white);
+  filter: none;
 }
 
 .stq-mobile-map-edit-actions {
-  display: grid;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
 }
 
@@ -170,6 +219,14 @@
     0 2px 6px var(--stq-alpha-brown),
     0 0 0 4px var(--stq-alpha-primary);
   filter: brightness(1.04);
+}
+
+/* Secondary buttons inside the expanded pill are smaller than the toggle. */
+.stq-phone-map-edit-pill__cluster.is-active button:not(.stq-phone-map-edit-pill__toggle) {
+  width: 32px;
+  height: 32px;
+  border-width: 2px;
+  box-shadow: none;
 }
 
 .stq-phone-map-tools {

@@ -692,7 +692,7 @@
   background: var(--stq-color-bg);
 }
 
-.stq-intro-phone__header button {
+.stq-intro-phone__header:not(.stq-intro-phone__header--app) button {
   display: grid;
   place-items: center;
   flex: none;
@@ -707,13 +707,42 @@
   font-weight: 700;
 }
 
-.stq-intro-phone__header span {
+.stq-intro-phone__header:not(.stq-intro-phone__header--app) span {
   flex: 1;
   text-align: center;
   color: var(--stq-color-text);
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+.stq-intro-phone__header--app {
+  position: sticky;
+  top: 62px;
+  justify-content: space-between;
+  min-height: 0;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--stq-color-bg-alt);
+  border-bottom: 1px solid var(--stq-alpha-brown);
+  box-shadow: 0 4px 8px -4px var(--stq-alpha-brown);
+}
+
+.stq-ios-device__content .stq-intro-phone {
+  padding-top: 62px;
+}
+
+.stq-intro-phone__brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--stq-color-text);
+  font: inherit;
+  cursor: pointer;
 }
 
 .stq-intro-phone__body {

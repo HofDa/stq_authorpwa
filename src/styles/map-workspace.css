@@ -453,11 +453,14 @@
 
 .stq-mobile-studio--overview .stq-tour-card-phone-scroll {
   min-height: 100%;
-  padding: calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 86px);
+  padding: 0 20px calc(env(safe-area-inset-bottom) + 86px);
 }
 
 .stq-mobile-studio--overview .stq-tour-card-phone-header {
-  display: none;
+  position: sticky;
+  top: 0;
+  margin: 0 -20px 12px;
+  padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
 }
 
 .stq-mobile-studio__header-edit-toggle {
@@ -487,8 +490,8 @@
 
 .stq-mobile-studio__floating-edit-chip {
   position: absolute;
-  top: max(16px, env(safe-area-inset-top));
-  right: max(16px, env(safe-area-inset-right));
+  right: max(18px, env(safe-area-inset-right));
+  bottom: calc(116px + 56px);
   z-index: 30;
   pointer-events: none;
   width: auto !important;
@@ -497,11 +500,6 @@
 
 .stq-mobile-studio__floating-edit-chip > * {
   pointer-events: auto;
-}
-
-/* Drop the chip below a sticky phone-frame header. */
-.stq-mobile-studio__floating-edit-chip--below-header {
-  top: calc(env(safe-area-inset-top) + 120px);
 }
 
 .stq-mobile-studio__floating-edit-chip .stq-mobile-studio__header-edit-toggle {
@@ -515,6 +513,9 @@
 .stq-mobile-studio__floating-edit-chip .stq-mobile-studio__header-edit-toggle.is-active {
   background: var(--stq-primary);
   color: var(--stq-color-surface-cream);
+  box-shadow:
+    inset 0 0 0 2px var(--stq-white),
+    0 6px 16px var(--stq-alpha-brown);
 }
 
 .stq-confirm-overlay {
@@ -589,6 +590,7 @@
 
 .stq-mobile-studio--intro .stq-intro-phone__header,
 .stq-mobile-studio--outro .stq-intro-phone__header {
+  top: 0;
   min-height: calc(env(safe-area-inset-top) + 48px);
   padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
 }

@@ -10,6 +10,7 @@ import {
 } from '@/components/map/mapTypes';
 import type { RecordedRoutePoint, RiddleEntry } from '@/schema';
 import { Icon } from '../Icon';
+import { MapEditPill } from './MapEditPill';
 import { PhoneMapMockup } from './PhoneMapMockup';
 import type { BaseWorkspaceProps } from './workspaceTypes';
 
@@ -18,6 +19,10 @@ interface Props extends BaseWorkspaceProps {
   onSelectStation: (id: string) => void;
   editable?: boolean;
   topRightPill?: ReactNode;
+  /** When true, render the round edit-mode toggle inside the map pill. */
+  mapEditMode?: boolean;
+  /** Toggle handler for the round map edit-mode toggle. */
+  onToggleMapEditMode?: () => void;
   layout?: 'desktop' | 'mobile';
 }
 
@@ -34,6 +39,8 @@ export function RouteWorkspace({
   onChange,
   editable = true,
   topRightPill,
+  mapEditMode,
+  onToggleMapEditMode,
   layout = 'mobile',
 }: Props) {
   const { t } = useEditorLanguage();
@@ -585,7 +592,28 @@ export function RouteWorkspace({
       topRightPill={
         layout === 'desktop'
           ? undefined
-          : topRightPill || editable ? (
+          : onToggleMapEditMode ? (
+              <MapEditPill
+                active={Boolean(mapEditMode)}
+                onToggle={onToggleMapEditMode}
+                content={
+                  mapEditMode && editable ? (
+                    <div className="stq-phone-map-edit-pill__stack">
+                      <div className="stq-phone-map-edit-pill__row">
+                        <div className="stq-mobile-map-edit-actions stq-mobile-map-edit-actions--route">
+                          {routeEditorTools}
+                        </div>
+                        {topRightPill}
+                      </div>
+                      <div className="stq-phone-map-edit-pill__stats">
+                        <strong>{formatDistance(totalDistance)}</strong>
+                        <small>· {draft.recordedRoute.length} {t('studio.points')}</small>
+                      </div>
+                    </div>
+                  ) : null
+                }
+              />
+            ) : topRightPill || editable ? (
               <>
                 {topRightPill}
                 {editable && (
@@ -612,13 +640,15 @@ export function RouteWorkspace({
       fitToCoordinates={focusEnabled && fitPoints.length > 1 ? fitPoints : undefined}
       fitTrigger={focusEnabled ? `${focusTrigger ?? 'on'}:${fitSignature}` : undefined}
       bottomSheet={
-        <div className="stq-phone-map-route-stats">
-          <span>{t('workflow.route')}</span>
-          <strong>{formatDistance(totalDistance)}</strong>
-          <small>
-            {fromLabel} → {toLabel} · {draft.recordedRoute.length} {t('studio.points')}
-          </small>
-        </div>
+        layout === 'mobile' && onToggleMapEditMode ? undefined : (
+          <div className="stq-phone-map-route-stats">
+            <span>{t('workflow.route')}</span>
+            <strong>{formatDistance(totalDistance)}</strong>
+            <small>
+              {fromLabel} → {toLabel} · {draft.recordedRoute.length} {t('studio.points')}
+            </small>
+          </div>
+        )
       }
       segmentArrows={
         editable

@@ -26,6 +26,7 @@ import {
 } from '../mobile/RightEditDrawer';
 import { StationIconPreview } from '@/components/stations/StationVisualPreview';
 import type { AuthorMapCoordinate } from '@/components/map/mapTypes';
+import { MapEditPill } from './MapEditPill';
 import { PhoneMapMockup } from './PhoneMapMockup';
 import { MapStationSheet, type MapSheetState } from './MapStationSheet';
 import {
@@ -46,6 +47,10 @@ interface Props {
   editMode?: boolean;
   markerEditMode?: boolean;
   topRightPill?: ReactNode;
+  /** When true, render the round edit-mode toggle inside the map pill. */
+  mapEditMode?: boolean;
+  /** Toggle handler for the round map edit-mode toggle. */
+  onToggleMapEditMode?: () => void;
   mobileSelectionFlow?: boolean;
   /** When true, renders a floating "+" button to add a station at viewport center. */
   showAddStationFab?: boolean;
@@ -78,6 +83,8 @@ export function MapPreviewWorkspace({
   editMode = true,
   markerEditMode = false,
   topRightPill,
+  mapEditMode,
+  onToggleMapEditMode,
   mobileSelectionFlow = false,
   showAddStationFab = false,
   showDeleteStationFab = false,
@@ -286,34 +293,44 @@ export function MapPreviewWorkspace({
     };
   }
 
-  const composedTopRightPill =
-    topRightPill || showAddStationFab || showDeleteStationFab ? (
-      <div className="stq-mobile-map-edit-actions">
-        {topRightPill}
-        {showAddStationFab && (
-          <button
-            type="button"
-            onClick={addStationAtViewportCenter}
-            aria-label={t('studio.addStation')}
-            title={t('studio.addStation')}
-          >
-            <Icon name="plus" size={15} />
-          </button>
-        )}
-        {showDeleteStationFab && (
-          <button
-            type="button"
-            className={deleteMode ? 'is-active' : ''}
-            onClick={() => setDeleteMode((value) => !value)}
-            aria-label={deleteMode ? 'Löschen beenden' : 'Station löschen'}
-            aria-pressed={deleteMode}
-            title={deleteMode ? 'Löschen beenden' : 'Station löschen'}
-          >
-            <Icon name="trash" size={15} />
-          </button>
-        )}
-      </div>
-    ) : undefined;
+  const hasPillContent =
+    Boolean(topRightPill) || showAddStationFab || showDeleteStationFab;
+  const pillContent = hasPillContent ? (
+    <div className="stq-mobile-map-edit-actions">
+      {showAddStationFab && (
+        <button
+          type="button"
+          onClick={addStationAtViewportCenter}
+          aria-label={t('studio.addStation')}
+          title={t('studio.addStation')}
+        >
+          <Icon name="plus" size={15} />
+        </button>
+      )}
+      {showDeleteStationFab && (
+        <button
+          type="button"
+          className={deleteMode ? 'is-active' : ''}
+          onClick={() => setDeleteMode((value) => !value)}
+          aria-label={deleteMode ? 'Löschen beenden' : 'Station löschen'}
+          aria-pressed={deleteMode}
+          title={deleteMode ? 'Löschen beenden' : 'Station löschen'}
+        >
+          <Icon name="trash" size={15} />
+        </button>
+      )}
+      {topRightPill}
+    </div>
+  ) : null;
+  const composedTopRightPill = onToggleMapEditMode ? (
+    <MapEditPill
+      content={mapEditMode ? pillContent : null}
+      active={Boolean(mapEditMode)}
+      onToggle={onToggleMapEditMode}
+    />
+  ) : (
+    pillContent ?? undefined
+  );
 
   const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
   const mobileContextToolbar =

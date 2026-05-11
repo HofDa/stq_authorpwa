@@ -236,17 +236,43 @@ export function IntroPhonePreview({
 
   return (
     <article className="stq-intro-phone">
-      <header className="stq-intro-phone__header">
-        <button type="button" aria-label={t('studio.back')} onClick={onBack}>
-          <Icon name="chevron-left" size={16} />
-        </button>
-        <span>{mode === 'outro' ? t('studio.outro') : t('studio.introPage')}</span>
-        <button type="button" aria-label={t('studio.language')}>
-          {locale.toUpperCase()}
-        </button>
+      <header className="stq-intro-phone__header stq-intro-phone__header--app">
+        {onBack ? (
+          <button
+            type="button"
+            className="stq-intro-phone__brand-link"
+            onClick={onBack}
+            aria-label={t('studio.back')}
+          >
+            <span className="stq-tour-card-phone-header-logo" aria-hidden>
+              <img src="/stq_logo.svg" alt="" />
+            </span>
+            <span className="stq-tour-card-phone-header-title">
+              SouthTyrolQuests
+            </span>
+          </button>
+        ) : (
+          <>
+            <span className="stq-tour-card-phone-header-logo" aria-hidden>
+              <img src="/stq_logo.svg" alt="" />
+            </span>
+            <span className="stq-tour-card-phone-header-title">
+              SouthTyrolQuests
+            </span>
+          </>
+        )}
+        <span className="stq-tour-card-phone-header-actions">
+          <span className="stq-tour-card-phone-header-locale">
+            {locale.toUpperCase()}
+            <Icon name="chevron-right" size={10} />
+          </span>
+          <span className="stq-tour-card-phone-header-gear" aria-hidden>
+            <Icon name="settings" size={16} />
+          </span>
+        </span>
       </header>
       {floatingEditToggle && (
-        <div className="stq-mobile-studio__floating-edit-chip stq-mobile-studio__floating-edit-chip--below-header">
+        <div className="stq-mobile-studio__floating-edit-chip">
           {floatingEditToggle}
         </div>
       )}

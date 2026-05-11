@@ -27,7 +27,6 @@ export function MobileStudioShell({
   const [introEditMode, setIntroEditMode] = useState(false);
   const [outroEditMode, setOutroEditMode] = useState(false);
   const [routeEditMode, setRouteEditMode] = useState(false);
-  const [stationSheetExpanded, setStationSheetExpanded] = useState(false);
   const [view, setView] = useState<'map' | 'overview' | 'intro' | 'outro'>('map');
   const [introDraftId, setIntroDraftId] = useState<string | null>(null);
   const { locale, selectedId, drafts, actions } = useStudioController({
@@ -55,7 +54,7 @@ export function MobileStudioShell({
     setView('outro');
   }
 
-  const mapEditPill = editMode ? (
+  const mapEditMarkerCluster = editMode ? (
     <div className="stq-mobile-map-edit-actions">
       <button
         type="button"
@@ -160,7 +159,9 @@ export function MobileStudioShell({
               selectedId={selectedId}
               onSelectStation={actions.selectStationOnly}
               onChange={onChange}
-              topRightPill={mapEditPill}
+              topRightPill={mapEditMarkerCluster}
+              mapEditMode={editMode}
+              onToggleMapEditMode={toggleMapEditMode}
             />
           ) : (
             <MapPreviewWorkspace
@@ -173,22 +174,13 @@ export function MobileStudioShell({
               onOpenOutro={openOutro}
               onChange={onChange}
               markerEditMode={editMode}
-              topRightPill={mapEditPill}
+              topRightPill={mapEditMarkerCluster}
+              mapEditMode={editMode}
+              onToggleMapEditMode={toggleMapEditMode}
               showAddStationFab={editMode && !routeEditMode}
               showDeleteStationFab={editMode && !routeEditMode}
               onDeleteStation={actions.deleteStation}
-              onSheetStateChange={(state) =>
-                setStationSheetExpanded(state === 'expanded')
-              }
             />
-          )}
-          {!stationSheetExpanded && (
-            <div className="stq-mobile-studio__floating-edit-chip">
-              <HeaderEditToggle
-                active={editMode}
-                onClick={toggleMapEditMode}
-              />
-            </div>
           )}
       </section>
       )}
