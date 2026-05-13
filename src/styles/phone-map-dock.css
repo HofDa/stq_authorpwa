@@ -1,17 +1,4 @@
 /* Phone map dock and progress rail */
-.stq-phone-map-sheet {
-  position: absolute;
-  right: 14px;
-  bottom: 92px;
-  left: 14px;
-  z-index: 20;
-  border: 1px solid var(--stq-border);
-  border-radius: 18px;
-  background: var(--stq-alpha-white);
-  padding: 10px 14px 16px;
-  box-shadow: 0 14px 28px var(--stq-alpha-brown);
-}
-
 .stq-phone-map-dock {
   position: absolute;
   left: 14px;
@@ -184,4 +171,3 @@
   height: 24px;
   font-size: 14px;
 }
-

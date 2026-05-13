@@ -22,6 +22,7 @@ interface Props {
   locale: Locale;
   onChange: (patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft)) => void;
   onCreateTour?: () => void | Promise<void>;
+  onDeleteTour?: () => void | Promise<void>;
   otherDrafts?: TourDraft[];
   onSelectDraft?: (draftId: string) => void;
   onOpenCurrentTour?: () => void;
@@ -38,6 +39,7 @@ export function TourCardCanvas({
   locale,
   onChange,
   onCreateTour,
+  onDeleteTour,
   otherDrafts,
   onSelectDraft,
   onOpenCurrentTour,
@@ -428,6 +430,16 @@ export function TourCardCanvas({
             <Icon name="plus" size={16} />
             {t('studio.createNewTour')}
           </button>
+          {editable && onDeleteTour && (
+            <button
+              type="button"
+              className="stq-tour-card-add-btn stq-tour-card-add-btn--danger"
+              onClick={() => onDeleteTour()}
+            >
+              <Icon name="trash" size={16} />
+              {t('studio.deleteTour')}
+            </button>
+          )}
         </div>
       </DeviceMockup>
 

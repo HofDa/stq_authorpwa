@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './AppLayout';
-import { TourListPage } from '@/pages/TourListPage';
+import { TourRedirectPage } from '@/pages/TourRedirectPage';
 import { TourEditorPage } from '@/pages/TourEditorPage';
 import { RrrRuntimeDemo } from '@/pages/RrrRuntimeDemo';
 import { RrrFieldTest } from '@/pages/RrrFieldTest';
@@ -11,7 +11,7 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <Navigate to="/tours" replace /> },
-      { path: 'tours', element: <TourListPage /> },
+      { path: 'tours', element: <TourRedirectPage /> },
       { path: 'tours/:draftId', element: <TourEditorPage /> },
       ...(import.meta.env.DEV
         ? [

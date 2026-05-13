@@ -16,7 +16,9 @@ import {
 import { useExportTour } from '@/hooks/useExportTour';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { getRrrTourReadiness } from '@/rrr';
-import { listDrafts } from '@/storage';
+import { deleteDraft, listDrafts } from '@/storage';
+import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
+import { getTourTitleLabel } from '@/utils/localizedContent';
 import type { StudioWorkflowSection } from './workflow/workflowTypes';
 
 type DraftChangeHandler = (
@@ -34,6 +36,8 @@ export function useStudioController({
 }: UseStudioControllerOptions) {
   const navigate = useNavigate();
   const { editorLanguage, setEditorLanguage, t } = useEditorLanguage();
+  const confirm = useConfirm();
+  const toast = useToast();
   const [locale, setLocale] = useState<Locale>(editorLanguage);
   const [activeSection, setActiveSection] = useState<StudioWorkflowSection>(
     'plan',
@@ -183,6 +187,29 @@ export function useStudioController({
     navigate('/tours');
   }, [navigate]);
 
+  const deleteCurrentTour = useCallback(async () => {
+    const title = getTourTitleLabel(
+      draft.tour,
+      locale,
+      t('studio.untitledTour'),
+    );
+    const confirmed = await confirm({
+      title: t('studio.deleteTourConfirmTitle'),
+      message: t('studio.deleteTourConfirmMessage').replace('{title}', title),
+      confirmLabel: t('studio.deleteTourConfirmAction'),
+      cancelLabel: t('studio.cancel'),
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
+    await deleteDraft(draft.draftId);
+    toast({
+      title: t('studio.tourDeleted'),
+      tone: 'success',
+    });
+    navigate('/tours', { replace: true });
+  }, [confirm, draft.draftId, draft.tour, locale, navigate, t, toast]);
+
   const selectTourOverview = useCallback(() => {
     setActiveSection('plan');
   }, []);
@@ -246,6 +273,7 @@ export function useStudioController({
     t,
     actions: {
       addStation,
+      deleteCurrentTour,
       deleteStation,
       backToTours,
       changeLanguage,

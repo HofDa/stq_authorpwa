@@ -6,6 +6,7 @@ import { ContentSectionRenderer } from '@/renderer/ContentSectionRenderer';
 import { getTourTitleLabel } from '@/utils/localizedContent';
 import { EditPanel, type EditPanelField } from '../EditPanel';
 import { Icon } from '../Icon';
+import { ImageAssetPanel } from '../ImageAssetPanel';
 import {
   RightEditDrawer,
   type RightEditDrawerState,
@@ -89,17 +90,6 @@ export function IntroPhonePreview({
     }));
   }
 
-  const coverFields: EditPanelField[] = [
-    {
-      id: 'intro-imagePath',
-      label: t('studio.imagePath'),
-      type: 'text',
-      value: draft.tour.imagePath,
-      placeholder: 'images/cover.webp',
-      onChange: (v) => patchTour({ imagePath: v }),
-    },
-  ];
-
   const titleFields: EditPanelField[] = [
     {
       id: 'intro-title',
@@ -147,9 +137,31 @@ export function IntroPhonePreview({
 
   const panelConfig: Record<
     Exclude<ActivePanel, null>,
-    { title: string; fields: EditPanelField[] }
+    { title: string; fields: EditPanelField[]; body?: ReactNode }
   > = {
-    cover: { title: t('studio.coverImage'), fields: coverFields },
+    cover: {
+      title: t('studio.coverImage'),
+      fields: [],
+      body: (
+        <ImageAssetPanel
+          draftId={draft.draftId}
+          label={t('studio.tourImage')}
+          imageUrl={coverUrl}
+          imagePath={draft.tour.imagePath}
+          imageBlobId={draft.tour.coverBlobId}
+          preset="tourCover"
+          onBlobStored={(blobId) =>
+            patchTour({
+              coverBlobId: blobId,
+              imagePath: `images/${blobId}.webp`,
+            })
+          }
+          onPathChange={(url) =>
+            patchTour({ imagePath: url, coverBlobId: undefined })
+          }
+        />
+      ),
+    },
     title: { title: t('studio.title'), fields: titleFields },
     copy: {
       title: mode === 'outro' ? t('studio.outroText') : t('studio.introText'),
@@ -197,6 +209,7 @@ export function IntroPhonePreview({
   function renderPanelBody() {
     return (
       <>
+        {panel?.body}
         {activePanel === 'copy' && (
           <TextBodyPanel
             blocks={blocks}

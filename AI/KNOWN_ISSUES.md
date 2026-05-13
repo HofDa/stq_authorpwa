@@ -70,6 +70,12 @@ New floating wrappers should set `pointer-events: none` and re-enable `pointer-e
 
 ## Resolved issues
 
+### 2026-05-13 — Stale global CSS stayed bundled after UI replacements
+
+Files: `src/index.css`, `src/styles/*.css`.
+Cause: old assistant/storyline/native-card prototypes and legacy phone-map/station-sheet mockups were removed or superseded, but their global CSS imports and selectors remained.
+Fix: removed unused imports/files and selector blocks after confirming no TS/TSX references. Preserved still-used phone map dock/zoom overrides.
+
 ### 2026-05-10 — Map back button and station tap blocked by edit chip wrapper
 
 Files: `src/styles/map-workspace.css`.

@@ -11,6 +11,9 @@
 - RRR core and runtime areas exist with boundary and evaluator tests.
 - Field-mode assistant/storyline components exist from recent PR work.
 - Mobile authoring shell (`src/components/studio/mobile/MobileStudioShell.tsx`) drives all four mobile surfaces (overview, intro, outro, map).
+- Stale global CSS from removed assistant/storyline/native-card prototypes and legacy phone-map/station-sheet mockups has been cleaned up; current map dock/zoom and mobile shell styles remain token-based and selector-backed.
+- Intro/start-page cover editing now uses the same `ImageAssetPanel` flow as the tour overview, including camera/upload, local blob storage and URL fallback against `tour.imagePath` / `tour.coverBlobId`.
+- Tours can now be deleted from the editor tour overview. The action uses the shared feedback confirm dialog, deletes the Dexie draft plus associated blobs through storage, then redirects through `/tours` so the editor opens another draft or creates a fresh one.
 
 ## Mobile authoring affordances (current placement)
 

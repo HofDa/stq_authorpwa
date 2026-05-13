@@ -102,6 +102,20 @@ Authors who had a station selected before entering edit mode lose that selection
 Rejected alternatives:
 Strengthening the mount-guard with a parent-tracked key/version; lifting selection into the shell.
 
+## 2026-05-13 — Remove stale global CSS by selector evidence
+
+Decision:
+Removed unused global CSS for old assistant/storyline panels, native-card prototypes, legacy static map/route phone mockups, obsolete station bottom sheets, removed riddle settings cogs, and unused mobile topbar/floating-controls chrome.
+
+Reason:
+The selectors had no TS/TSX references and were still bundled into production CSS. Keeping them increased the styling surface and made future mobile-shell work harder to audit.
+
+Tradeoffs:
+Pure selector scans can miss dynamically composed class names, so cleanup was limited to class families with direct negative reference checks. Still-used phone map dock and zoom overrides were preserved even though they live in an old `station-pillbar-sheet.css` file.
+
+Rejected alternatives:
+Cleaning all heuristic-unused CSS in one broad sweep; moving/renaming still-used dock styles in the same PR.
+
 ## Existing architectural decisions to preserve
 
 ### Authoring PWA exports to Flutter player

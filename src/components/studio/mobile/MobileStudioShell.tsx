@@ -105,6 +105,7 @@ export function MobileStudioShell({
             locale={locale}
             onChange={onChange}
             onCreateTour={onCreateTour}
+            onDeleteTour={actions.deleteCurrentTour}
             otherDrafts={otherDrafts}
             onSelectDraft={
               overviewEditMode
