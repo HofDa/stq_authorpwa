@@ -64,6 +64,7 @@
 
 .stq-phone-map-title-pill {
   position: absolute;
+  top: max(7.6vh, calc(env(safe-area-inset-top) + 7.6vh));
   top: max(7.6dvh, calc(env(safe-area-inset-top) + 7.6dvh));
   left: 16px;
   right: 16px;
@@ -245,6 +246,7 @@
 
 .stq-phone-map-tools {
   position: absolute;
+  top: max(15.4vh, calc(env(safe-area-inset-top) + 15.4vh));
   top: max(15.4dvh, calc(env(safe-area-inset-top) + 15.4dvh));
   left: 16px;
   right: auto;

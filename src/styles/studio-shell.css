@@ -36,6 +36,12 @@
   color: var(--stq-color-text);
 }
 
+.stq-author-tool-shell--fullheight {
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+}
+
 .stq-author-tool-canvas {
   --stq-author-surface: var(--stq-color-surface);
   --stq-author-surface-raised: var(--stq-color-surface);

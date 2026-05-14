@@ -262,8 +262,17 @@
 }
 
 .stq-mobile-studio {
+  /* Fallback chain: vh (broken on mobile, but always parses) → svh → dvh.
+     dvh shrinks/grows with the browser chrome and is correct on Android
+     Chrome/Firefox; svh is the small-viewport fallback. Setting both height
+     and min-height to dvh prevents the content from being cut off behind the
+     mobile address bar on browsers without dvh support. */
+  height: 100vh;
+  height: 100svh;
   height: 100dvh;
   min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
   width: 100%;
   display: block;
   background: var(--stq-color-bg-success);

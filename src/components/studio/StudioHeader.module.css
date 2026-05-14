@@ -4,6 +4,8 @@
   gap: 18px;
   min-height: 0;
   height: 100vh;
+  height: 100svh;
+  height: 100dvh;
   padding: 28px 22px 18px;
   background: #1a1614;
   border-right: 1px solid #2c2520;

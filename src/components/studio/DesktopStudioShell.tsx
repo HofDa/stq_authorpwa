@@ -40,14 +40,22 @@ export function DesktopStudioShell({
   const SIDEBAR_MAX = 560;
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     if (typeof window === 'undefined') return 280;
-    const stored = Number(window.localStorage.getItem('stq.studio.sidebarWidth'));
-    return Number.isFinite(stored) && stored >= SIDEBAR_MIN && stored <= SIDEBAR_MAX
-      ? stored
-      : 280;
+    try {
+      const stored = Number(window.localStorage.getItem('stq.studio.sidebarWidth'));
+      return Number.isFinite(stored) && stored >= SIDEBAR_MIN && stored <= SIDEBAR_MAX
+        ? stored
+        : 280;
+    } catch {
+      return 280;
+    }
   });
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('stq.studio.sidebarWidth', String(sidebarWidth));
+    try {
+      window.localStorage.setItem('stq.studio.sidebarWidth', String(sidebarWidth));
+    } catch {
+      // Private mode / quota — non-fatal.
+    }
   }, [sidebarWidth]);
   const draggingRef = useRef(false);
   function startResize(event: React.PointerEvent<HTMLDivElement>) {
@@ -72,9 +80,8 @@ export function DesktopStudioShell({
 
   return (
     <div
-      className="stq-author-tool-shell"
+      className="stq-author-tool-shell stq-author-tool-shell--fullheight"
       style={{
-        height: '100vh',
         width: '100%',
         display: 'grid',
         gridTemplateColumns: `${sidebarWidth}px 6px minmax(0, 1fr)`,
