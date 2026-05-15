@@ -11,7 +11,7 @@ export interface DesktopStudioShellProps {
   draft: TourDraft;
   onChange: (
     patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
-  ) => void;
+  ) => void | Promise<void>;
   onCreateTour?: () => void | Promise<void>;
   onSelectDraft?: (draftId: string) => void;
 }

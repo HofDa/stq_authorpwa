@@ -24,55 +24,55 @@
   --stq-color-accent: #2f7f9f;
 
   /* ───────── Surfaces & backgrounds ───────── */
-  --stq-color-bg: #f7efe7;
-  --stq-color-bg-rgb: 247 239 231;
-  --stq-color-bg-alt: #f4ebe3;
-  --stq-color-bg-alt-rgb: 244 235 227;
-  --stq-color-bg-success: #eef8ef;
-  --stq-color-bg-danger: #fff0ee;
+  --stq-color-bg: #ffffff;
+  --stq-color-bg-rgb: 255 255 255;
+  --stq-color-bg-alt: #ffffff;
+  --stq-color-bg-alt-rgb: 255 255 255;
+  --stq-color-bg-success: #f6fff7;
+  --stq-color-bg-danger: #fff5f5;
 
   --stq-color-surface: #ffffff;
   --stq-color-surface-rgb: 255 255 255;
-  --stq-color-surface-cream: #fff8f2;
+  --stq-color-surface-cream: #ffffff;
 
   /* ───────── Text & ink ───────── */
-  --stq-color-text: #1a1a1a;
-  --stq-color-text-rgb: 26 26 26;
-  --stq-color-text-soft: #5a5350;
-  --stq-color-text-muted: #8a807a;
-  --stq-color-text-muted-rgb: 138 128 122;
+  --stq-color-text: #111827;
+  --stq-color-text-rgb: 17 24 39;
+  --stq-color-text-soft: #374151;
+  --stq-color-text-muted: #6b7280;
+  --stq-color-text-muted-rgb: 107 114 128;
   --stq-color-text-inverted: #ffffff;
-  --stq-color-icon-muted: #b8b0af;
+  --stq-color-icon-muted: #9ca3af;
 
   /* ───────── Borders ───────── */
-  --stq-color-border: #e5d8cb;
-  --stq-color-border-rgb: 229 216 203;
+  --stq-color-border: #edf2f7;
+  --stq-color-border-rgb: 237 242 247;
 
   /* ───────── Sidebar (dark studio chrome) ───────── */
-  --stq-color-sidebar-bg: #1a1614;
-  --stq-color-sidebar-border: #2c2520;
-  --stq-color-sidebar-surface: #2a221d;
-  --stq-color-sidebar-text: #e8d8c8;
-  --stq-color-sidebar-text-strong: #f4e6d7;
-  --stq-color-sidebar-text-muted: #a89888;
-  --stq-color-sidebar-sticky: linear-gradient(180deg, rgba(26, 22, 20, 0.84), #1a1614);
+  --stq-color-sidebar-bg: #111827;
+  --stq-color-sidebar-border: #1f2937;
+  --stq-color-sidebar-surface: #1f2937;
+  --stq-color-sidebar-text: #e5e7eb;
+  --stq-color-sidebar-text-strong: #f9fafb;
+  --stq-color-sidebar-text-muted: #9ca3af;
+  --stq-color-sidebar-sticky: linear-gradient(180deg, rgba(17, 24, 39, 0.84), #111827);
 
   /* ───────── Alpha overlays (one per family — 24% canonical) ───────── */
   --stq-alpha-primary: rgba(160, 70, 61, 0.24);
   --stq-alpha-primary-icon: rgba(144, 74, 72, 0.6);
-  --stq-alpha-brown: rgba(70, 40, 30, 0.24);
+  --stq-alpha-brown: rgba(15, 23, 42, 0.08);
   --stq-alpha-black: rgba(0, 0, 0, 0.24);
   --stq-alpha-white: rgba(255, 255, 255, 0.95);
-  --stq-alpha-warm-tint: rgba(231, 221, 211, 0.8);
-  --stq-alpha-canvas: rgba(216, 196, 176, 0.4);
+  --stq-alpha-warm-tint: rgba(237, 242, 247, 0.82);
+  --stq-alpha-canvas: rgba(237, 242, 247, 0.45);
   --stq-alpha-danger: rgba(186, 26, 26, 0.24);
   --stq-alpha-success: rgba(65, 104, 52, 0.24);
   --stq-alpha-warning: rgba(196, 139, 60, 0.4);
   --stq-alpha-route: rgba(33, 150, 243, 0.24);
   --stq-alpha-amber: rgba(204, 126, 41, 0.8);
   --stq-alpha-panel: rgba(255, 255, 255, 0.96);
-  --stq-alpha-modal-backdrop: rgba(35, 25, 25, 0.28);
-  --stq-alpha-subtle-ink: rgba(35, 25, 25, 0.08);
+  --stq-alpha-modal-backdrop: rgba(15, 23, 42, 0.28);
+  --stq-alpha-subtle-ink: rgba(15, 23, 42, 0.06);
   --stq-alpha-code-bg: rgba(0, 0, 0, 0.04);
   --stq-alpha-code-border: rgba(0, 0, 0, 0.08);
   --stq-alpha-danger-border: rgba(186, 26, 26, 0.35);
@@ -84,14 +84,14 @@
   --stq-alpha-validation-success: rgba(65, 104, 52, 0.34);
 
   /* Misc raw helpers */
-  --stq-alpha-ink-rgb: rgb(31, 25, 27);
+  --stq-alpha-ink-rgb: rgb(15, 23, 42);
   --stq-alpha-success-cream-95: rgba(245, 238, 203, 0.95);
 
   /* ───────── Elevation ───────── */
-  --stq-shadow-card: 0 4px 18px rgba(70, 40, 30, 0.07);
+  --stq-shadow-card: 0 4px 18px rgba(15, 23, 42, 0.05);
   --stq-shadow-soft: 0 4px 12px var(--stq-alpha-brown);
-  --stq-shadow-modal: 0 22px 55px rgba(35, 25, 25, 0.22);
-  --stq-shadow-station-rail: 0 8px 24px rgba(35, 25, 25, 0.14);
+  --stq-shadow-modal: 0 22px 55px rgba(15, 23, 42, 0.12);
+  --stq-shadow-station-rail: 0 8px 24px rgba(15, 23, 42, 0.08);
   --stq-shadow-map-marker: 0 0 0 1px var(--stq-alpha-subtle-ink);
   --stq-shadow-route-marker: 0 2px 9px rgba(25, 35, 45, 0.25);
   --stq-shadow-route-endpoint: 0 2px 8px rgba(25, 35, 45, 0.22);

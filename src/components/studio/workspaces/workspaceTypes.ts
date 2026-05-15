@@ -2,7 +2,7 @@ import type { Locale, TourDraft } from '@/schema';
 
 export type DraftChangeHandler = (
   patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
-) => void;
+) => void | Promise<void>;
 
 /**
  * Shared shape for the studio workspaces. Each workspace receives the

@@ -1,6 +1,7 @@
 import {
   useEffect,
   useRef,
+  useState,
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
@@ -9,7 +10,7 @@ import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { Icon } from '../Icon';
 import type { EditPanelField } from '../EditPanel';
 
-export type RightEditDrawerState = 'closed' | 'peek' | 'half' | 'open';
+export type RightEditDrawerState = 'closed' | 'peek' | 'open';
 
 interface Props {
   title: string;
@@ -40,7 +41,23 @@ export function RightEditDrawer({
     lastY: number;
   } | null>(null);
   const gestureDidSwipeRef = useRef(false);
-  const expanded = state === 'half' || state === 'open';
+  const wasExpandedRef = useRef(false);
+  const expanded = state === 'open';
+
+  const [draftValues, setDraftValues] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const justOpened = expanded && !wasExpandedRef.current;
+
+    if (justOpened) {
+      setDraftValues(
+        Object.fromEntries(fields.map((field) => [field.id, field.value])),
+      );
+    }
+
+    wasExpandedRef.current = expanded;
+  }, [expanded, fields]);
 
   useEffect(() => {
     if (expanded) {
@@ -51,16 +68,41 @@ export function RightEditDrawer({
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
+
       if (expanded) {
         onStateChange('peek');
         return;
       }
+
+      onCancel?.();
+      onStateChange('closed');
       onClose();
     }
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [expanded, onClose, onStateChange]);
+  }, [expanded, onClose, onCancel, onStateChange]);
+
+  function updateDraft(fieldId: string, value: string) {
+    setDraftValues((current) => ({
+      ...current,
+      [fieldId]: value,
+    }));
+  }
+
+  async function commitSave() {
+    if (saving) return;
+
+    setSaving(true);
+    try {
+      for (const field of fields) {
+        await field.onChange(draftValues[field.id] ?? field.value ?? '');
+      }
+      commitClose();
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function commitClose() {
     onStateChange('closed');
@@ -72,41 +114,8 @@ export function RightEditDrawer({
     commitClose();
   }
 
-  function expandState(current: RightEditDrawerState): RightEditDrawerState {
-    if (current === 'closed') return 'peek';
-    if (current === 'peek') return 'half';
-    if (current === 'half') return 'open';
-    return 'open';
-  }
-
-  function reduceState(current: RightEditDrawerState): RightEditDrawerState {
-    if (current === 'open') return 'half';
-    if (current === 'half') return 'peek';
-    return 'closed';
-  }
-
-  function setDrawerState(next: RightEditDrawerState) {
-    if (next === 'closed') {
-      commitClose();
-      return;
-    }
-
-    onStateChange(next);
-  }
-
-  function expandDrawer() {
-    setDrawerState(expandState(state));
-  }
-
-  function collapseDrawer() {
-    setDrawerState(reduceState(state));
-  }
-
   function nextHandleState(): RightEditDrawerState {
-    if (state === 'closed') return 'peek';
-    if (state === 'peek') return 'half';
-    if (state === 'half') return 'open';
-    return 'peek';
+    return state === 'open' ? 'peek' : 'open';
   }
 
   function beginGesture(event: PointerEvent<HTMLElement>) {
@@ -146,11 +155,11 @@ export function RightEditDrawer({
 
     gestureDidSwipeRef.current = true;
     if (deltaX < 0) {
-      expandDrawer();
+      onStateChange('open');
       return;
     }
 
-    collapseDrawer();
+    onStateChange('peek');
   }
 
   function cancelGesture(event: PointerEvent<HTMLElement>) {
@@ -166,7 +175,7 @@ export function RightEditDrawer({
       return;
     }
 
-    setDrawerState(nextHandleState());
+    onStateChange(nextHandleState());
   }
 
   return (
@@ -203,27 +212,12 @@ export function RightEditDrawer({
               <div className="stq-edit-panel-eyebrow">{t('studio.edit')}</div>
               <h2 className="stq-edit-panel-title">{title}</h2>
             </div>
+
             <div className="stq-right-edit-drawer__actions">
               <button
                 type="button"
-                aria-label="Editor erweitern"
-                disabled={state === 'open'}
-                onClick={expandDrawer}
-              >
-                <Icon name="chevron-left" size={15} />
-              </button>
-              <button
-                type="button"
-                aria-label="Editor einklappen"
-                disabled={state === 'peek' || state === 'closed'}
-                onClick={collapseDrawer}
-              >
-                <Icon name="chevron-right" size={15} />
-              </button>
-              <button
-                type="button"
                 aria-label={t('studio.close')}
-                onClick={commitClose}
+                onClick={commitCancel}
               >
                 <Icon name="x" size={15} />
               </button>
@@ -231,44 +225,69 @@ export function RightEditDrawer({
           </div>
 
           <div className="stq-right-edit-drawer__body">
-            {fields.map((field, index) => (
-              <div key={field.id} className="stq-edit-panel-field">
-                <label
-                  className="stq-edit-panel-label"
-                  htmlFor={`red-${field.id}`}
-                >
-                  {field.label}
-                </label>
-                {field.type === 'textarea' ? (
-                  <textarea
-                    ref={index === 0 ? (el) => { firstRef.current = el; } : undefined}
-                    id={`red-${field.id}`}
-                    className="stq-edit-panel-textarea"
-                    value={field.value}
-                    placeholder={field.placeholder}
-                    maxLength={field.maxLength}
-                    onChange={(event) => field.onChange(event.target.value)}
-                    rows={4}
-                  />
-                ) : (
-                  <input
-                    ref={index === 0 ? (el) => { firstRef.current = el; } : undefined}
-                    id={`red-${field.id}`}
-                    type="text"
-                    className="stq-edit-panel-input"
-                    value={field.value}
-                    placeholder={field.placeholder}
-                    maxLength={field.maxLength}
-                    onChange={(event) => field.onChange(event.target.value)}
-                  />
-                )}
-                {typeof field.maxLength === 'number' && (
-                  <div className="stq-edit-panel-count">
-                    {field.value.length} / {field.maxLength}
-                  </div>
-                )}
-              </div>
-            ))}
+            {fields.map((field, index) => {
+              const value = draftValues[field.id] ?? field.value ?? '';
+
+              return (
+                <div key={field.id} className="stq-edit-panel-field">
+                  <label
+                    className="stq-edit-panel-label"
+                    htmlFor={`red-${field.id}`}
+                  >
+                    {field.label}
+                  </label>
+
+                  {field.type === 'textarea' ? (
+                    <textarea
+                      ref={
+                        index === 0
+                          ? (el) => {
+                              firstRef.current = el;
+                            }
+                          : undefined
+                      }
+                      id={`red-${field.id}`}
+                      className="stq-edit-panel-textarea"
+                      value={value}
+                      placeholder={field.placeholder}
+                      maxLength={field.maxLength}
+                      disabled={saving}
+                      onChange={(event) =>
+                        updateDraft(field.id, event.target.value)
+                      }
+                      rows={4}
+                    />
+                  ) : (
+                    <input
+                      ref={
+                        index === 0
+                          ? (el) => {
+                              firstRef.current = el;
+                            }
+                          : undefined
+                      }
+                      id={`red-${field.id}`}
+                      type="text"
+                      className="stq-edit-panel-input"
+                      value={value}
+                      placeholder={field.placeholder}
+                      maxLength={field.maxLength}
+                      disabled={saving}
+                      onChange={(event) =>
+                        updateDraft(field.id, event.target.value)
+                      }
+                    />
+                  )}
+
+                  {typeof field.maxLength === 'number' && (
+                    <div className="stq-edit-panel-count">
+                      {value.length} / {field.maxLength}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
             {children}
           </div>
 
@@ -277,13 +296,18 @@ export function RightEditDrawer({
               type="button"
               className="stq-edit-panel-button stq-edit-panel-button--ghost"
               onClick={commitCancel}
+              disabled={saving}
             >
               {t('studio.cancel')}
             </button>
+
             <button
               type="button"
               className="stq-edit-panel-button stq-edit-panel-button--primary"
-              onClick={commitClose}
+              onClick={() => {
+                void commitSave();
+              }}
+              disabled={saving}
             >
               {t('studio.save')}
             </button>

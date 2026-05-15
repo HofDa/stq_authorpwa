@@ -23,7 +23,7 @@ import type { StudioWorkflowSection } from './workflow/workflowTypes';
 
 type DraftChangeHandler = (
   patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
-) => void;
+) => void | Promise<void>;
 
 interface UseStudioControllerOptions {
   draft: TourDraft;
@@ -187,7 +187,9 @@ export function useStudioController({
     navigate('/tours');
   }, [navigate]);
 
-  const deleteCurrentTour = useCallback(async () => {
+  const deleteCurrentTour = useCallback(async (options?: {
+    redirectSearch?: string;
+  }) => {
     const title = getTourTitleLabel(
       draft.tour,
       locale,
@@ -207,7 +209,13 @@ export function useStudioController({
       title: t('studio.tourDeleted'),
       tone: 'success',
     });
-    navigate('/tours', { replace: true });
+    navigate(
+      {
+        pathname: '/tours',
+        search: options?.redirectSearch ?? '',
+      },
+      { replace: true },
+    );
   }, [confirm, draft.draftId, draft.tour, locale, navigate, t, toast]);
 
   const selectTourOverview = useCallback(() => {

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { TourDraft } from '@/schema';
 import { useStudioController } from '../useStudioController';
 import { Icon } from '../Icon';
@@ -31,7 +32,7 @@ export interface MobileStudioShellProps {
   draft: TourDraft;
   onChange: (
     patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
-  ) => void;
+  ) => void | Promise<void>;
   onCreateTour?: () => void | Promise<void>;
   onSelectDraft?: (draftId: string) => void;
 }
@@ -42,12 +43,15 @@ export function MobileStudioShell({
   onCreateTour,
   onSelectDraft,
 }: MobileStudioShellProps) {
+  const [searchParams] = useSearchParams();
   const [editMode, setEditMode] = useState(false);
   const [overviewEditMode, setOverviewEditMode] = useState(false);
   const [introEditMode, setIntroEditMode] = useState(false);
   const [outroEditMode, setOutroEditMode] = useState(false);
   const [routeEditMode, setRouteEditMode] = useState(false);
-  const [view, setView] = useState<'map' | 'overview' | 'intro' | 'outro'>('map');
+  const [view, setView] = useState<'map' | 'overview' | 'intro' | 'outro'>(
+    () => (searchParams.get('view') === 'overview' ? 'overview' : 'map'),
+  );
   const [introDraftId, setIntroDraftId] = useState<string | null>(null);
   const { locale, selectedId, drafts, actions } = useStudioController({
     draft,
@@ -130,7 +134,9 @@ export function MobileStudioShell({
               locale={locale}
               onChange={onChange}
               onCreateTour={onCreateTour}
-              onDeleteTour={actions.deleteCurrentTour}
+              onDeleteTour={() =>
+                actions.deleteCurrentTour({ redirectSearch: '?view=overview' })
+              }
               otherDrafts={otherDrafts}
               onSelectDraft={
                 overviewEditMode

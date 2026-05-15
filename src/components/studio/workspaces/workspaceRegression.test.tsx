@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RiddleEntry, TourDraft } from '@/schema';
 import { buildValidDraft, buildValidStation } from '@/test/fixtures';
+import { TourCardCanvas } from '../TourCardCanvas';
 import { MapPreviewWorkspace } from './MapPreviewWorkspace';
 import { PhoneMapMockup } from './PhoneMapMockup';
 import { RouteWorkspace } from './RouteWorkspace';
@@ -34,6 +35,12 @@ vi.mock('@/i18n/editorLanguage', () => {
     'studio.stations': 'Stations',
     'studio.storyHeading': 'Story-Überschrift',
     'studio.storyHeadingPlaceholder': 'z. B. Das süße Geheimnis',
+    'studio.title': 'Titel',
+    'studio.titleLocation': 'Titel & Ort',
+    'studio.titleLocationEdit': 'Edit title and location',
+    'studio.location': 'Ort',
+    'studio.locationPlaceholder': 'Ort der Tour',
+    'studio.noLocation': 'No location',
     'studio.tourOverview': 'Tour overview',
     'studio.untitledTour': 'Untitled tour',
     'workflow.route': 'Route',
@@ -132,6 +139,36 @@ afterEach(() => {
 });
 
 describe('workspace regression flows', () => {
+  it('commits tour overview title and location as ordered async field updates', async () => {
+    const draft = buildWorkspaceDraft();
+    let persisted = draft;
+    const onChange = vi.fn(
+      async (patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft)) => {
+        const current = persisted;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        persisted =
+          typeof patch === 'function' ? patch(current) : { ...current, ...patch };
+      },
+    );
+
+    render(
+      <TourCardCanvas
+        draft={draft}
+        locale="de"
+        onChange={onChange}
+      />,
+    );
+
+    clickControl('Edit title and location');
+    setFieldValue('Titel', 'Neue Tour');
+    setFieldValue('Ort', 'Bozen');
+    await clickTextButtonAsync('Speichern');
+
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(persisted.tour.de.title).toBe('Neue Tour');
+    expect(persisted.tour.de.location).toBe('Bozen');
+  });
+
   it('renders RouteWorkspace route data and keeps toolbar actions reachable', () => {
     const draft = buildWorkspaceDraft();
     const onChange = vi.fn();
@@ -494,6 +531,20 @@ function clickControl(label: string) {
   });
 }
 
+async function clickTextButtonAsync(text: string) {
+  const target = Array.from(container.querySelectorAll('button')).find(
+    (button) => button.textContent?.trim() === text,
+  );
+  if (!target) {
+    throw new Error(`Button text not found: ${text}`);
+  }
+  await act(async () => {
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  });
+}
+
 function clickTextButton(text: string) {
   const target = Array.from(container.querySelectorAll('button')).find(
     (button) => button.textContent?.trim() === text,
@@ -516,6 +567,24 @@ function control(label: string): HTMLElement | null {
   return (
     controls(label)[0] ?? null
   );
+}
+
+function setFieldValue(label: string, value: string) {
+  const field = labeledField(label);
+  if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) {
+    throw new Error(`Editable field not found: ${label}`);
+  }
+
+  const prototype =
+    field instanceof HTMLInputElement
+      ? HTMLInputElement.prototype
+      : HTMLTextAreaElement.prototype;
+  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+
+  act(() => {
+    valueSetter?.call(field, value);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  });
 }
 
 function labeledField(label: string): HTMLElement | null {

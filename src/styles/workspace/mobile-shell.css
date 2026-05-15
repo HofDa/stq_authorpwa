@@ -17,6 +17,14 @@
   overflow: hidden;
 }
 
+.stq-mobile-studio input:not([type='checkbox']):not([type='radio']):not([type='range']),
+.stq-mobile-studio textarea,
+.stq-mobile-studio select {
+  max-width: 100%;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
 .stq-mobile-studio__workspace {
   position: relative;
   display: block;
@@ -222,4 +230,3 @@
   min-height: calc(env(safe-area-inset-top) + 48px);
   padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
 }
-

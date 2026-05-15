@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createDraft, listDrafts } from '@/storage';
 import type { TourDraft } from '@/schema';
 
@@ -7,6 +7,7 @@ type RedirectStatus = 'loading' | 'error';
 
 export function TourRedirectPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [status, setStatus] = useState<RedirectStatus>('loading');
   const [error, setError] = useState<Error | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -36,7 +37,9 @@ export function TourRedirectPage() {
         console.info('[TourRedirectPage] redirecting to existing draft', {
           tourId: drafts[0].draftId,
         });
-        navigate(`/tours/${drafts[0].draftId}`, { replace: true });
+        navigate(`/tours/${drafts[0].draftId}${location.search}`, {
+          replace: true,
+        });
         return;
       }
 
@@ -48,7 +51,9 @@ export function TourRedirectPage() {
         console.info('[TourRedirectPage] created new draft', {
           tourId: draft.draftId,
         });
-        navigate(`/tours/${draft.draftId}`, { replace: true });
+        navigate(`/tours/${draft.draftId}${location.search}`, {
+          replace: true,
+        });
       } catch (err) {
         if (cancelled) return;
         console.error('[TourRedirectPage] createDraft failed', err);
@@ -64,7 +69,7 @@ export function TourRedirectPage() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, reloadKey]);
+  }, [location.search, navigate, reloadKey]);
 
   if (status === 'error') {
     return (

@@ -27,7 +27,6 @@ export function ImageAssetPanel({
   children,
 }: ImageAssetPanelProps) {
   const { t } = useEditorLanguage();
-  const [tab, setTab] = useState<'photo' | 'upload'>('upload');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -56,26 +55,24 @@ export function ImageAssetPanel({
     <div className="stq-cover-panel">
       <div className="stq-edit-panel-label">{label}</div>
 
-      <div className="stq-cover-tabs" role="tablist">
+      <div className="stq-cover-actions">
         <button
           type="button"
-          role="tab"
-          aria-selected={tab === 'photo'}
-          className={`stq-cover-tab${tab === 'photo' ? ' is-active' : ''}`}
-          onClick={() => setTab('photo')}
+          className="stq-cover-action"
+          disabled={busy}
+          onClick={() => cameraInputRef.current?.click()}
         >
           <Icon name="camera" size={14} />
-          {t('studio.takePhoto')}
+          <span>{t('studio.takePhoto')}</span>
         </button>
         <button
           type="button"
-          role="tab"
-          aria-selected={tab === 'upload'}
-          className={`stq-cover-tab${tab === 'upload' ? ' is-active' : ''}`}
-          onClick={() => setTab('upload')}
+          className="stq-cover-action"
+          disabled={busy}
+          onClick={() => fileInputRef.current?.click()}
         >
           <Icon name="upload" size={14} />
-          {t('studio.upload')}
+          <span>{t('studio.upload')}</span>
         </button>
       </div>
 
@@ -85,22 +82,9 @@ export function ImageAssetPanel({
         </div>
       )}
 
-      <button
-        type="button"
-        className="stq-cover-dropzone"
-        disabled={busy}
-        onClick={() =>
-          (tab === 'photo' ? cameraInputRef : fileInputRef).current?.click()
-        }
-      >
-        <Icon name="upload" size={18} className="stq-cover-dropzone-icon" />
-        <span className="stq-cover-dropzone-title">
-          {busy ? '...' : t('studio.chooseImage')}
-        </span>
-        <span className="stq-cover-dropzone-hint">
-          {t('studio.imageFormatHint')}
-        </span>
-      </button>
+      <div className="stq-cover-format-hint" aria-live="polite">
+        {busy ? '...' : t('studio.imageFormatHint')}
+      </div>
 
       <input
         ref={fileInputRef}

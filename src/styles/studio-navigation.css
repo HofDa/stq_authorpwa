@@ -347,38 +347,44 @@
   gap: 12px;
 }
 
-.stq-cover-tabs {
+.stq-cover-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  padding: 4px;
-  background: var(--stq-color-bg-alt);
-  border-radius: 10px;
 }
 
-.stq-cover-tab {
+.stq-cover-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
-  border: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--stq-color-border);
   border-radius: 8px;
-  background: transparent;
+  background: var(--stq-white);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  color: var(--stq-color-text-soft);
+  color: var(--stq-text);
   cursor: pointer;
   transition:
+    border-color 120ms ease,
     background-color 120ms ease,
-    color 120ms ease;
+    color 120ms ease,
+    box-shadow 120ms ease;
 }
 
-.stq-cover-tab.is-active {
-  background: var(--stq-white);
-  color: var(--stq-text);
+.stq-cover-action:hover:not(:disabled) {
+  border-color: var(--stq-primary);
+  background: var(--stq-alpha-primary);
+  color: var(--stq-primary);
   box-shadow: 0 1px 3px var(--stq-alpha-brown);
+}
+
+.stq-cover-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .stq-cover-status {
@@ -394,45 +400,10 @@
   text-overflow: ellipsis;
 }
 
-.stq-cover-dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 24px 16px;
-  border: 1.5px dashed var(--stq-color-border);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--stq-text);
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
-}
-
-.stq-cover-dropzone:hover:not(:disabled) {
-  border-color: var(--stq-primary);
-  background: var(--stq-alpha-primary);
-}
-
-.stq-cover-dropzone:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.stq-cover-dropzone-icon {
-  font-size: 22px;
-  color: var(--stq-route);
-}
-
-.stq-cover-dropzone-title {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.stq-cover-dropzone-hint {
+.stq-cover-format-hint {
   font-size: 12px;
   color: var(--stq-text-mute);
+  line-height: 1.4;
 }
 
 .stq-station-icon-current {
@@ -604,4 +575,3 @@
   white-space: pre-line;
   line-height: 1.2;
 }
-

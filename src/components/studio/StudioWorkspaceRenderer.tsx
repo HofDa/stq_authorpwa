@@ -34,7 +34,7 @@ interface StudioWorkspaceRendererProps {
   selectedId: string | null;
   onChange: (
     patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
-  ) => void;
+  ) => void | Promise<void>;
   onSelectStation: (id: string) => void;
   onAddStation: (coordinate?: AuthorMapCoordinate) => void;
   onCreateTour?: () => void | Promise<void>;

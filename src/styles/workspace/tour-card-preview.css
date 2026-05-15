@@ -22,7 +22,7 @@
 .stq-tour-card-phone-header {
   position: sticky;
   top: 62px;
-  z-index: 10;
+  z-index: 80;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -272,4 +272,3 @@
   background: var(--stq-color-bg-danger);
   color: var(--stq-danger-ink);
 }
-

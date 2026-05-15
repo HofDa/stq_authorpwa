@@ -11,10 +11,6 @@
   transition: width 220ms cubic-bezier(0.32, 0, 0.15, 1);
 }
 
-.stq-right-edit-drawer[data-state='half'] {
-  --stq-right-edit-drawer-width: 52vw;
-}
-
 .stq-right-edit-drawer[data-state='open'] {
   --stq-right-edit-drawer-width: min(86vw, 420px);
 }

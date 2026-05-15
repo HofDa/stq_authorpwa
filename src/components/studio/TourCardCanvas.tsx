@@ -20,7 +20,9 @@ import {
 interface Props {
   draft: TourDraft;
   locale: Locale;
-  onChange: (patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft)) => void;
+  onChange: (
+    patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
+  ) => void | Promise<void>;
   onCreateTour?: () => void | Promise<void>;
   onDeleteTour?: () => void | Promise<void>;
   otherDrafts?: TourDraft[];
@@ -102,7 +104,7 @@ export function TourCardCanvas({
   }, [editable]);
 
   function patchLocale(patch: Partial<typeof localized>) {
-    onChange((prev) => ({
+    return onChange((prev) => ({
       ...prev,
       tour: {
         ...prev.tour,
@@ -112,7 +114,7 @@ export function TourCardCanvas({
   }
 
   function patchTour(patch: Partial<TourDraft['tour']>) {
-    onChange((prev) => ({ ...prev, tour: { ...prev.tour, ...patch } }));
+    return onChange((prev) => ({ ...prev, tour: { ...prev.tour, ...patch } }));
   }
 
   const titleFields: EditPanelField[] = [
@@ -163,7 +165,7 @@ export function TourCardCanvas({
   const publicMeta: TourPublicMeta = draft.tour.publicMeta ?? {};
 
   function patchPublicMeta(patch: Partial<TourPublicMeta>) {
-    onChange((prev) => ({
+    return onChange((prev) => ({
       ...prev,
       tour: {
         ...prev.tour,
