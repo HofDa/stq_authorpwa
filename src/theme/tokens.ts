@@ -9,18 +9,20 @@
  */
 export const tokens = {
   colors: {
-    primary: '#a0463d',
-    background: '#f8efe8',
-    border: '#e7ddd3',
-    text: '#1a1a1a',
-    error: '#c84a3a',
-    success: '#4a8a4a',
-    disabled: '#8a807a',
-    route: '#2196f3',
+    primary: 'rgb(var(--stq-color-primary-rgb) / <alpha-value>)',
+    background: 'rgb(var(--stq-color-bg-rgb) / <alpha-value>)',
+    border: 'rgb(var(--stq-color-border-rgb) / <alpha-value>)',
+    surface: 'rgb(var(--stq-color-surface-rgb) / <alpha-value>)',
+    text: 'rgb(var(--stq-color-text-rgb) / <alpha-value>)',
+    inverted: 'rgb(var(--stq-color-surface-rgb) / <alpha-value>)',
+    error: 'rgb(var(--stq-color-danger-rgb) / <alpha-value>)',
+    success: 'rgb(var(--stq-color-success-rgb) / <alpha-value>)',
+    disabled: 'rgb(var(--stq-color-text-muted-rgb) / <alpha-value>)',
+    route: 'rgb(var(--stq-color-route-rgb) / <alpha-value>)',
   },
   fonts: {
-    ui: '"Open Sans", system-ui, sans-serif',
-    body: '"Open Sans", system-ui, sans-serif',
+    ui: 'var(--stq-font-ui)',
+    body: 'var(--stq-font-ui)',
   },
   textStyles: {
     h3: { fontFamily: 'ui', fontSize: 20.8, fontWeight: 700 },
@@ -33,9 +35,12 @@ export const tokens = {
     labelSmall: { fontFamily: 'ui', fontSize: 12, fontWeight: 600 },
   },
   radius: {
-    sm: 8,
-    md: 12,
-    pill: 9999,
+    xs: 'var(--stq-radius-xs)',
+    sm: 'var(--stq-radius-sm)',
+    md: 'var(--stq-radius-md)',
+    lg: 'var(--stq-radius-lg)',
+    xl: 'var(--stq-radius-xl)',
+    pill: 'var(--stq-radius-pill)',
   },
 } as const;
 

@@ -1,6 +1,10 @@
 @import './styles/tailwind.css';
 @import './styles/tokens.css';
 @import './styles/foundation.css';
+
+/* CSS order is intentional: base Studio/RRR styles first, phone/workspace
+   overrides later. Workspace split files are imported through small
+   aggregators so the previous cascade position stays unchanged. */
 @import './styles/studio-shell.css';
 @import './styles/edit-panel-shell.css';
 @import './styles/rrr-author-editor.css';
@@ -28,4 +32,5 @@
 @import './styles/phone-station-preview.css';
 @import './styles/station-pillbar-sheet.css';
 @import './styles/studio-navigation.css';
+@import './styles/workspace/route-tools.css';
 @import './styles/map-workspace.css';

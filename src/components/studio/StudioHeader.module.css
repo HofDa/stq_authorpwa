@@ -7,10 +7,10 @@
   height: 100svh;
   height: 100dvh;
   padding: 28px 22px 18px;
-  background: #1a1614;
-  border-right: 1px solid #2c2520;
+  background: var(--stq-color-sidebar-bg);
+  border-right: 1px solid var(--stq-color-sidebar-border);
   box-shadow: none;
-  color: #e8d8c8;
+  color: var(--stq-color-sidebar-text);
   z-index: 30;
   overflow: auto;
 }
@@ -23,7 +23,7 @@
 .brandMain {
   font-size: 13px;
   font-weight: 700;
-  color: #f4e6d7;
+  color: var(--stq-color-sidebar-text-strong);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -31,7 +31,7 @@
 
 .brandSub {
   font-size: 10.5px;
-  color: #a89888;
+  color: var(--stq-color-sidebar-text-muted);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }

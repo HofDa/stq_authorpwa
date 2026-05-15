@@ -148,9 +148,9 @@ function ToastRegion({
           role={toast.tone === 'error' ? 'alert' : 'status'}
           style={{
             pointerEvents: 'auto',
-            borderRadius: 18,
+            borderRadius: 'var(--stq-radius-lg)',
             border: `1px solid ${toneBorder(toast.tone)}`,
-            background: 'rgba(255, 255, 255, 0.96)',
+            background: 'var(--stq-alpha-panel)',
             boxShadow: 'var(--stq-shadow-card)',
             padding: '12px 14px',
             color: 'var(--stq-text)',
@@ -163,7 +163,7 @@ function ToastRegion({
               style={{
                 width: 9,
                 height: 9,
-                borderRadius: 999,
+                borderRadius: 'var(--stq-radius-pill)',
                 background: toneColor(toast.tone),
                 marginTop: 6,
                 flex: '0 0 auto',
@@ -275,7 +275,7 @@ function ConfirmDialog({
         zIndex: 1001,
         display: 'grid',
         placeItems: 'center',
-        background: 'rgba(35, 25, 25, 0.28)',
+        background: 'var(--stq-alpha-modal-backdrop)',
         padding: 18,
       }}
       onMouseDown={(event) => {
@@ -290,10 +290,10 @@ function ConfirmDialog({
         aria-describedby={request.message ? `${request.id}-message` : undefined}
         style={{
           width: 'min(440px, 100%)',
-          borderRadius: 24,
+          borderRadius: 'var(--stq-radius-xl)',
           border: '1px solid var(--stq-border)',
-          background: 'white',
-          boxShadow: '0 22px 55px rgba(35,25,25,0.22)',
+          background: 'var(--stq-color-surface)',
+          boxShadow: 'var(--stq-shadow-modal)',
           padding: 20,
         }}
       >
@@ -344,7 +344,7 @@ function ConfirmDialog({
             className={request.tone === 'danger' ? 'studio-btn-ghost' : 'studio-btn-primary'}
             style={
               request.tone === 'danger'
-                ? { color: 'var(--stq-error)', borderColor: 'rgba(186,26,26,0.35)' }
+                ? { color: 'var(--stq-error)', borderColor: 'var(--stq-alpha-danger-border)' }
                 : undefined
             }
             onClick={onConfirm}
@@ -386,14 +386,14 @@ function toneColor(tone: ToastTone) {
 function toneBorder(tone: ToastTone) {
   switch (tone) {
     case 'success':
-      return 'rgba(65,104,52,0.28)';
+      return 'var(--stq-alpha-success)';
     case 'warning':
-      return 'oklch(0.78 0.13 70 / 0.38)';
+      return 'var(--stq-alpha-warning)';
     case 'error':
-      return 'rgba(186,26,26,0.28)';
+      return 'var(--stq-alpha-danger)';
     case 'info':
     default:
-      return 'rgba(144,74,72,0.24)';
+      return 'var(--stq-alpha-primary)';
   }
 }
 

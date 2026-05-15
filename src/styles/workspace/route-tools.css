@@ -1,0 +1,75 @@
+.stq-phone-map-route-stats {
+  position: absolute;
+  bottom: 124px;
+  left: 16px;
+  z-index: 19;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 148px;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
+  border: 1px solid var(--stq-border);
+  border-radius: 14px;
+  background: var(--stq-alpha-white);
+  box-shadow: 0 8px 24px var(--stq-alpha-brown);
+}
+
+.stq-phone-map-route-stats span {
+  color: var(--stq-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.stq-phone-map-route-stats strong {
+  color: var(--stq-text);
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.stq-phone-map-route-stats small {
+  color: var(--stq-color-text-soft);
+  font-size: 12px;
+}
+
+.stq-phone-map-progress-item.is-static {
+  cursor: default;
+}
+
+.stq-phone-map-progress-item.is-static .stq-phone-map-progress-select {
+  cursor: default;
+  pointer-events: none;
+}
+
+.stq-phone-map-segment-arrow {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 28px;
+  margin: 0 -2px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--stq-route);
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    transform 120ms ease;
+}
+
+.stq-phone-map-segment-arrow:hover {
+  background: var(--stq-alpha-route);
+}
+
+.stq-phone-map-segment-arrow.is-active {
+  background: var(--stq-route);
+  color: var(--stq-white);
+  box-shadow: 0 4px 10px var(--stq-alpha-route);
+  transform: translateY(-1px);
+}
+

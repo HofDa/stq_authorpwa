@@ -1,0 +1,166 @@
+.stq-rrr-compass-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stq-rrr-compass-picker__main {
+  display: grid;
+  grid-template-columns: minmax(132px, 160px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.stq-rrr-compass-picker__dial {
+  position: relative;
+  width: min(160px, 100%);
+  aspect-ratio: 1;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, var(--stq-white) 0 9%, transparent 10%),
+    radial-gradient(circle at center, var(--stq-color-surface-cream) 0 54%, var(--stq-white) 55% 100%);
+  box-shadow: inset 0 0 0 8px var(--stq-white);
+  color: var(--stq-text);
+  cursor: crosshair;
+}
+
+.stq-rrr-compass-picker__dial:focus-visible {
+  outline: 2px solid var(--stq-alpha-primary);
+  outline-offset: 3px;
+}
+
+.stq-rrr-compass-picker__cardinal {
+  position: absolute;
+  color: var(--stq-color-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stq-rrr-compass-picker__cardinal--north {
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.stq-rrr-compass-picker__cardinal--east {
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+}
+
+.stq-rrr-compass-picker__cardinal--south {
+  bottom: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.stq-rrr-compass-picker__cardinal--west {
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+}
+
+.stq-rrr-compass-picker__needle {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 4px;
+  height: 42%;
+  border-radius: 9999px;
+  background: var(--stq-primary);
+  transform: translateX(-50%) rotate(var(--stq-rrr-compass-degrees));
+  transform-origin: 50% 100%;
+}
+
+.stq-rrr-compass-picker__needle::before {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid var(--stq-primary);
+  border-left: 7px solid transparent;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.stq-rrr-compass-picker__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--stq-white);
+  border-radius: 50%;
+  background: var(--stq-primary);
+  box-shadow: 0 0 0 1px var(--stq-alpha-primary);
+  transform: translate(-50%, -50%);
+}
+
+.stq-rrr-compass-picker__readout {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface-cream);
+  padding: 12px;
+}
+
+.stq-rrr-compass-picker__readout span,
+.stq-rrr-compass-picker__readout small {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.stq-rrr-compass-picker__readout strong {
+  color: var(--stq-text);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.stq-rrr-compass-picker__presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stq-rrr-compass-picker__preset {
+  min-height: 34px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-color-text-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stq-rrr-compass-picker__preset.is-active {
+  border-color: var(--stq-primary);
+  background: var(--stq-primary);
+  color: var(--stq-white);
+}
+
+.stq-rrr-compass-picker__tolerance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 150px);
+  gap: 8px;
+  align-items: start;
+}
+
+.stq-rrr-compass-picker__tolerance input[type="range"] {
+  height: 24px;
+  border: 0;
+  background: transparent;
+  accent-color: var(--stq-primary);
+  padding: 0;
+}
+

@@ -1,0 +1,101 @@
+.stq-rrr-hold-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stq-rrr-hold-duration {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface-cream);
+  padding: 12px;
+}
+
+.stq-rrr-hold-duration__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-hold-duration__header div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-rrr-hold-duration__header span {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stq-rrr-hold-duration__header strong {
+  color: var(--stq-text);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.stq-rrr-hold-duration__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid var(--stq-alpha-primary);
+  border-radius: 9999px;
+  background: var(--stq-white);
+  color: var(--stq-primary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.stq-rrr-hold-duration__badge--short {
+  border-color: var(--stq-alpha-success);
+  background: var(--stq-color-bg-success);
+  color: var(--stq-color-success);
+}
+
+.stq-rrr-hold-duration__badge--long {
+  border-color: var(--stq-alpha-warning);
+  background: var(--stq-color-surface-cream);
+  color: var(--stq-color-warning-text);
+}
+
+.stq-rrr-hold-duration input[type="range"] {
+  height: 24px;
+  border: 0;
+  background: transparent;
+  accent-color: var(--stq-primary);
+  padding: 0;
+}
+
+.stq-rrr-hold-duration__presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stq-rrr-hold-duration__preset {
+  min-height: 34px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-color-text-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stq-rrr-hold-duration__preset.is-active {
+  border-color: var(--stq-primary);
+  background: var(--stq-primary);
+  color: var(--stq-white);
+}
+

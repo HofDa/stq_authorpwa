@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { RrrCondition } from '@/rrr';
-import type { RrrModuleResult } from '@/rrr-runtime';
+import type { RrrModuleResult } from '@/rrr/runtime';
 import { RrrConditionStatusTree } from './RrrConditionStatusTree';
 
 const modules: Record<string, RrrModuleResult> = {

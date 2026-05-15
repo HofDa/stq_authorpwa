@@ -2,7 +2,7 @@ import {
   getGpsQuality,
   recommendGpsRadius,
   type GpsQuality,
-} from '@/rrr-sensors';
+} from '@/rrr/sensors';
 
 export interface GpsQualityBadgeProps {
   accuracyMeters?: number;

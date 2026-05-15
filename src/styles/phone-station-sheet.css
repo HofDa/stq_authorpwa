@@ -102,7 +102,7 @@
 .stq-phone-station-sheet .stq-riddle-map-card-action {
   width: 28px;
   height: 28px;
-  color: white;
+  color: var(--stq-color-text-inverted);
 }
 
 .stq-phone-station-sheet .stq-riddle-map-card-action--image,
@@ -173,4 +173,3 @@
   border-radius: 7px;
   font-size: 12px;
 }
-

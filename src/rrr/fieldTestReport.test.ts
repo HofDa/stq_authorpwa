@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { RrrInteraction, RrrInteractionResult } from '@/rrr-core';
+import type { RrrInteraction } from '@/rrr';
+import type { RrrInteractionResult } from '@/rrr/runtime';
 import {
   createRrrFieldTestReport,
   formatRrrFieldTestReportMarkdown,

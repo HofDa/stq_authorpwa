@@ -1,0 +1,81 @@
+.studio-lane-card {
+  flex: none;
+  width: 260px;
+  border-radius: 20px;
+  background: var(--stq-color-surface);
+  border: 1px solid var(--stq-color-border);
+  box-shadow: var(--stq-shadow-soft);
+  overflow: hidden;
+  text-align: left;
+  transition: transform 160ms, box-shadow 160ms, border-color 160ms;
+  cursor: pointer;
+  padding: 0;
+}
+.studio-lane-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px var(--stq-alpha-brown);
+}
+.studio-lane-card.active {
+  border-color: var(--stq-color-primary);
+  box-shadow: 0 14px 30px var(--stq-alpha-primary), 0 0 0 3px var(--stq-alpha-primary);
+}
+.studio-lane-card:focus-within {
+  border-color: var(--stq-color-primary);
+  box-shadow: 0 0 0 3px var(--stq-alpha-primary), var(--stq-shadow-soft);
+}
+.studio-lane-card-main {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.studio-lane-card-main:focus {
+  outline: none;
+}
+
+.studio-placeholder-stripe {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--stq-alpha-primary),
+    var(--stq-alpha-primary) 8px,
+    var(--stq-alpha-primary) 8px,
+    var(--stq-alpha-primary) 16px
+  );
+}
+
+.studio-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.studio-scroll::-webkit-scrollbar-thumb {
+  background: var(--stq-alpha-primary);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.studio-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--stq-alpha-primary);
+  background-clip: content-box;
+  border: 3px solid transparent;
+}
+.studio-scroll::-webkit-scrollbar-track { background: transparent; }
+
+.studio-pin {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--stq-color-primary);
+  color: var(--stq-color-text-inverted);
+  font-weight: 700;
+  font-size: 12px;
+  border: 2px solid var(--stq-color-bg);
+  box-shadow: 0 6px 14px var(--stq-alpha-brown);
+}
+.studio-pin--selected {
+  background: var(--stq-color-route);
+}

@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import type { Locale, TourDraft } from '@/schema';
-import { downloadDraftExportZip } from '@/export/tourExport';
 import {
   formatExportError,
   formatSuccessfulExport,
@@ -28,6 +27,7 @@ export function useExportTour() {
       setExportError(null);
       setExportingDraftId(draft.draftId);
       try {
+        const { downloadDraftExportZip } = await import('@/export/tourExport');
         const result = await downloadDraftExportZip(draft, options);
         const notice = formatSuccessfulExport(result);
         toast({

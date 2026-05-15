@@ -4,7 +4,7 @@ import {
   type RrrCondition,
   type RrrConditionType,
 } from '@/rrr';
-import type { RrrModuleResult, RrrRuntimeStatus } from '@/rrr-runtime';
+import type { RrrModuleResult, RrrRuntimeStatus } from '@/rrr/runtime';
 
 interface RrrConditionStatusTreeProps {
   condition: RrrCondition | undefined;

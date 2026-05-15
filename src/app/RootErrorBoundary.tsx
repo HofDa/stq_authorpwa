@@ -25,39 +25,19 @@ export class RootErrorBoundary extends Component<{ children: ReactNode }, State>
     if (!this.state.error) return this.props.children;
 
     return (
-      <div
-        role="alert"
-        style={{
-          minHeight: '100dvh',
-          display: 'grid',
-          placeItems: 'center',
-          padding: '24px',
-          background: 'var(--stq-color-bg, #fff8f7)',
-          color: 'var(--stq-color-text, #2b1f1c)',
-          fontFamily: 'system-ui, sans-serif',
-        }}
-      >
-        <div style={{ maxWidth: 420, textAlign: 'center' }}>
-          <h1 style={{ fontSize: 20, marginBottom: 12 }}>
+      <div role="alert" className="stq-root-error">
+        <div className="stq-root-error__panel">
+          <h1 className="stq-root-error__title">
             Etwas ist schiefgegangen
           </h1>
-          <p style={{ fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
+          <p className="stq-root-error__copy">
             Die Seite konnte nicht geladen werden. Bitte lade die Seite neu.
             Wenn das Problem weiter besteht, schließe und öffne den Browser-Tab erneut.
           </p>
           <button
             type="button"
             onClick={this.handleReload}
-            style={{
-              padding: '10px 18px',
-              borderRadius: 12,
-              border: '1px solid currentColor',
-              background: 'transparent',
-              color: 'inherit',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 600,
-            }}
+            className="stq-root-error__button"
           >
             Seite neu laden
           </button>

@@ -134,6 +134,8 @@ describe('createDeviceOrientationSensorAdapter', () => {
       orientationStatus: 'available',
       timestamp: 4000,
     });
+
+    adapter.stop();
   });
 });
 

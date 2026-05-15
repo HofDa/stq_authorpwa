@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildDraftExportZip } from '@/export/tourExport';
 import { db, type StoredBlob } from './db';
 import { deleteDraft, duplicateDraft, getDraft } from './drafts';
@@ -44,6 +44,10 @@ beforeEach(async () => {
 afterEach(async () => {
   await db.blobs.clear();
   await db.drafts.clear();
+});
+
+afterAll(() => {
+  db.close();
 });
 
 describe('duplicateDraft', () => {

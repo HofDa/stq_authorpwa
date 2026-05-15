@@ -6,18 +6,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RRR_MODULE_TYPES, type RrrInteraction } from '@/rrr';
 import { RrrInteractionEditor } from './RrrInteractionEditor';
 
-vi.mock('@/i18n/editorLanguage', () => ({
-  useEditorLanguage: () => ({
-    t: (key: string) =>
-      ({
-        'studio.riddleSettingsHint':
-          'Lege fest, welche Aufgabe die Spielenden lösen müssen.',
-        'rrr.expertMode': 'Expertenmodus',
-        'rrr.expertModeHint':
-          'Zeigt technische Details wie JSON und Debug-Informationen.',
-      })[key] ?? key,
-  }),
-}));
+vi.mock('@/i18n/editorLanguage', async () => {
+  const locale = await import('@/i18n/locales/de');
+  const messages = locale.default as Record<string, string>;
+  return {
+    useEditorLanguage: () => ({
+      editorLanguage: 'de',
+      t: (key: string) => messages[key] ?? key,
+    }),
+  };
+});
 
 (
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -25,8 +23,10 @@ vi.mock('@/i18n/editorLanguage', () => ({
 
 let container: HTMLDivElement;
 let root: Root;
+const expertModeStorageKey = 'stq-rrr-expert-mode';
 
 beforeEach(() => {
+  localStorage.removeItem(expertModeStorageKey);
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -37,6 +37,7 @@ afterEach(() => {
     root.unmount();
   });
   container.remove();
+  localStorage.removeItem(expertModeStorageKey);
 });
 
 describe('RrrInteractionEditor', () => {
@@ -259,8 +260,7 @@ describe('RrrInteractionEditor', () => {
       />,
     );
 
-    expect(container.textContent).toContain('Hinweise');
-    expect(container.textContent).toContain('hat noch keine Antwort');
+    expectExpertWarnings(['hat noch keine Antwort']);
 
     clickButton('Bearbeiten');
 
@@ -293,8 +293,10 @@ describe('RrrInteractionEditor', () => {
     );
 
     expect(container.textContent).toContain('Auswahlfrage');
-    expect(container.textContent).toContain('hat noch keine Antwortoptionen');
-    expect(container.textContent).toContain('hat noch keine richtige Option');
+    expectExpertWarnings([
+      'hat noch keine Antwortoptionen',
+      'hat noch keine richtige Option',
+    ]);
     expect(container.textContent).toContain('Welche Symbole siehst du?');
     expect(container.textContent).toContain('Option 1');
     expect(container.textContent).toContain(
@@ -340,16 +342,17 @@ describe('RrrInteractionEditor', () => {
     });
   });
 
-  it('renders qr_scan authoring configuration and empty value warnings', () => {
+  it('renders qr_scan authoring configuration and empty value warnings', async () => {
     const onChange = vi.fn();
     renderEditor(
       <RrrInteractionEditor interaction={qrScanInteraction} onChange={onChange} />,
     );
 
     expect(container.textContent).toContain('QR-Code scannen');
-    expect(container.textContent).toContain('hat noch keinen erwarteten QR-Wert');
+    expectExpertWarnings(['hat noch keinen erwarteten QR-Wert']);
     expect(container.textContent).toContain('Der Spieler scannt den vorgesehenen QR-Code.');
     expect(container.textContent).toContain('Simulierter QR-Wert');
+    await waitForText('Kamera wird benötigt');
     expect(container.textContent).toContain('Kamera wird benötigt');
     expect(container.textContent).toContain('Kamera aktivieren');
     expect(container.textContent).toContain('Kamera nicht verfügbar');
@@ -389,7 +392,7 @@ describe('RrrInteractionEditor', () => {
     );
 
     expect(container.textContent).toContain('Codewort eingeben');
-    expect(container.textContent).toContain('hat noch kein Codewort');
+    expectExpertWarnings(['hat noch kein Codewort']);
     expect(container.textContent).toContain(
       'Der Spieler gibt das gefundene Codewort ein.',
     );
@@ -424,7 +427,7 @@ describe('RrrInteractionEditor', () => {
     );
 
     expect(container.textContent).toContain('Gesammelten Code eingeben');
-    expect(container.textContent).toContain('hat noch keinen gesammelten Code');
+    expectExpertWarnings(['hat noch keinen gesammelten Code']);
     expect(container.textContent).toContain(
       'Der Spieler gibt den unterwegs gesammelten Code ein.',
     );
@@ -765,6 +768,17 @@ function renderEditor(element: ReactElement) {
   });
 }
 
+async function waitForText(text: string) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    if (container.textContent?.includes(text)) {
+      return;
+    }
+  }
+}
+
 function clickButton(label: string, index = 0) {
   const buttons = Array.from(container.querySelectorAll('button')).filter(
     (candidate) => candidate.textContent?.includes(label),
@@ -869,6 +883,15 @@ function toggleExpertMode() {
   act(() => {
     input.click();
   });
+}
+
+function expectExpertWarnings(messages: string[]) {
+  toggleExpertMode();
+  expect(container.textContent).toContain('Hinweise');
+  for (const message of messages) {
+    expect(container.textContent).toContain(message);
+  }
+  toggleExpertMode();
 }
 
 const emptyInteraction: RrrInteraction = {

@@ -1,0 +1,199 @@
+.stq-device-mockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  min-width: 0;
+  max-height: 100%;
+}
+
+.stq-device-mockup__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: min(420px, 100%);
+  color: var(--stq-color-text-muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.stq-device-mockup__label strong {
+  color: var(--stq-color-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stq-device-mockup__label strong::after {
+  content: " — IPHONE 14";
+  color: var(--stq-color-text-muted);
+  font-weight: 600;
+}
+
+.stq-device-mockup__label span:last-child:not(.stq-device-mockup__dot) {
+  min-width: 0;
+  overflow: hidden;
+  max-width: 230px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stq-device-mockup__detail {
+  display: none;
+}
+
+.stq-device-mockup__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--stq-color-text-muted);
+}
+
+.stq-device-mockup__shell {
+  flex: none;
+}
+
+.stq-ios-device {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  border-radius: 48px;
+  background: var(--stq-color-bg-alt);
+  box-shadow:
+    0 40px 80px var(--stq-alpha-black),
+    0 0 0 1px var(--stq-alpha-black);
+  color: var(--stq-color-text);
+  font-family: var(--stq-font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+.stq-ios-device__island {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  z-index: 70;
+  width: 126px;
+  height: 37px;
+  border-radius: 24px;
+  background: var(--stq-color-text);
+  transform: translateX(-50%);
+}
+
+.stq-ios-device__status {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 154px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 21px 24px 19px;
+  color: var(--stq-color-text);
+  pointer-events: none;
+}
+
+.stq-tour-card-canvas .stq-ios-device__status,
+.stq-ios-device:has(.stq-phone-map-workspace) .stq-ios-device__status {
+  background: var(--stq-color-bg-alt);
+}
+
+.stq-ios-device__status > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding-top: 1.5px;
+  font-size: 17px;
+  font-weight: 590;
+  line-height: 22px;
+}
+
+.stq-ios-device__status-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 22px;
+  padding-top: 1px;
+  padding-right: 1px;
+}
+
+.stq-ios-device__content {
+  height: 100%;
+  overflow: auto;
+}
+
+.stq-ios-device__content:has(.stq-phone-map-workspace) {
+  overflow: hidden;
+}
+
+.stq-ios-device__content--map {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.stq-ios-device__content::-webkit-scrollbar {
+  width: 0;
+}
+
+.stq-ios-device__home {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  z-index: 60;
+  width: 139px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--stq-alpha-black);
+  pointer-events: none;
+}
+
+.studio-phone-shell {
+  position: relative;
+  border-radius: 46px;
+  background: linear-gradient(180deg, var(--stq-color-sidebar-bg) 0%, var(--stq-color-sidebar-bg) 100%);
+  padding: 11px;
+  box-shadow:
+    0 40px 80px -20px var(--stq-alpha-brown),
+    0 20px 40px -20px var(--stq-alpha-primary),
+    inset 0 0 0 1px var(--stq-alpha-white);
+}
+.studio-phone-screen {
+  position: relative;
+  border-radius: 36px;
+  background: var(--stq-color-bg);
+  overflow: hidden;
+}
+.studio-phone-notch {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--stq-color-text);
+  z-index: 10;
+}
+.studio-phone-home {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--stq-color-text);
+  opacity: 0.85;
+  z-index: 10;
+}
+

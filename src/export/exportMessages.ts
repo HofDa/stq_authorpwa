@@ -1,16 +1,18 @@
-import {
-  DraftExportValidationError,
-  type downloadDraftExportZip,
+import type {
+  DraftExportReport,
+  ExportValidationError,
 } from './tourExport';
 
-type ExportResult = Awaited<ReturnType<typeof downloadDraftExportZip>>;
+type ExportValidationErrorLike = Error & {
+  errors: ExportValidationError[];
+};
 
 /**
  * Render an export error as a multi-line string suitable for display in
  * an error banner or toast.
  */
 export function formatExportError(error: unknown): string {
-  if (error instanceof DraftExportValidationError) {
+  if (isDraftExportValidationError(error)) {
     const lines = error.errors
       .slice(0, 8)
       .map((e) => `• ${e.path}: ${e.message}`);
@@ -27,7 +29,7 @@ export function formatExportError(error: unknown): string {
  * Render any non-fatal warnings about a successful export (missing blobs,
  * publishing-validation warnings). Returns `null` when the export is clean.
  */
-export function formatSuccessfulExport(result: ExportResult): string | null {
+export function formatSuccessfulExport(result: DraftExportReport): string | null {
   const notes: string[] = [];
 
   if (result.missingBlobIds.length > 0) {
@@ -48,4 +50,14 @@ export function formatSuccessfulExport(result: ExportResult): string | null {
   }
 
   return notes.length === 0 ? null : notes.join('\n\n');
+}
+
+function isDraftExportValidationError(
+  error: unknown,
+): error is ExportValidationErrorLike {
+  return (
+    error instanceof Error &&
+    error.name === 'DraftExportValidationError' &&
+    Array.isArray((error as { errors?: unknown }).errors)
+  );
 }

@@ -38,7 +38,7 @@
 .stq-riddle-text-block-add button {
   border: 1px solid var(--stq-alpha-primary);
   border-radius: 9999px;
-  background: white;
+  background: var(--stq-color-surface);
   color: var(--stq-primary);
   padding: 0 11px;
   font-size: 12px;
@@ -98,4 +98,3 @@
     font-size: 23px;
   }
 }
-

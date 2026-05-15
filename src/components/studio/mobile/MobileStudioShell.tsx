@@ -1,11 +1,31 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { TourDraft } from '@/schema';
 import { useStudioController } from '../useStudioController';
 import { Icon } from '../Icon';
-import { TourCardCanvas } from '../TourCardCanvas';
-import { IntroPhonePreview } from '../workspaces/IntroPhonePreview';
-import { MapPreviewWorkspace } from '../workspaces/MapPreviewWorkspace';
-import { RouteWorkspace } from '../workspaces/RouteWorkspace';
+
+const TourCardCanvas = lazy(() =>
+  import('../TourCardCanvas').then((module) => ({
+    default: module.TourCardCanvas,
+  })),
+);
+
+const IntroPhonePreview = lazy(() =>
+  import('../workspaces/IntroPhonePreview').then((module) => ({
+    default: module.IntroPhonePreview,
+  })),
+);
+
+const MapPreviewWorkspace = lazy(() =>
+  import('../workspaces/MapPreviewWorkspace').then((module) => ({
+    default: module.MapPreviewWorkspace,
+  })),
+);
+
+const RouteWorkspace = lazy(() =>
+  import('../workspaces/RouteWorkspace').then((module) => ({
+    default: module.RouteWorkspace,
+  })),
+);
 
 export interface MobileStudioShellProps {
   draft: TourDraft;
@@ -100,102 +120,139 @@ export function MobileStudioShell({
           className="stq-mobile-studio__workspace"
           aria-label="Tour Übersicht"
         >
-          <TourCardCanvas
-            draft={draft}
-            locale={locale}
-            onChange={onChange}
-            onCreateTour={onCreateTour}
-            onDeleteTour={actions.deleteCurrentTour}
-            otherDrafts={otherDrafts}
-            onSelectDraft={
-              overviewEditMode
-                ? onSelectDraft ?? actions.selectTour
-                : (draftId) => openIntro(draftId)
+          <Suspense
+            fallback={
+              <MobileWorkspaceLoadingState label="Loading tour overview..." />
             }
-            onOpenCurrentTour={() => openIntro(draft.draftId)}
-            editable={overviewEditMode}
-            mobileSelectionFlow={overviewEditMode}
-            floatingEditToggle={
-              <HeaderEditToggle
-                active={overviewEditMode}
-                onClick={() => setOverviewEditMode((value) => !value)}
-              />
-            }
-          />
+          >
+            <TourCardCanvas
+              draft={draft}
+              locale={locale}
+              onChange={onChange}
+              onCreateTour={onCreateTour}
+              onDeleteTour={actions.deleteCurrentTour}
+              otherDrafts={otherDrafts}
+              onSelectDraft={
+                overviewEditMode
+                  ? onSelectDraft ?? actions.selectTour
+                  : (draftId) => openIntro(draftId)
+              }
+              onOpenCurrentTour={() => openIntro(draft.draftId)}
+              editable={overviewEditMode}
+              mobileSelectionFlow={overviewEditMode}
+              floatingEditToggle={
+                <HeaderEditToggle
+                  active={overviewEditMode}
+                  onClick={() => setOverviewEditMode((value) => !value)}
+                />
+              }
+            />
+          </Suspense>
         </section>
       ) : view === 'intro' || view === 'outro' ? (
         <section
           className="stq-mobile-studio__workspace"
           aria-label={view === 'outro' ? 'Outro-Seite' : 'Intro-Seite'}
         >
-          <IntroPhonePreview
-            draft={introDraft}
-            locale={locale}
-            onChange={introDraft.draftId === draft.draftId ? onChange : () => undefined}
-            mode={view}
-            editable={view === 'outro' ? outroEditMode : introEditMode}
-            mobileSelectionFlow={view === 'outro' ? outroEditMode : introEditMode}
-            onBack={() => {
-              setIntroEditMode(false);
-              setOutroEditMode(false);
-              setView(view === 'outro' ? 'map' : 'overview');
-            }}
-            onStartTour={() => {
-              setIntroEditMode(false);
-              if (introDraft.draftId !== draft.draftId) {
-                (onSelectDraft ?? actions.selectTour)(introDraft.draftId);
-              }
-              setView('map');
-            }}
-            onSelectTourOverview={() => {
-              setOutroEditMode(false);
-              setView('overview');
-            }}
-            floatingEditToggle={
-              <HeaderEditToggle
-                active={view === 'outro' ? outroEditMode : introEditMode}
-                onClick={() =>
+          <Suspense
+            fallback={
+              <MobileWorkspaceLoadingState
+                label={
                   view === 'outro'
-                    ? setOutroEditMode((value) => !value)
-                    : setIntroEditMode((value) => !value)
+                    ? 'Loading outro page...'
+                    : 'Loading intro page...'
                 }
               />
             }
-          />
+          >
+            <IntroPhonePreview
+              draft={introDraft}
+              locale={locale}
+              onChange={
+                introDraft.draftId === draft.draftId ? onChange : () => undefined
+              }
+              mode={view}
+              editable={view === 'outro' ? outroEditMode : introEditMode}
+              mobileSelectionFlow={
+                view === 'outro' ? outroEditMode : introEditMode
+              }
+              onBack={() => {
+                setIntroEditMode(false);
+                setOutroEditMode(false);
+                setView(view === 'outro' ? 'map' : 'overview');
+              }}
+              onStartTour={() => {
+                setIntroEditMode(false);
+                if (introDraft.draftId !== draft.draftId) {
+                  (onSelectDraft ?? actions.selectTour)(introDraft.draftId);
+                }
+                setView('map');
+              }}
+              onSelectTourOverview={() => {
+                setOutroEditMode(false);
+                setView('overview');
+              }}
+              floatingEditToggle={
+                <HeaderEditToggle
+                  active={view === 'outro' ? outroEditMode : introEditMode}
+                  onClick={() =>
+                    view === 'outro'
+                      ? setOutroEditMode((value) => !value)
+                      : setIntroEditMode((value) => !value)
+                  }
+                />
+              }
+            />
+          </Suspense>
         </section>
       ) : (
-        <section className="stq-mobile-studio__workspace" aria-label="Mobile Studio Arbeitsbereich">
-          {editMode && routeEditMode ? (
-            <RouteWorkspace
-              draft={draft}
-              locale={locale}
-              selectedId={selectedId}
-              onSelectStation={actions.selectStationOnly}
-              onChange={onChange}
-              topRightPill={mapEditMarkerCluster}
-              mapEditMode={editMode}
-              onToggleMapEditMode={toggleMapEditMode}
-            />
-          ) : (
-            <MapPreviewWorkspace
-              draft={draft}
-              locale={locale}
-              selectedId={selectedId}
-              onSelectStation={actions.selectStationOnly}
-              onAddStation={actions.addStation}
-              onTitleBack={() => setView('overview')}
-              onOpenOutro={openOutro}
-              onChange={onChange}
-              markerEditMode={editMode}
-              topRightPill={mapEditMarkerCluster}
-              mapEditMode={editMode}
-              onToggleMapEditMode={toggleMapEditMode}
-              showAddStationFab={editMode && !routeEditMode}
-              showDeleteStationFab={editMode && !routeEditMode}
-              onDeleteStation={actions.deleteStation}
-            />
-          )}
-      </section>
+        <section
+          className="stq-mobile-studio__workspace"
+          aria-label="Mobile Studio Arbeitsbereich"
+        >
+          <Suspense
+            fallback={
+              <MobileWorkspaceLoadingState
+                label={
+                  editMode && routeEditMode
+                    ? 'Loading route workspace...'
+                    : 'Loading map workspace...'
+                }
+              />
+            }
+          >
+            {editMode && routeEditMode ? (
+              <RouteWorkspace
+                draft={draft}
+                locale={locale}
+                selectedId={selectedId}
+                onSelectStation={actions.selectStationOnly}
+                onChange={onChange}
+                topRightPill={mapEditMarkerCluster}
+                mapEditMode={editMode}
+                onToggleMapEditMode={toggleMapEditMode}
+              />
+            ) : (
+              <MapPreviewWorkspace
+                draft={draft}
+                locale={locale}
+                selectedId={selectedId}
+                onSelectStation={actions.selectStationOnly}
+                onAddStation={actions.addStation}
+                onTitleBack={() => setView('overview')}
+                onOpenOutro={openOutro}
+                onChange={onChange}
+                markerEditMode={editMode}
+                topRightPill={mapEditMarkerCluster}
+                mapEditMode={editMode}
+                onToggleMapEditMode={toggleMapEditMode}
+                showAddStationFab={editMode && !routeEditMode}
+                showDeleteStationFab={editMode && !routeEditMode}
+                onDeleteStation={actions.deleteStation}
+              />
+            )}
+          </Suspense>
+        </section>
       )}
     </main>
   );
@@ -220,5 +277,27 @@ function HeaderEditToggle({
     >
       <Icon name="edit" size={14} />
     </button>
+  );
+}
+
+function MobileWorkspaceLoadingState({ label }: { label: string }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      style={{
+        minWidth: 0,
+        minHeight: 0,
+        width: '100%',
+        height: '100%',
+        display: 'grid',
+        placeItems: 'center',
+        padding: 24,
+        background: 'var(--stq-color-bg)',
+        color: 'var(--stq-color-text-muted)',
+      }}
+    >
+      <p className="text-bodySm text-disabled">{label}</p>
+    </div>
   );
 }

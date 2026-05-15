@@ -12,7 +12,7 @@ import {
   type RrrInteraction,
   type RrrModule,
   type RrrModuleType,
-} from '@/rrr';
+} from '@/rrr/types';
 
 /**
  * Authoring model for a text riddle / station.

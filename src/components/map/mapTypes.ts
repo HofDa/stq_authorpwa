@@ -160,7 +160,7 @@ export interface AuthorMapProps {
 
 export const AUTHOR_MAP_SELECTION_STYLE_PLANNER: AuthorMapSelectionStyle = {
   radius: 20,
-  color: '#904A48',
+  color: 'var(--stq-color-primary)',
   weight: 2,
   fillOpacity: 0.08,
 };
@@ -168,28 +168,28 @@ export const AUTHOR_MAP_SELECTION_STYLE_PLANNER: AuthorMapSelectionStyle = {
 export const AUTHOR_MAP_CURRENT_POSITION_STYLE_PLANNER: AuthorMapCurrentPositionStyle =
   {
     markerRadius: 8,
-    markerColor: '#0d5ea8',
+    markerColor: 'var(--stq-color-route-dark)',
     markerWeight: 2,
-    markerFillColor: '#2196f3',
+    markerFillColor: 'var(--stq-color-route)',
     markerFillOpacity: 0.95,
-    accuracyColor: '#2196f3',
+    accuracyColor: 'var(--stq-color-route)',
     accuracyWeight: 1,
     accuracyOpacity: 0.4,
-    accuracyFillColor: '#90CAF9',
+    accuracyFillColor: 'var(--stq-color-route-light)',
     accuracyFillOpacity: 0.12,
   };
 
 export const AUTHOR_MAP_CURRENT_POSITION_STYLE_FIELD: AuthorMapCurrentPositionStyle =
   {
     markerRadius: 7,
-    markerColor: 'white',
+    markerColor: 'var(--stq-color-surface)',
     markerWeight: 2,
-    markerFillColor: '#2196f3',
+    markerFillColor: 'var(--stq-color-route)',
     markerFillOpacity: 1,
-    accuracyColor: '#2196f3',
+    accuracyColor: 'var(--stq-color-route)',
     accuracyWeight: 1,
     accuracyOpacity: 0.4,
-    accuracyFillColor: '#90CAF9',
+    accuracyFillColor: 'var(--stq-color-route-light)',
     accuracyFillOpacity: 0.15,
   };
 

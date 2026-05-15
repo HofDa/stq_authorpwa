@@ -1,0 +1,225 @@
+.stq-mobile-studio {
+  /* Fallback chain: vh (broken on mobile, but always parses) → svh → dvh.
+     dvh shrinks/grows with the browser chrome and is correct on Android
+     Chrome/Firefox; svh is the small-viewport fallback. Setting both height
+     and min-height to dvh prevents the content from being cut off behind the
+     mobile address bar on browsers without dvh support. */
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+  width: 100%;
+  display: block;
+  background: var(--stq-color-bg-success);
+  color: var(--stq-color-surface-cream);
+  overflow: hidden;
+}
+
+.stq-mobile-studio__workspace {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+
+.stq-mobile-studio__workspace > div {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.stq-mobile-studio .stq-device-mockup {
+  width: 100%;
+  height: 100%;
+  display: block;
+  gap: 0;
+}
+
+.stq-mobile-studio .stq-device-mockup__label {
+  display: none;
+}
+
+.stq-mobile-studio .stq-device-mockup__shell {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100%;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stq-mobile-studio .stq-ios-device__island,
+.stq-mobile-studio .stq-ios-device__status,
+.stq-mobile-studio .stq-ios-device__home {
+  display: none;
+}
+
+.stq-mobile-studio .stq-ios-device__content {
+  height: 100%;
+}
+
+.stq-mobile-studio .stq-phone-map-title-pill {
+  top: calc(env(safe-area-inset-top) + 12px);
+}
+
+.stq-mobile-studio .stq-phone-map-dock {
+  bottom: calc(env(safe-area-inset-bottom) + 18px);
+}
+
+.stq-mobile-studio--overview {
+  background: var(--stq-color-bg-alt);
+}
+
+.stq-mobile-studio--overview .stq-tour-card-canvas {
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.stq-mobile-studio--overview .stq-tour-card-phone-scroll {
+  min-height: 100%;
+  padding: 0 20px calc(env(safe-area-inset-bottom) + 86px);
+}
+
+.stq-mobile-studio--overview .stq-tour-card-phone-header {
+  position: sticky;
+  top: 0;
+  margin: 0 -20px 12px;
+  padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
+}
+
+.stq-mobile-studio__header-edit-toggle {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--stq-color-text);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.stq-mobile-studio__header-edit-toggle.is-active {
+  background: var(--stq-primary);
+  color: var(--stq-color-surface-cream);
+}
+
+.stq-mobile-studio__header-edit-toggle:focus-visible {
+  outline: 2px solid var(--stq-primary);
+  outline-offset: 2px;
+}
+
+.stq-mobile-studio__floating-edit-chip {
+  position: absolute;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: calc(116px + 56px);
+  z-index: 30;
+  pointer-events: none;
+  width: auto !important;
+  height: auto !important;
+}
+
+.stq-mobile-studio__floating-edit-chip > * {
+  pointer-events: auto;
+}
+
+.stq-mobile-studio__floating-edit-chip .stq-mobile-studio__header-edit-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--stq-alpha-white);
+  box-shadow: 0 6px 16px var(--stq-alpha-brown);
+}
+
+.stq-mobile-studio__floating-edit-chip .stq-mobile-studio__header-edit-toggle.is-active {
+  background: var(--stq-primary);
+  color: var(--stq-color-surface-cream);
+  box-shadow:
+    inset 0 0 0 2px var(--stq-white),
+    0 6px 16px var(--stq-alpha-brown);
+}
+
+.stq-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--stq-alpha-brown);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+}
+
+.stq-confirm-dialog {
+  background: var(--stq-color-text);
+  color: var(--stq-color-surface-cream);
+  border: 1px solid var(--stq-alpha-white);
+  border-radius: 12px;
+  padding: 20px 22px;
+  width: min(92vw, 380px);
+  box-shadow: 0 24px 60px var(--stq-alpha-black);
+}
+
+.stq-confirm-dialog__title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.stq-confirm-dialog__body {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--stq-alpha-white);
+}
+
+.stq-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.stq-confirm-dialog__btn {
+  appearance: none;
+  border: 1px solid var(--stq-alpha-white);
+  background: transparent;
+  color: var(--stq-color-surface-cream);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.stq-confirm-dialog__btn--danger {
+  background: var(--stq-primary);
+  border-color: var(--stq-primary);
+}
+
+.stq-confirm-dialog__btn--danger:hover {
+  background: var(--stq-primary);
+}
+
+.stq-mobile-studio--intro .stq-mobile-studio__workspace,
+.stq-mobile-studio--outro .stq-mobile-studio__workspace {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stq-mobile-studio--intro .stq-intro-phone,
+.stq-mobile-studio--outro .stq-intro-phone {
+  min-height: 100%;
+}
+
+.stq-mobile-studio--intro .stq-intro-phone__header,
+.stq-mobile-studio--outro .stq-intro-phone__header {
+  top: 0;
+  min-height: calc(env(safe-area-inset-top) + 48px);
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+}
+

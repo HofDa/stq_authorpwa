@@ -21,30 +21,34 @@ import {
   type RrrModule,
   type RrrModuleType,
 } from '@/rrr';
-import { useEditorLanguage } from '@/i18n/editorLanguage';
+import {
+  useEditorLanguage,
+  type EditorTextKey,
+} from '@/i18n/editorLanguage';
 import { RrrInteractionJsonEditor } from './RrrInteractionJsonEditor';
 import { RrrMockPreview } from './RrrMockPreview';
 import { RrrTemplatePicker } from './RrrTemplatePicker';
 import { RrrWarningsPanel } from './RrrWarningsPanel';
 import { Icon, type IconName } from '@/components/studio/Icon';
-import { recommendGpsRadius } from '@/rrr-sensors';
+import { recommendGpsRadius } from '@/rrr/sensors';
 import type { RrrInteractionEditorProps } from './types';
 
 type FlatConditionType = RrrFlatConditionType;
+type EditorT = ReturnType<typeof useEditorLanguage>['t'];
 
-const CONDITION_TYPE_LABELS: Record<FlatConditionType, string> = {
-  none: 'Keine Lösungsregel',
-  module: 'Einzelner Baustein',
-  sequence: 'Nacheinander',
-  all_of: 'Alles muss erfüllt sein',
-  any_of: 'Eine Lösung reicht',
+const CONDITION_TYPE_LABEL_KEYS: Record<FlatConditionType, EditorTextKey> = {
+  none: 'rrr.editor.condition.none',
+  module: 'rrr.editor.condition.module',
+  sequence: 'rrr.editor.condition.sequence',
+  all_of: 'rrr.editor.condition.allOf',
+  any_of: 'rrr.editor.condition.anyOf',
 };
 
 const COMPASS_DIRECTION_PRESETS = [
-  { label: 'Norden', degrees: 0 },
-  { label: 'Osten', degrees: 90 },
-  { label: 'Süden', degrees: 180 },
-  { label: 'Westen', degrees: 270 },
+  { labelKey: 'rrr.editor.compass.north', degrees: 0 },
+  { labelKey: 'rrr.editor.compass.east', degrees: 90 },
+  { labelKey: 'rrr.editor.compass.south', degrees: 180 },
+  { labelKey: 'rrr.editor.compass.west', degrees: 270 },
 ] as const;
 
 const HOLD_STILL_DURATION_PRESETS = [
@@ -155,7 +159,10 @@ export function RrrInteractionEditor({
     );
     const labeledFallbackModule = {
       ...fallbackModule,
-      label: `${fallbackModule.label} für ${targetModule.label}`,
+      label: formatEditorText(t('rrr.editor.fallback.generatedLabel'), {
+        fallback: fallbackModule.label,
+        target: targetModule.label,
+      }),
     };
 
     onChange({
@@ -172,10 +179,10 @@ export function RrrInteractionEditor({
   }
 
   return (
-    <section className="stq-rrr-editor" aria-label="Modulares Rätsel">
+    <section className="stq-rrr-editor" aria-label={t('rrr.editor.title')}>
       <div className="stq-rrr-editor__header">
         <div>
-          <h3>Modulares Rätsel</h3>
+          <h3>{t('rrr.editor.title')}</h3>
           <p>{t('studio.riddleSettingsHint')}</p>
         </div>
         <label className="stq-rrr-expert-toggle">
@@ -193,13 +200,13 @@ export function RrrInteractionEditor({
 
       <dl className="stq-rrr-editor__summary">
         <div>
-          <dt>Bausteine</dt>
+          <dt>{t('rrr.editor.summary.modules')}</dt>
           <dd>{moduleCount}</dd>
         </div>{' '}
         {expertMode && (
           <div>
-            <dt>Lösungsregel</dt>
-            <dd>{CONDITION_TYPE_LABELS[conditionType]}</dd>
+            <dt>{t('rrr.condition')}</dt>
+            <dd>{getConditionTypeLabel(conditionType, t)}</dd>
           </div>
         )}
       </dl>
@@ -212,7 +219,7 @@ export function RrrInteractionEditor({
 
       <div className="stq-rrr-editor__add">
         <label className="stq-edit-panel-label" htmlFor="rrr-module-type">
-          Baustein hinzufügen
+          {t('rrr.editor.addModule')}
         </label>
         <div className="stq-rrr-editor__add-row">
           <select
@@ -238,7 +245,7 @@ export function RrrInteractionEditor({
             className="stq-rrr-editor__button"
             onClick={addModule}
           >
-            Hinzufügen
+            {t('rrr.editor.add')}
           </button>
         </div>
         <ModulePresetHints preset={selectedModulePreset} />
@@ -246,7 +253,7 @@ export function RrrInteractionEditor({
 
       {moduleCount === 0 && (
         <div className="stq-rrr-editor__empty">
-          Noch keine Bausteine vorhanden.
+          {t('rrr.editor.emptyModules')}
         </div>
       )}
 
@@ -298,7 +305,11 @@ export function RrrInteractionEditor({
             }`}
           >
             <div className="stq-rrr-validation__header">
-              <strong>{validation.success ? 'Gültig' : 'Ungültig'}</strong>
+              <strong>
+                {validation.success
+                  ? t('rrr.editor.validation.valid')
+                  : t('rrr.editor.validation.invalid')}
+              </strong>
             </div>
             {!validation.success && (
               <ul>
@@ -323,8 +334,9 @@ function ModulePresetHints({
 }: {
   preset: (typeof RRR_MODULE_PRESETS)[RrrModuleType];
 }) {
-  const reliabilityLabel = getModuleReliabilityLabel(preset.reliability);
-  const difficultyLabel = getModuleDifficultyLabel(preset.difficulty);
+  const { t } = useEditorLanguage();
+  const reliabilityLabel = getModuleReliabilityLabel(preset.reliability, t);
+  const difficultyLabel = getModuleDifficultyLabel(preset.difficulty, t);
   const shouldFieldTest =
     preset.reliability === 'medium' ||
     preset.reliability === 'device-dependent' ||
@@ -342,8 +354,12 @@ function ModulePresetHints({
       <div className="stq-rrr-module-preset-hints__badges">
         <span>{difficultyLabel}</span>
         <span>{reliabilityLabel}</span>
-        <span>{preset.needsFallback ? 'Ersatzlösung empfohlen' : 'Robust'}</span>
-        {shouldFieldTest && <span>Für Feldtests prüfen</span>}
+        <span>
+          {preset.needsFallback
+            ? t('rrr.editor.preset.fallbackRecommended')
+            : t('rrr.editor.preset.robust')}
+        </span>
+        {shouldFieldTest && <span>{t('rrr.editor.preset.fieldTest')}</span>}
       </div>
     </div>
   );
@@ -351,27 +367,29 @@ function ModulePresetHints({
 
 function getModuleDifficultyLabel(
   difficulty: (typeof RRR_MODULE_PRESETS)[RrrModuleType]['difficulty'],
+  t: EditorT,
 ): string {
   switch (difficulty) {
     case 'easy':
-      return 'Einfach';
+      return t('rrr.editor.difficulty.easy');
     case 'medium':
-      return 'Mittel';
+      return t('rrr.editor.difficulty.medium');
     case 'advanced':
-      return 'Fortgeschritten';
+      return t('rrr.editor.difficulty.advanced');
   }
 }
 
 function getModuleReliabilityLabel(
   reliability: (typeof RRR_MODULE_PRESETS)[RrrModuleType]['reliability'],
+  t: EditorT,
 ): string {
   switch (reliability) {
     case 'high':
-      return 'Sehr zuverlässig';
+      return t('rrr.editor.reliability.high');
     case 'medium':
-      return 'Zuverlässig';
+      return t('rrr.editor.reliability.medium');
     case 'device-dependent':
-      return 'Geräteabhängig';
+      return t('rrr.editor.reliability.deviceDependent');
   }
 }
 
@@ -386,6 +404,7 @@ function RrrConditionEditor({
   expertMode: boolean;
   onChange: (condition: RrrCondition | undefined) => void;
 }) {
+  const { t } = useEditorLanguage();
   const moduleIds = useMemo(
     () => modules.map((module) => module.id),
     [modules],
@@ -493,13 +512,13 @@ function RrrConditionEditor({
     <section className="stq-rrr-condition">
       <div className="stq-rrr-condition__header">
         <div>
-          <strong>Lösungsregel</strong>
-          <span>Lege fest, wie die Bausteine zum Lösen kombiniert werden.</span>
+          <strong>{t('rrr.condition')}</strong>
+          <span>{t('rrr.editor.condition.description')}</span>
         </div>
       </div>
 
       <label className="stq-rrr-field">
-        <span>Art der Lösungsregel</span>
+        <span>{t('rrr.editor.condition.type')}</span>
         <select
           className="stq-rrr-editor__select"
           value={conditionType}
@@ -508,9 +527,9 @@ function RrrConditionEditor({
           }
           disabled={moduleIds.length === 0 || unsupportedNestedCondition}
         >
-          {Object.entries(CONDITION_TYPE_LABELS).map(([type, label]) => (
+          {Object.keys(CONDITION_TYPE_LABEL_KEYS).map((type) => (
             <option key={type} value={type}>
-              {label}
+              {getConditionTypeLabel(type as FlatConditionType, t)}
             </option>
           ))}
         </select>
@@ -518,22 +537,19 @@ function RrrConditionEditor({
 
       {moduleIds.length === 0 && (
         <div className="stq-rrr-editor__empty">
-          Füge zuerst mindestens einen Baustein hinzu.
+          {t('rrr.editor.condition.emptyModules')}
         </div>
       )}
 
       {unsupportedNestedCondition && (
         <div className="stq-rrr-condition__warning">
-          <span>
-            Diese Lösungsregel ist zu komplex für die aktuelle Eingabemaske.
-            Setze sie zurück, um sie wieder hier zu bearbeiten.
-          </span>
+          <span>{t('rrr.editor.condition.unsupported')}</span>
           <button
             type="button"
             className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
             onClick={resetCondition}
           >
-            Lösungsregel zurücksetzen
+            {t('rrr.editor.condition.reset')}
           </button>
         </div>
       )}
@@ -541,16 +557,21 @@ function RrrConditionEditor({
       {invalidIds.length > 0 && (
         <div className="stq-rrr-condition__warning">
           {expertMode
-            ? `Ungültige Baustein-Referenz${ // TODO: i18n
-                invalidIds.length === 1 ? '' : 'en'
-              }: ${invalidIds.join(', ')}`
-            : 'Die Lösungsregel enthält einen gelöschten Baustein.'}
+            ? formatEditorText(
+                t(
+                  invalidIds.length === 1
+                    ? 'rrr.editor.condition.invalidReference'
+                    : 'rrr.editor.condition.invalidReferences',
+                ),
+                { ids: invalidIds.join(', ') },
+              )
+            : t('rrr.editor.condition.deletedModule')}
         </div>
       )}
 
       {!unsupportedNestedCondition && conditionType === 'module' && moduleIds.length > 0 && (
         <label className="stq-rrr-field">
-          <span>Baustein</span>
+          <span>{t('rrr.editor.condition.moduleLabel')}</span>
           <select
             className="stq-rrr-editor__select"
             value={selectedIds[0] ?? moduleIds[0]}
@@ -571,18 +592,23 @@ function RrrConditionEditor({
             <div key={`${moduleId}-${index}`} className="stq-rrr-condition__row">
               <div className="stq-rrr-condition__step">
                 <strong>
-                  Schritt {index + 1}:{' '}
-                  {getModuleDisplayLabel(moduleId, modules, expertMode)}
+                  {formatEditorText(t('rrr.editor.condition.stepLabel'), {
+                    index: String(index + 1),
+                    module: getModuleDisplayLabel(moduleId, modules, expertMode, t),
+                  })}
                 </strong>
                 {!moduleIdSet.has(moduleId) && (
-                  <span>Dieser Baustein fehlt oder wurde gelöscht.</span>
+                  <span>{t('rrr.editor.condition.missingStepModule')}</span>
                 )}
               </div>
               {moduleIdSet.has(moduleId) && (
                 <select
                   className="stq-rrr-editor__select"
                   value={moduleId}
-                  aria-label={`Baustein für Schritt ${index + 1}`}
+                  aria-label={formatEditorText(
+                    t('rrr.editor.condition.stepModuleAria'),
+                    { index: String(index + 1) },
+                  )}
                   onChange={(event) => setListModule(index, event.target.value)}
                 >
                   {modules.map((module) => (
@@ -598,7 +624,7 @@ function RrrConditionEditor({
                 disabled={index === 0}
                 onClick={() => moveListModule(index, -1)}
               >
-                Nach oben
+                {t('studio.moveUp')}
               </button>
               <button
                 type="button"
@@ -606,14 +632,14 @@ function RrrConditionEditor({
                 disabled={index === sequenceStepIds.length - 1}
                 onClick={() => moveListModule(index, 1)}
               >
-                Nach unten
+                {t('studio.moveDown')}
               </button>
               <button
                 type="button"
                 className="stq-rrr-editor__button stq-rrr-editor__button--danger"
                 onClick={() => removeListModule(index)}
               >
-                Entfernen
+                {t('studio.deleteEntry')}
               </button>
             </div>
           ))}
@@ -621,7 +647,7 @@ function RrrConditionEditor({
             <select
               className="stq-rrr-editor__select"
               value={moduleIdToAdd}
-              aria-label="Baustein für neuen Schritt"
+              aria-label={t('rrr.editor.condition.newStepModuleAria')}
               onChange={(event) => setModuleIdToAdd(event.target.value)}
             >
               {modules.map((module) => (
@@ -635,7 +661,7 @@ function RrrConditionEditor({
               className="stq-rrr-editor__button"
               onClick={addListModule}
             >
-              Schritt hinzufügen
+              {t('rrr.editor.condition.addStep')}
             </button>
           </div>
         </div>
@@ -680,17 +706,18 @@ function RrrModuleEditor({
   onCreateFallback: (fallbackType: RrrModuleType) => void;
   onRemove: () => void;
 }) {
+  const { t } = useEditorLanguage();
   const config = module.config;
   const [isEditing, setIsEditing] = useState(false);
-  const cardMeta = getModuleCardMeta(module);
+  const cardMeta = getModuleCardMeta(module, t);
   const modulePreset = RRR_MODULE_PRESETS[module.type];
   const fallbackOptions = modules.filter((entry) => entry.id !== module.id);
   const fallbackSuggestions = module.fallbackModuleId
     ? []
     : modulePreset.recommendedFallbackTypes;
   const summary = [
-    ...getModuleSettingsSummary(module),
-    ...getFallbackSettingsSummary(module, modules, expertMode),
+    ...getModuleSettingsSummary(module, t),
+    ...getFallbackSettingsSummary(module, modules, expertMode, t),
   ];
 
   function patchConfig(patch: Record<string, unknown>) {
@@ -737,7 +764,7 @@ function RrrModuleEditor({
             aria-expanded={isEditing}
           >
             <Icon name="edit" size={14} />
-            {isEditing ? 'Schließen' : 'Bearbeiten'}
+            {isEditing ? t('studio.close') : t('studio.edit')}
           </button>
           <button
             type="button"
@@ -745,7 +772,7 @@ function RrrModuleEditor({
             onClick={onRemove}
           >
             <Icon name="trash" size={14} />
-            Entfernen
+            {t('studio.deleteEntry')}
           </button>
         </div>
       </div>
@@ -786,8 +813,8 @@ function RrrModuleEditor({
               config={config}
               expertMode={expertMode}
               toleranceConfigKey="successTolerance"
-              toleranceLabel="Erfolgstoleranz"
-              toleranceHint="Innerhalb dieser Abweichung gilt die Richtung als korrekt. Außerhalb davon sehen Spieler warm/kalt-Feedback."
+              toleranceLabel={t('rrr.editor.module.directionHotcoldToleranceLabel')}
+              toleranceHint={t('rrr.editor.module.directionHotcoldToleranceHint')}
               onPatchConfig={patchConfig}
             />
           )}
@@ -808,8 +835,8 @@ function RrrModuleEditor({
             <GpsRadiusEditor
               config={config}
               radiusConfigKey="successRadiusMeters"
-              radiusLabel="Erfolgsradius"
-              radiusHint="Innerhalb dieses Radius ist der Schritt erfüllt. Außerhalb davon sehen Spieler Nähe-Hinweise."
+              radiusLabel={t('rrr.editor.module.proximityRadiusLabel')}
+              radiusHint={t('rrr.editor.module.proximityRadiusHint')}
               onPatchConfig={patchConfig}
             />
           )}
@@ -857,13 +884,13 @@ function RrrModuleEditor({
           )}
 
           <label className="stq-rrr-field">
-            <span>Ersatzlösung (Fallback)</span>
+            <span>{t('rrr.editor.fallback.label')}</span>
             <select
               className="stq-rrr-editor__select"
               value={module.fallbackModuleId ?? ''}
               onChange={(event) => setFallbackModuleId(event.target.value)}
             >
-              <option value="">Keine Ersatzlösung</option>
+              <option value="">{t('rrr.editor.fallback.none')}</option>
               {fallbackOptions.map((fallbackModule) => (
                 <option key={fallbackModule.id} value={fallbackModule.id}>
                   {formatModuleOption(fallbackModule, expertMode)}
@@ -876,13 +903,13 @@ function RrrModuleEditor({
                 ) && (
                   <option value={module.fallbackModuleId}>
                     {expertMode
-                      ? `Fehlender Baustein (${module.fallbackModuleId})`
-                      : 'Fehlender Baustein'}
+                      ? `${t('rrr.editor.fallback.missing')} (${module.fallbackModuleId})`
+                      : t('rrr.editor.fallback.missing')}
                   </option>
                 )}
             </select>
             <small className="stq-rrr-field__hint">
-              Optionaler Baustein, den Autoren als Ersatzlösung vormerken.
+              {t('rrr.editor.fallback.hint')}
             </small>
           </label>
         </div>
@@ -900,16 +927,18 @@ function FallbackSuggestion({
   fallbackTypes: readonly RrrModuleType[];
   onCreateFallback: (fallbackType: RrrModuleType) => void;
 }) {
+  const { t } = useEditorLanguage();
   return (
     <section
       className="stq-rrr-fallback-suggestion"
-      aria-label="Vorgeschlagene Ersatzlösung"
+      aria-label={t('rrr.editor.fallback.suggestionAria')}
     >
       <div className="stq-rrr-fallback-suggestion__text">
-        <strong>Ersatzlösung empfohlen</strong>
+        <strong>{t('rrr.editor.fallback.suggestionTitle')}</strong>
         <span>
-          Falls "{moduleLabel}" im Feld nicht zuverlässig funktioniert, kann ein
-          einfacher Ersatzbaustein helfen.
+          {formatEditorText(t('rrr.editor.fallback.suggestionDescription'), {
+            module: moduleLabel,
+          })}
         </span>
       </div>
       <div className="stq-rrr-fallback-suggestion__actions">
@@ -920,7 +949,9 @@ function FallbackSuggestion({
             className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
             onClick={() => onCreateFallback(fallbackType)}
           >
-            {RRR_MODULE_PRESETS[fallbackType].label} anlegen
+            {formatEditorText(t('rrr.editor.fallback.create'), {
+              label: RRR_MODULE_PRESETS[fallbackType].label,
+            })}
           </button>
         ))}
       </div>
@@ -935,6 +966,7 @@ function TextAnswerEditor({
   config: RrrModule['config'];
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const answer = readString(config.answer);
   const hasAnswer = answer.trim() !== '';
   const caseSensitive = Boolean(config.caseSensitive);
@@ -945,38 +977,44 @@ function TextAnswerEditor({
         className={`stq-rrr-text-answer ${
           hasAnswer ? '' : 'stq-rrr-text-answer--empty'
         }`}
-        aria-label="Textantwort einstellen"
+        aria-label={t('rrr.editor.textAnswer.aria')}
       >
         <div className="stq-rrr-text-answer__header">
           <div>
-            <span>Erwartete Antwort</span>
-            <strong>{hasAnswer ? 'Antwort festgelegt' : 'Antwort fehlt'}</strong>
+            <span>{t('rrr.editor.textAnswer.eyebrow')}</span>
+            <strong>
+              {hasAnswer
+                ? t('rrr.editor.textAnswer.set')
+                : t('rrr.editor.textAnswer.missing')}
+            </strong>
           </div>
           <span
             className={`stq-rrr-text-answer__badge ${
               hasAnswer ? '' : 'stq-rrr-text-answer__badge--empty'
             }`}
           >
-            {caseSensitive ? 'Exakte Schreibweise' : 'Schreibweise flexibel'}
+            {caseSensitive
+              ? t('rrr.editor.case.exact')
+              : t('rrr.editor.case.flexible')}
           </span>
         </div>
 
         <label className="stq-rrr-field">
-          <span>Antwort</span>
+          <span>{t('rrr.editor.textAnswer.label')}</span>
           <input
             type="text"
             value={answer}
-            placeholder="z. B. Turm"
+            placeholder={t('rrr.editor.textAnswer.placeholder')}
             onChange={(event) => onPatchConfig({ answer: event.target.value })}
           />
           <small className="stq-rrr-field__hint">
-            Spieler müssen diese Antwort eingeben, um den Baustein zu lösen.
+            {t('rrr.editor.textAnswer.hint')}
           </small>
         </label>
 
         {!hasAnswer && (
           <p className="stq-rrr-text-answer__warning">
-            Lege eine Antwort fest, damit dieser Baustein lösbar ist.
+            {t('rrr.editor.textAnswer.warning')}
           </p>
         )}
 
@@ -988,7 +1026,7 @@ function TextAnswerEditor({
               onPatchConfig({ caseSensitive: event.target.checked })
             }
           />
-          <span>Groß-/Kleinschreibung beachten</span>
+          <span>{t('rrr.editor.case.respect')}</span>
         </label>
       </section>
     </div>
@@ -1004,6 +1042,7 @@ function MultiChoiceEditor({
   config: RrrModule['config'];
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const question = readString(config.question);
   const options = normalizeMultiChoiceOptions(config.options);
   const correctOptionIndexes = normalizeMultiChoiceIndexes(
@@ -1073,15 +1112,15 @@ function MultiChoiceEditor({
             ? ''
             : 'stq-rrr-text-answer--empty'
         }`}
-        aria-label="Auswahlfrage einstellen"
+        aria-label={t('rrr.editor.multiChoice.aria')}
       >
         <div className="stq-rrr-text-answer__header">
           <div>
-            <span>Auswahlfrage</span>
+            <span>{t('rrr.editor.multiChoice.eyebrow')}</span>
             <strong>
               {hasQuestion && hasOptions && hasCorrectOption
-                ? 'Frage bereit'
-                : 'Angaben fehlen'}
+                ? t('rrr.editor.multiChoice.ready')
+                : t('rrr.editor.multiChoice.missing')}
             </strong>
           </div>
           <span
@@ -1091,16 +1130,18 @@ function MultiChoiceEditor({
                 : 'stq-rrr-text-answer__badge--empty'
             }`}
           >
-            {allowMultiple ? 'Mehrfachauswahl' : 'Einzelauswahl'}
+            {allowMultiple
+              ? t('rrr.editor.multiChoice.multiple')
+              : t('rrr.editor.multiChoice.single')}
           </span>
         </div>
 
         <label className="stq-rrr-field">
-          <span>Frage</span>
+          <span>{t('rrr.editor.multiChoice.question')}</span>
           <input
             type="text"
             value={question}
-            placeholder="z. B. Welche Spur siehst du am Brunnen?"
+            placeholder={t('rrr.editor.multiChoice.questionPlaceholder')}
             onChange={(event) =>
               onPatchConfig({ question: event.target.value })
             }
@@ -1113,7 +1154,7 @@ function MultiChoiceEditor({
             checked={allowMultiple}
             onChange={(event) => setAllowMultiple(event.target.checked)}
           />
-          <span>Mehrere richtige Antworten erlauben</span>
+          <span>{t('rrr.editor.multiChoice.allowMultiple')}</span>
         </label>
 
         <div className="stq-rrr-multi-choice-editor__options">
@@ -1127,14 +1168,20 @@ function MultiChoiceEditor({
                   onChange={(event) =>
                     toggleCorrectOption(index, event.target.checked)
                   }
-                  aria-label={`Option ${index + 1} als richtig markieren`}
+                  aria-label={formatEditorText(
+                    t('rrr.editor.multiChoice.correctAria'),
+                    { index: String(index + 1) },
+                  )}
                 />
-                <span>Richtig</span>
+                <span>{t('rrr.editor.multiChoice.correct')}</span>
               </label>
               <input
                 type="text"
                 value={option}
-                placeholder={`Option ${index + 1}`}
+                placeholder={formatEditorText(
+                  t('rrr.editor.multiChoice.optionPlaceholder'),
+                  { index: String(index + 1) },
+                )}
                 onChange={(event) => setOption(index, event.target.value)}
               />
               <button
@@ -1143,7 +1190,7 @@ function MultiChoiceEditor({
                 onClick={() => removeOption(index)}
                 disabled={options.length <= 1}
               >
-                Entfernen
+                {t('studio.deleteEntry')}
               </button>
             </div>
           ))}
@@ -1154,12 +1201,12 @@ function MultiChoiceEditor({
           className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
           onClick={addOption}
         >
-          Option hinzufügen
+          {t('rrr.editor.multiChoice.addOption')}
         </button>
 
         {(!hasQuestion || !hasOptions || !hasCorrectOption) && (
           <p className="stq-rrr-text-answer__warning">
-            Lege Frage, Antwortoptionen und mindestens eine richtige Option fest.
+            {t('rrr.editor.multiChoice.warning')}
           </p>
         )}
       </section>
@@ -1176,9 +1223,10 @@ function HoldStillDurationEditor({
   expertMode: boolean;
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const durationMs = normalizeDurationMs(readNumber(config.durationMs));
   const durationSliderValue = clampNumber(durationMs, 500, 8000);
-  const durationMeta = getHoldStillDurationMeta(durationMs);
+  const durationMeta = getHoldStillDurationMeta(durationMs, t);
 
   function setDurationMs(value: number) {
     onPatchConfig({ durationMs: normalizeDurationMs(value) });
@@ -1188,11 +1236,11 @@ function HoldStillDurationEditor({
     <div className="stq-rrr-hold-editor">
       <section
         className="stq-rrr-hold-duration"
-        aria-label="Stillhalte-Dauer einstellen"
+        aria-label={t('rrr.editor.hold.aria')}
       >
         <div className="stq-rrr-hold-duration__header">
           <div>
-            <span>Dauer</span>
+            <span>{t('rrr.editor.hold.duration')}</span>
             <strong>{formatDurationSeconds(durationMs)}</strong>
           </div>
           <span
@@ -1203,7 +1251,7 @@ function HoldStillDurationEditor({
         </div>
 
         <label className="stq-rrr-field">
-          <span>Dauer per Schieberegler</span>
+          <span>{t('rrr.editor.hold.slider')}</span>
           <input
             type="range"
             min="500"
@@ -1217,7 +1265,10 @@ function HoldStillDurationEditor({
           </small>
         </label>
 
-        <div className="stq-rrr-hold-duration__presets" aria-label="Schnelle Dauer">
+        <div
+          className="stq-rrr-hold-duration__presets"
+          aria-label={t('rrr.editor.hold.presetsAria')}
+        >
           {HOLD_STILL_DURATION_PRESETS.map((preset) => (
             <button
               key={preset.durationMs}
@@ -1235,7 +1286,7 @@ function HoldStillDurationEditor({
 
       {expertMode && (
         <NumberField
-          label="Dauer in ms"
+          label={t('rrr.editor.hold.expertLabel')}
           value={durationMs}
           onChange={setDurationMs}
         />
@@ -1248,8 +1299,8 @@ function CompassDirectionPicker({
   config,
   expertMode,
   toleranceConfigKey = 'tolerance',
-  toleranceLabel = 'Toleranz',
-  toleranceHint = 'Je größer die Toleranz, desto großzügiger gilt die Blickrichtung als richtig.',
+  toleranceLabel,
+  toleranceHint,
   onPatchConfig,
 }: {
   config: RrrModule['config'];
@@ -1259,6 +1310,11 @@ function CompassDirectionPicker({
   toleranceHint?: string;
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
+  const resolvedToleranceLabel =
+    toleranceLabel ?? t('rrr.editor.compass.defaultToleranceLabel');
+  const resolvedToleranceHint =
+    toleranceHint ?? t('rrr.editor.compass.defaultToleranceHint');
   const targetDegrees = normalizeCompassDegrees(readNumber(config.targetDegrees));
   const tolerance = Math.max(0, readNumber(config[toleranceConfigKey]));
   const toleranceSliderValue = Math.min(tolerance, 90);
@@ -1288,19 +1344,19 @@ function CompassDirectionPicker({
           type="button"
           className="stq-rrr-compass-picker__dial"
           onPointerDown={handleDialPointer}
-          aria-label="Richtung auf dem Kompass wählen"
+          aria-label={t('rrr.editor.compass.aria')}
         >
           <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--north">
-            N
+            {getCompassCardinalInitial('rrr.editor.compass.north', t)}
           </span>
           <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--east">
-            O
+            {getCompassCardinalInitial('rrr.editor.compass.east', t)}
           </span>
           <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--south">
-            S
+            {getCompassCardinalInitial('rrr.editor.compass.south', t)}
           </span>
           <span className="stq-rrr-compass-picker__cardinal stq-rrr-compass-picker__cardinal--west">
-            W
+            {getCompassCardinalInitial('rrr.editor.compass.west', t)}
           </span>
           <span
             className="stq-rrr-compass-picker__needle"
@@ -1314,13 +1370,16 @@ function CompassDirectionPicker({
         </button>
 
         <div className="stq-rrr-compass-picker__readout">
-          <span>Ausgewählte Richtung</span>
+          <span>{t('rrr.editor.compass.selected')}</span>
           <strong>{formatNumber(targetDegrees, 0)}°</strong>
-          <small>{getCompassDirectionLabel(targetDegrees)}</small>
+          <small>{getCompassDirectionLabel(targetDegrees, t)}</small>
         </div>
       </div>
 
-      <div className="stq-rrr-compass-picker__presets" aria-label="Schnelle Richtungen">
+      <div
+        className="stq-rrr-compass-picker__presets"
+        aria-label={t('rrr.editor.compass.presetsAria')}
+      >
         {COMPASS_DIRECTION_PRESETS.map((preset) => (
           <button
             key={preset.degrees}
@@ -1330,14 +1389,16 @@ function CompassDirectionPicker({
             }`}
             onClick={() => setTargetDegrees(preset.degrees)}
           >
-            {preset.label} {preset.degrees}°
+            {t(preset.labelKey)} {preset.degrees}°
           </button>
         ))}
       </div>
 
       <div className="stq-rrr-compass-picker__tolerance">
         <label className="stq-rrr-field">
-          <span>{toleranceLabel}: ±{formatNumber(tolerance, 0)}°</span>
+          <span>
+            {resolvedToleranceLabel}: ±{formatNumber(tolerance, 0)}°
+          </span>
           <input
             type="range"
             min="0"
@@ -1347,11 +1408,13 @@ function CompassDirectionPicker({
             onChange={(event) => setTolerance(Number(event.target.value))}
           />
           <small className="stq-rrr-field__hint">
-            {toleranceHint}
+            {resolvedToleranceHint}
           </small>
         </label>
         <NumberField
-          label={`${toleranceLabel} in Grad`}
+          label={formatEditorText(t('rrr.editor.compass.toleranceDegrees'), {
+            label: resolvedToleranceLabel,
+          })}
           value={tolerance}
           onChange={setTolerance}
         />
@@ -1359,7 +1422,7 @@ function CompassDirectionPicker({
 
       {expertMode && (
         <NumberField
-          label="Zielrichtung in Grad"
+          label={t('rrr.editor.compass.targetDegrees')}
           value={targetDegrees}
           onChange={setTargetDegrees}
         />
@@ -1371,7 +1434,7 @@ function CompassDirectionPicker({
 function GpsRadiusEditor({
   config,
   radiusConfigKey = 'radiusMeters',
-  radiusLabel = 'Radius',
+  radiusLabel,
   radiusHint,
   onPatchConfig,
 }: {
@@ -1381,9 +1444,11 @@ function GpsRadiusEditor({
   radiusHint?: string;
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
+  const resolvedRadiusLabel = radiusLabel ?? t('rrr.editor.gps.radius');
   const radiusMeters = Math.max(0, readNumber(config[radiusConfigKey]));
   const radiusSliderValue = Math.min(radiusMeters, 100);
-  const radiusMeta = getGpsRadiusMeta(radiusMeters);
+  const radiusMeta = getGpsRadiusMeta(radiusMeters, t);
 
   function setRadiusMeters(value: number) {
     onPatchConfig({ [radiusConfigKey]: Math.max(0, Math.round(value)) });
@@ -1393,12 +1458,12 @@ function GpsRadiusEditor({
     <div className="stq-rrr-gps-editor">
       <div className="stq-rrr-field-grid">
         <NumberField
-          label="Breitengrad"
+          label={t('rrr.editor.gps.lat')}
           value={readNumber(config.lat)}
           onChange={(value) => onPatchConfig({ lat: value })}
         />
         <NumberField
-          label="Längengrad"
+          label={t('rrr.editor.gps.lng')}
           value={readNumber(config.lng)}
           onChange={(value) => onPatchConfig({ lng: value })}
         />
@@ -1406,11 +1471,11 @@ function GpsRadiusEditor({
 
       <section
         className="stq-rrr-gps-radius"
-        aria-label="GPS-Radius einstellen"
+        aria-label={t('rrr.editor.gps.aria')}
       >
         <div className="stq-rrr-gps-radius__header">
           <div>
-            <span>{radiusLabel}</span>
+            <span>{resolvedRadiusLabel}</span>
             <strong>{formatNumber(radiusMeters, 0)} m</strong>
           </div>
           <span
@@ -1421,7 +1486,11 @@ function GpsRadiusEditor({
         </div>
 
         <label className="stq-rrr-field">
-          <span>{radiusLabel} per Schieberegler</span>
+          <span>
+            {formatEditorText(t('rrr.editor.gps.slider'), {
+              label: resolvedRadiusLabel,
+            })}
+          </span>
           <input
             type="range"
             min="1"
@@ -1436,14 +1505,16 @@ function GpsRadiusEditor({
         </label>
 
         <NumberField
-          label={`${radiusLabel} in Metern`}
+          label={formatEditorText(t('rrr.editor.gps.meters'), {
+            label: resolvedRadiusLabel,
+          })}
           value={radiusMeters}
           onChange={setRadiusMeters}
         />
         <p className="stq-rrr-gps-radius__calibration">
-          Im Feld sollte der Radius mindestens so groß sein wie die aktuelle
-          GPS-Genauigkeit. Ohne Live-Messung ist {recommendGpsRadius()} m ein
-          sinnvoller Startwert.
+          {formatEditorText(t('rrr.editor.gps.calibration'), {
+            radius: String(recommendGpsRadius()),
+          })}
         </p>
       </section>
     </div>
@@ -1457,6 +1528,7 @@ function QrScanEditor({
   config: RrrModule['config'];
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const expectedValue = readString(config.expectedValue);
   const hasExpectedValue = expectedValue.trim() !== '';
 
@@ -1466,13 +1538,15 @@ function QrScanEditor({
         className={`stq-rrr-text-answer ${
           hasExpectedValue ? '' : 'stq-rrr-text-answer--empty'
         }`}
-        aria-label="QR-Code einstellen"
+        aria-label={t('rrr.editor.qr.aria')}
       >
         <div className="stq-rrr-text-answer__header">
           <div>
-            <span>Erwarteter QR-Wert</span>
+            <span>{t('rrr.editor.qr.eyebrow')}</span>
             <strong>
-              {hasExpectedValue ? 'QR-Wert festgelegt' : 'QR-Wert fehlt'}
+              {hasExpectedValue
+                ? t('rrr.editor.qr.set')
+                : t('rrr.editor.qr.missing')}
             </strong>
           </div>
           <span
@@ -1480,38 +1554,33 @@ function QrScanEditor({
               hasExpectedValue ? '' : 'stq-rrr-text-answer__badge--empty'
             }`}
           >
-            Exakter Wert
+            {t('rrr.editor.qr.exact')}
           </span>
         </div>
 
         <label className="stq-rrr-field">
-          <span>Erwarteter Wert</span>
+          <span>{t('rrr.editor.qr.expected')}</span>
           <input
             type="text"
             value={expectedValue}
-            placeholder="z. B. station-3-gate"
+            placeholder={t('rrr.editor.qr.placeholder')}
             onChange={(event) =>
               onPatchConfig({ expectedValue: event.target.value })
             }
           />
           <small className="stq-rrr-field__hint">
-            Dieser Wert wird später mit dem gescannten QR-Code verglichen.
+            {t('rrr.editor.qr.hint')}
           </small>
         </label>
 
         <div className="stq-rrr-editor__empty">
-          <strong>Kamera wird benötigt</strong>
-          <span>
-            Im Spiel wird dafür eine Kamera-Freigabe vorbereitet. Kamera
-            aktivieren, Kamera nicht verfügbar und QR-Code konnte nicht gelesen
-            werden sind eigene UI-Zustände. Der geführte Test bleibt über den
-            simulierten QR-Wert bedienbar.
-          </span>
+          <strong>{t('rrr.editor.qr.cameraTitle')}</strong>
+          <span>{t('rrr.editor.qr.cameraHint')}</span>
         </div>
 
         {!hasExpectedValue && (
           <p className="stq-rrr-text-answer__warning">
-            Lege einen erwarteten QR-Wert fest, damit dieser Baustein lösbar ist.
+            {t('rrr.editor.qr.warning')}
           </p>
         )}
       </section>
@@ -1526,6 +1595,7 @@ function CodeWordEditor({
   config: RrrModule['config'];
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const code = readString(config.code);
   const hasCode = code.trim() !== '';
   const caseSensitive = Boolean(config.caseSensitive);
@@ -1536,38 +1606,44 @@ function CodeWordEditor({
         className={`stq-rrr-text-answer ${
           hasCode ? '' : 'stq-rrr-text-answer--empty'
         }`}
-        aria-label="Codewort einstellen"
+        aria-label={t('rrr.editor.codeWord.aria')}
       >
         <div className="stq-rrr-text-answer__header">
           <div>
-            <span>Codewort</span>
-            <strong>{hasCode ? 'Codewort festgelegt' : 'Codewort fehlt'}</strong>
+            <span>{t('rrr.editor.codeWord.eyebrow')}</span>
+            <strong>
+              {hasCode
+                ? t('rrr.editor.codeWord.set')
+                : t('rrr.editor.codeWord.missing')}
+            </strong>
           </div>
           <span
             className={`stq-rrr-text-answer__badge ${
               hasCode ? '' : 'stq-rrr-text-answer__badge--empty'
             }`}
           >
-            {caseSensitive ? 'Exakte Schreibweise' : 'Schreibweise flexibel'}
+            {caseSensitive
+              ? t('rrr.editor.case.exact')
+              : t('rrr.editor.case.flexible')}
           </span>
         </div>
 
         <label className="stq-rrr-field">
-          <span>Codewort</span>
+          <span>{t('rrr.editor.codeWord.label')}</span>
           <input
             type="text"
             value={code}
-            placeholder="z. B. Adler"
+            placeholder={t('rrr.editor.codeWord.placeholder')}
             onChange={(event) => onPatchConfig({ code: event.target.value })}
           />
           <small className="stq-rrr-field__hint">
-            Spieler geben dieses Codewort ein, um den Baustein zu lösen.
+            {t('rrr.editor.codeWord.hint')}
           </small>
         </label>
 
         {!hasCode && (
           <p className="stq-rrr-text-answer__warning">
-            Lege ein Codewort fest, damit dieser Baustein lösbar ist.
+            {t('rrr.editor.codeWord.warning')}
           </p>
         )}
 
@@ -1579,7 +1655,7 @@ function CodeWordEditor({
               onPatchConfig({ caseSensitive: event.target.checked })
             }
           />
-          <span>Groß-/Kleinschreibung beachten</span>
+          <span>{t('rrr.editor.case.respect')}</span>
         </label>
       </section>
     </div>
@@ -1593,6 +1669,7 @@ function SequentialCodeEditor({
   config: RrrModule['config'];
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const code = readString(config.code);
   const hint = readString(config.hint);
   const hasCode = code.trim() !== '';
@@ -1604,48 +1681,54 @@ function SequentialCodeEditor({
         className={`stq-rrr-text-answer ${
           hasCode ? '' : 'stq-rrr-text-answer--empty'
         }`}
-        aria-label="Gesammelten Code einstellen"
+        aria-label={t('rrr.editor.sequential.aria')}
       >
         <div className="stq-rrr-text-answer__header">
           <div>
-            <span>Gesammelter Code</span>
-            <strong>{hasCode ? 'Code festgelegt' : 'Code fehlt'}</strong>
+            <span>{t('rrr.editor.sequential.eyebrow')}</span>
+            <strong>
+              {hasCode
+                ? t('rrr.editor.sequential.set')
+                : t('rrr.editor.sequential.missing')}
+            </strong>
           </div>
           <span
             className={`stq-rrr-text-answer__badge ${
               hasCode ? '' : 'stq-rrr-text-answer__badge--empty'
             }`}
           >
-            {caseSensitive ? 'Exakte Schreibweise' : 'Schreibweise flexibel'}
+            {caseSensitive
+              ? t('rrr.editor.case.exact')
+              : t('rrr.editor.case.flexible')}
           </span>
         </div>
 
         <label className="stq-rrr-field">
-          <span>Code</span>
+          <span>{t('rrr.editor.sequential.code')}</span>
           <input
             type="text"
             value={code}
-            placeholder="z. B. 1842"
+            placeholder={t('rrr.editor.sequential.codePlaceholder')}
             onChange={(event) => onPatchConfig({ code: event.target.value })}
           />
           <small className="stq-rrr-field__hint">
-            Spieler geben den unterwegs gesammelten Code am Ende ein.
+            {t('rrr.editor.sequential.hint')}
           </small>
         </label>
 
         <label className="stq-rrr-field">
-          <span>Hinweis (optional)</span>
+          <span>{t('rrr.editor.sequential.hintLabel')}</span>
           <input
             type="text"
             value={hint}
-            placeholder="z. B. Vier Zeichen aus den Stationen"
+            placeholder={t('rrr.editor.sequential.hintPlaceholder')}
             onChange={(event) => onPatchConfig({ hint: event.target.value })}
           />
         </label>
 
         {!hasCode && (
           <p className="stq-rrr-text-answer__warning">
-            Lege einen Code fest, damit dieser Baustein lösbar ist.
+            {t('rrr.editor.sequential.warning')}
           </p>
         )}
 
@@ -1657,7 +1740,7 @@ function SequentialCodeEditor({
               onPatchConfig({ caseSensitive: event.target.checked })
             }
           />
-          <span>Groß-/Kleinschreibung beachten</span>
+          <span>{t('rrr.editor.case.respect')}</span>
         </label>
       </section>
     </div>
@@ -1673,9 +1756,10 @@ function TimerWaitDurationEditor({
   expertMode: boolean;
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const durationMs = normalizeDurationMs(readNumber(config.durationMs));
   const durationSliderValue = clampNumber(durationMs, 500, 30000);
-  const durationMeta = getTimerWaitDurationMeta(durationMs);
+  const durationMeta = getTimerWaitDurationMeta(durationMs, t);
 
   function setDurationMs(value: number) {
     onPatchConfig({ durationMs: normalizeDurationMs(value) });
@@ -1685,11 +1769,11 @@ function TimerWaitDurationEditor({
     <div className="stq-rrr-hold-editor">
       <section
         className="stq-rrr-hold-duration"
-        aria-label="Wartezeit einstellen"
+        aria-label={t('rrr.editor.timer.aria')}
       >
         <div className="stq-rrr-hold-duration__header">
           <div>
-            <span>Wartezeit</span>
+            <span>{t('rrr.editor.timer.wait')}</span>
             <strong>{formatDurationSeconds(durationMs)}</strong>
           </div>
           <span
@@ -1700,7 +1784,7 @@ function TimerWaitDurationEditor({
         </div>
 
         <label className="stq-rrr-field">
-          <span>Wartezeit per Schieberegler</span>
+          <span>{t('rrr.editor.timer.slider')}</span>
           <input
             type="range"
             min="500"
@@ -1714,7 +1798,10 @@ function TimerWaitDurationEditor({
           </small>
         </label>
 
-        <div className="stq-rrr-hold-duration__presets" aria-label="Schnelle Wartezeit">
+        <div
+          className="stq-rrr-hold-duration__presets"
+          aria-label={t('rrr.editor.timer.presetsAria')}
+        >
           {TIMER_WAIT_DURATION_PRESETS.map((preset) => (
             <button
               key={preset.durationMs}
@@ -1732,7 +1819,7 @@ function TimerWaitDurationEditor({
 
       {expertMode && (
         <NumberField
-          label="Wartezeit in ms"
+          label={t('rrr.editor.timer.expertLabel')}
           value={durationMs}
           onChange={setDurationMs}
         />
@@ -1748,6 +1835,7 @@ function ObjectFoundEditor({
   config: RrrModule['config'];
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const prompt = readString(config.prompt);
   const confirmLabel = readString(config.confirmLabel);
   const hasPrompt = prompt.trim() !== '';
@@ -1758,13 +1846,15 @@ function ObjectFoundEditor({
         className={`stq-rrr-text-answer ${
           hasPrompt ? '' : 'stq-rrr-text-answer--empty'
         }`}
-        aria-label="Objektfund einstellen"
+        aria-label={t('rrr.editor.object.aria')}
       >
         <div className="stq-rrr-text-answer__header">
           <div>
-            <span>Fund-Anweisung</span>
+            <span>{t('rrr.editor.object.eyebrow')}</span>
             <strong>
-              {hasPrompt ? 'Anweisung festgelegt' : 'Anweisung fehlt'}
+              {hasPrompt
+                ? t('rrr.editor.object.set')
+                : t('rrr.editor.object.missing')}
             </strong>
           </div>
           <span
@@ -1772,42 +1862,41 @@ function ObjectFoundEditor({
               hasPrompt ? '' : 'stq-rrr-text-answer__badge--empty'
             }`}
           >
-            Manuelle Bestätigung
+            {t('rrr.editor.manual.confirmation')}
           </span>
         </div>
 
         <label className="stq-rrr-field">
-          <span>Anweisung</span>
+          <span>{t('rrr.editor.manual.instruction')}</span>
           <input
             type="text"
             value={prompt}
-            placeholder="z. B. Finde den roten Marker am Baum"
+            placeholder={t('rrr.editor.object.placeholder')}
             onChange={(event) => onPatchConfig({ prompt: event.target.value })}
           />
           <small className="stq-rrr-field__hint">
-            Beschreibe, welches Objekt, Schild oder welcher Hinweis gefunden
-            werden soll.
+            {t('rrr.editor.object.hint')}
           </small>
         </label>
 
         <label className="stq-rrr-field">
-          <span>Bestätigungstext</span>
+          <span>{t('rrr.editor.manual.confirmLabel')}</span>
           <input
             type="text"
             value={confirmLabel}
-            placeholder="Gefunden"
+            placeholder={t('rrr.editor.manual.confirmPlaceholderFound')}
             onChange={(event) =>
               onPatchConfig({ confirmLabel: event.target.value })
             }
           />
           <small className="stq-rrr-field__hint">
-            Text auf dem Button für die manuelle Bestätigung.
+            {t('rrr.editor.manual.confirmHint')}
           </small>
         </label>
 
         {!hasPrompt && (
           <p className="stq-rrr-text-answer__warning">
-            Lege eine Fund-Anweisung fest, damit dieser Baustein verständlich ist.
+            {t('rrr.editor.object.warning')}
           </p>
         )}
       </section>
@@ -1822,6 +1911,7 @@ function PhotoCheckManualEditor({
   config: RrrModule['config'];
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useEditorLanguage();
   const prompt = readString(config.prompt);
   const confirmLabel = readString(config.confirmLabel);
   const hasPrompt = prompt.trim() !== '';
@@ -1832,13 +1922,15 @@ function PhotoCheckManualEditor({
         className={`stq-rrr-text-answer ${
           hasPrompt ? '' : 'stq-rrr-text-answer--empty'
         }`}
-        aria-label="Foto-Aufgabe einstellen"
+        aria-label={t('rrr.editor.photo.aria')}
       >
         <div className="stq-rrr-text-answer__header">
           <div>
-            <span>Foto-Aufgabe</span>
+            <span>{t('rrr.editor.photo.eyebrow')}</span>
             <strong>
-              {hasPrompt ? 'Aufgabe festgelegt' : 'Aufgabe fehlt'}
+              {hasPrompt
+                ? t('rrr.editor.photo.set')
+                : t('rrr.editor.photo.missing')}
             </strong>
           </div>
           <span
@@ -1846,41 +1938,41 @@ function PhotoCheckManualEditor({
               hasPrompt ? '' : 'stq-rrr-text-answer__badge--empty'
             }`}
           >
-            Manuelle Bestätigung
+            {t('rrr.editor.manual.confirmation')}
           </span>
         </div>
 
         <label className="stq-rrr-field">
-          <span>Anweisung</span>
+          <span>{t('rrr.editor.manual.instruction')}</span>
           <input
             type="text"
             value={prompt}
-            placeholder="z. B. Vergleiche dein Foto mit dem Schild"
+            placeholder={t('rrr.editor.photo.placeholder')}
             onChange={(event) => onPatchConfig({ prompt: event.target.value })}
           />
           <small className="stq-rrr-field__hint">
-            Beschreibe, welches Foto aufgenommen oder verglichen werden soll.
+            {t('rrr.editor.photo.hint')}
           </small>
         </label>
 
         <label className="stq-rrr-field">
-          <span>Bestätigungstext</span>
+          <span>{t('rrr.editor.manual.confirmLabel')}</span>
           <input
             type="text"
             value={confirmLabel}
-            placeholder="Bestätigt"
+            placeholder={t('rrr.editor.manual.confirmPlaceholderConfirmed')}
             onChange={(event) =>
               onPatchConfig({ confirmLabel: event.target.value })
             }
           />
           <small className="stq-rrr-field__hint">
-            Text auf dem Button für die manuelle Bestätigung.
+            {t('rrr.editor.manual.confirmHint')}
           </small>
         </label>
 
         {!hasPrompt && (
           <p className="stq-rrr-text-answer__warning">
-            Lege eine Foto-Aufgabe fest, damit dieser Baustein verständlich ist.
+            {t('rrr.editor.photo.warning')}
           </p>
         )}
       </section>
@@ -1888,7 +1980,7 @@ function PhotoCheckManualEditor({
   );
 }
 
-function getModuleCardMeta(module: RrrModule): {
+function getModuleCardMeta(module: RrrModule, t: EditorT): {
   title: string;
   description: string;
   icon: IconName;
@@ -1896,80 +1988,80 @@ function getModuleCardMeta(module: RrrModule): {
   switch (module.type) {
     case 'text_answer':
       return {
-        title: 'Antwort eingeben',
-        description: 'Spieler lösen den Schritt mit einer Texteingabe.',
+        title: t('rrr.editor.card.textAnswerTitle'),
+        description: t('rrr.editor.card.textAnswerDescription'),
         icon: 'type',
       };
     case 'multi_choice':
       return {
-        title: 'Auswahlfrage',
-        description: 'Spieler wählen eine oder mehrere Antwortoptionen.',
+        title: t('rrr.editor.card.multiChoiceTitle'),
+        description: t('rrr.editor.card.multiChoiceDescription'),
         icon: 'check',
       };
     case 'gps_enter':
       return {
-        title: 'Am richtigen Ort stehen',
-        description: 'Der Schritt prüft eine simulierte Position am Zielort.',
+        title: t('rrr.editor.card.gpsTitle'),
+        description: t('rrr.editor.card.gpsDescription'),
         icon: 'map-pin',
       };
     case 'proximity_hint':
       return {
-        title: 'Nähe-Hinweis',
-        description: 'Spieler erhalten Nähe-Feedback beim Annähern an den Zielort.',
+        title: t('rrr.editor.card.proximityTitle'),
+        description: t('rrr.editor.card.proximityDescription'),
         icon: 'map-pin',
       };
     case 'compass_align':
       return {
-        title: 'In eine Richtung schauen',
-        description: 'Der Schritt prüft die Blickrichtung per Kompasswert.',
+        title: t('rrr.editor.card.compassTitle'),
+        description: t('rrr.editor.card.compassDescription'),
         icon: 'compass',
       };
     case 'direction_hotcold':
       return {
-        title: 'Richtung warm/kalt',
-        description: 'Spieler erhalten wärmer/kälter-Feedback zur Zielrichtung.',
+        title: t('rrr.editor.card.directionHotcoldTitle'),
+        description: t('rrr.editor.card.directionHotcoldDescription'),
         icon: 'compass',
       };
     case 'hold_still':
       return {
-        title: 'Handy ruhig halten',
-        description: 'Der Schritt wartet auf ruhiges Halten des Geräts.',
+        title: t('rrr.editor.card.holdStillTitle'),
+        description: t('rrr.editor.card.holdStillDescription'),
         icon: 'hand',
       };
     case 'qr_scan':
       return {
-        title: 'QR-Code scannen',
-        description: 'Der Schritt erwartet einen bestimmten QR-Code-Wert.',
+        title: t('rrr.editor.card.qrTitle'),
+        description: t('rrr.editor.card.qrDescription'),
         icon: 'qr-code',
       };
     case 'code_word':
       return {
-        title: 'Codewort eingeben',
-        description: 'Spieler lösen den Schritt mit einem Codewort.',
+        title: t('rrr.editor.card.codeWordTitle'),
+        description: t('rrr.editor.card.codeWordDescription'),
         icon: 'type',
       };
     case 'sequential_code':
       return {
-        title: 'Gesammelten Code eingeben',
-        description: 'Spieler lösen den Schritt mit einem gesammelten Code.',
+        title: t('rrr.editor.card.sequentialTitle'),
+        description: t('rrr.editor.card.sequentialDescription'),
         icon: 'type',
       };
     case 'timer_wait':
       return {
-        title: 'Warten',
-        description: 'Der Schritt ist nach einer Wartezeit erfüllt.',
+        title: t('rrr.editor.card.timerTitle'),
+        description: t('rrr.editor.card.timerDescription'),
         icon: 'clock',
       };
     case 'photo_check_manual':
       return {
-        title: 'Foto-Aufgabe bestätigen',
-        description: 'Spieler bestätigen eine Foto-Aufgabe manuell.',
+        title: t('rrr.editor.card.photoTitle'),
+        description: t('rrr.editor.card.photoDescription'),
         icon: 'image',
       };
     case 'object_found':
       return {
-        title: 'Objekt gefunden',
-        description: 'Spieler bestätigen manuell, dass sie etwas gefunden haben.',
+        title: t('rrr.editor.card.objectTitle'),
+        description: t('rrr.editor.card.objectDescription'),
         icon: 'check-circle',
       };
   }
@@ -1977,21 +2069,23 @@ function getModuleCardMeta(module: RrrModule): {
 
 function getModuleSettingsSummary(
   module: RrrModule,
+  t: EditorT,
 ): Array<{ label: string; value: string }> {
   const config = module.config;
+  const notSet = t('rrr.editor.summary.notSet');
   switch (module.type) {
     case 'text_answer': {
       const answer = readString(config.answer).trim();
       return [
         {
-          label: 'Antwort',
-          value: answer ? `"${answer}"` : 'Noch nicht festgelegt',
+          label: t('rrr.editor.summary.answer'),
+          value: answer ? `"${answer}"` : notSet,
         },
         {
-          label: 'Schreibweise',
+          label: t('rrr.editor.case.exact'),
           value: Boolean(config.caseSensitive)
-            ? 'Groß-/Kleinschreibung wichtig'
-            : 'Groß-/Kleinschreibung egal',
+            ? t('rrr.editor.case.important')
+            : t('rrr.editor.case.ignored'),
         },
       ];
     }
@@ -2005,69 +2099,72 @@ function getModuleSettingsSummary(
       ).length;
       return [
         {
-          label: 'Frage',
-          value: question || 'Noch nicht festgelegt',
+          label: t('rrr.editor.summary.question'),
+          value: question || notSet,
         },
         {
-          label: 'Optionen',
+          label: t('rrr.editor.summary.options'),
           value:
             filledOptions.length > 0
-              ? `${filledOptions.length} Optionen, ${correctCount} richtig`
-              : 'Noch nicht festgelegt',
+              ? formatEditorText(t('rrr.editor.multiChoice.optionsSummary'), {
+                  options: String(filledOptions.length),
+                  correct: String(correctCount),
+                })
+              : notSet,
         },
       ];
     }
     case 'gps_enter':
       return [
         {
-          label: 'Zielort',
+          label: t('rrr.editor.summary.target'),
           value: hasFiniteNumber(config.lat) && hasFiniteNumber(config.lng)
             ? `${formatNumber(readNumber(config.lat), 5)}, ${formatNumber(
                 readNumber(config.lng),
                 5,
               )}`
-            : 'Koordinaten fehlen',
+            : t('rrr.editor.summary.coordinatesMissing'),
         },
         {
-          label: 'Radius',
+          label: t('rrr.editor.summary.radius'),
           value: `${formatNumber(readNumber(config.radiusMeters), 0)} m`,
         },
       ];
     case 'proximity_hint':
       return [
         {
-          label: 'Zielort',
+          label: t('rrr.editor.summary.target'),
           value: hasFiniteNumber(config.lat) && hasFiniteNumber(config.lng)
             ? `${formatNumber(readNumber(config.lat), 5)}, ${formatNumber(
                 readNumber(config.lng),
                 5,
               )}`
-            : 'Koordinaten fehlen',
+            : t('rrr.editor.summary.coordinatesMissing'),
         },
         {
-          label: 'Erfolgsradius',
+          label: t('rrr.editor.summary.successRadius'),
           value: `${formatNumber(readNumber(config.successRadiusMeters), 0)} m`,
         },
       ];
     case 'compass_align':
       return [
         {
-          label: 'Richtung',
+          label: t('rrr.editor.summary.direction'),
           value: `${formatNumber(readNumber(config.targetDegrees), 0)}°`,
         },
         {
-          label: 'Toleranz',
+          label: t('rrr.editor.summary.tolerance'),
           value: `±${formatNumber(readNumber(config.tolerance), 0)}°`,
         },
       ];
     case 'direction_hotcold':
       return [
         {
-          label: 'Richtung',
+          label: t('rrr.editor.summary.direction'),
           value: `${formatNumber(readNumber(config.targetDegrees), 0)}°`,
         },
         {
-          label: 'Erfolgstoleranz',
+          label: t('rrr.editor.summary.successTolerance'),
           value: `±${formatNumber(readNumber(config.successTolerance), 0)}°`,
         },
       ];
@@ -2075,7 +2172,7 @@ function getModuleSettingsSummary(
       const durationMs = readNumber(config.durationMs);
       return [
         {
-          label: 'Dauer',
+          label: t('rrr.editor.summary.duration'),
           value:
             durationMs >= 1000
               ? `${formatNumber(durationMs / 1000, 1)} s`
@@ -2087,8 +2184,8 @@ function getModuleSettingsSummary(
       const expectedValue = readString(config.expectedValue).trim();
       return [
         {
-          label: 'QR-Wert',
-          value: expectedValue ? `"${expectedValue}"` : 'Noch nicht festgelegt',
+          label: t('rrr.editor.summary.qrValue'),
+          value: expectedValue ? `"${expectedValue}"` : notSet,
         },
       ];
     }
@@ -2096,14 +2193,14 @@ function getModuleSettingsSummary(
       const code = readString(config.code).trim();
       return [
         {
-          label: 'Codewort',
-          value: code ? `"${code}"` : 'Noch nicht festgelegt',
+          label: t('rrr.editor.summary.codeWord'),
+          value: code ? `"${code}"` : notSet,
         },
         {
-          label: 'Schreibweise',
+          label: t('rrr.editor.case.exact'),
           value: Boolean(config.caseSensitive)
-            ? 'Groß-/Kleinschreibung wichtig'
-            : 'Groß-/Kleinschreibung egal',
+            ? t('rrr.editor.case.important')
+            : t('rrr.editor.case.ignored'),
         },
       ];
     }
@@ -2112,18 +2209,18 @@ function getModuleSettingsSummary(
       const hint = readString(config.hint).trim();
       return [
         {
-          label: 'Code',
-          value: code ? `"${code}"` : 'Noch nicht festgelegt',
+          label: t('rrr.editor.summary.code'),
+          value: code ? `"${code}"` : notSet,
         },
         {
-          label: 'Hinweis',
-          value: hint || 'Kein Hinweis',
+          label: t('rrr.editor.summary.hint'),
+          value: hint || t('rrr.editor.sequential.noHint'),
         },
         {
-          label: 'Schreibweise',
+          label: t('rrr.editor.case.exact'),
           value: Boolean(config.caseSensitive)
-            ? 'Groß-/Kleinschreibung wichtig'
-            : 'Groß-/Kleinschreibung egal',
+            ? t('rrr.editor.case.important')
+            : t('rrr.editor.case.ignored'),
         },
       ];
     }
@@ -2131,7 +2228,7 @@ function getModuleSettingsSummary(
       const durationMs = readNumber(config.durationMs);
       return [
         {
-          label: 'Wartezeit',
+          label: t('rrr.editor.summary.wait'),
           value: formatDurationSeconds(durationMs),
         },
       ];
@@ -2141,12 +2238,13 @@ function getModuleSettingsSummary(
       const confirmLabel = readString(config.confirmLabel).trim();
       return [
         {
-          label: 'Anweisung',
-          value: prompt || 'Noch nicht festgelegt',
+          label: t('rrr.editor.summary.instruction'),
+          value: prompt || notSet,
         },
         {
-          label: 'Button',
-          value: confirmLabel || 'Bestätigt',
+          label: t('rrr.editor.summary.button'),
+          value:
+            confirmLabel || t('rrr.editor.manual.confirmPlaceholderConfirmed'),
         },
       ];
     }
@@ -2155,12 +2253,12 @@ function getModuleSettingsSummary(
       const confirmLabel = readString(config.confirmLabel).trim();
       return [
         {
-          label: 'Anweisung',
-          value: prompt || 'Noch nicht festgelegt',
+          label: t('rrr.editor.summary.instruction'),
+          value: prompt || notSet,
         },
         {
-          label: 'Button',
-          value: confirmLabel || 'Gefunden',
+          label: t('rrr.editor.summary.button'),
+          value: confirmLabel || t('rrr.editor.manual.confirmPlaceholderFound'),
         },
       ];
     }
@@ -2171,6 +2269,7 @@ function getFallbackSettingsSummary(
   module: RrrModule,
   modules: RrrModule[],
   expertMode: boolean,
+  t: EditorT,
 ): Array<{ label: string; value: string }> {
   if (!module.fallbackModuleId) {
     return [];
@@ -2178,8 +2277,8 @@ function getFallbackSettingsSummary(
 
   return [
     {
-      label: 'Ersatzlösung',
-      value: getModuleDisplayLabel(module.fallbackModuleId, modules, expertMode),
+      label: t('rrr.editor.fallback.label'),
+      value: getModuleDisplayLabel(module.fallbackModuleId, modules, expertMode, t),
     },
   ];
 }
@@ -2188,12 +2287,15 @@ function getModuleDisplayLabel(
   moduleId: string,
   modules: RrrModule[],
   expertMode: boolean,
+  t: EditorT,
 ): string {
   const module = modules.find((entry) => entry.id === moduleId);
   if (module) {
     return module.label;
   }
-  return expertMode ? `Fehlender Baustein (${moduleId})` : 'Fehlender Baustein';
+  return expertMode
+    ? `${t('rrr.editor.fallback.missing')} (${moduleId})`
+    : t('rrr.editor.fallback.missing');
 }
 
 function formatModuleOption(module: RrrModule, expertMode: boolean): string {
@@ -2209,6 +2311,7 @@ function NumberField({
   value: number;
   onChange: (value: number) => void;
 }) {
+  const { t } = useEditorLanguage();
   const externalValue = Number.isFinite(value) ? String(value) : '';
   const [inputValue, setInputValue] = useState(externalValue);
   const parsedValue = Number(inputValue);
@@ -2236,7 +2339,9 @@ function NumberField({
         aria-invalid={invalid || undefined}
       />
       {invalid && (
-        <small className="stq-rrr-field__hint">Gib eine gültige Zahl ein.</small>
+        <small className="stq-rrr-field__hint">
+          {t('rrr.editor.number.invalid')}
+        </small>
       )}
     </label>
   );
@@ -2280,7 +2385,7 @@ function hasFiniteNumber(value: unknown): boolean {
 }
 
 function formatNumber(value: number, maximumFractionDigits: number): string {
-  return new Intl.NumberFormat('de-DE', {
+  return new Intl.NumberFormat(undefined, {
     maximumFractionDigits,
   }).format(value);
 }
@@ -2296,33 +2401,30 @@ function readNumber(value: unknown): number {
   return 0;
 }
 
-function getGpsRadiusMeta(radiusMeters: number): {
+function getGpsRadiusMeta(radiusMeters: number, t: EditorT): {
   label: string;
   description: string;
   tone: 'precise' | 'normal' | 'forgiving';
 } {
   if (radiusMeters < 5) {
     return {
-      label: 'Sehr präzise / riskant',
-      description:
-        'Unter 5 m kann GPS unzuverlässig sein. Spieler müssen sehr genau am Ort stehen.',
+      label: t('rrr.editor.gps.radiusPrecise'),
+      description: t('rrr.editor.gps.radiusPreciseHint'),
       tone: 'precise',
     };
   }
 
   if (radiusMeters <= 20) {
     return {
-      label: 'Normal',
-      description:
-        '5 bis 20 m ist meist gut verständlich und verzeiht normale GPS-Abweichungen.',
+      label: t('rrr.editor.gps.radiusNormal'),
+      description: t('rrr.editor.gps.radiusNormalHint'),
       tone: 'normal',
     };
   }
 
   return {
-    label: 'Großzügig',
-    description:
-      'Über 20 m ist leichter zu treffen und eignet sich für größere Plätze oder schwaches GPS.',
+    label: t('rrr.editor.gps.radiusForgiving'),
+    description: t('rrr.editor.gps.radiusForgivingHint'),
     tone: 'forgiving',
   };
 }
@@ -2343,64 +2445,58 @@ function formatDurationSeconds(durationMs: number): string {
   return `${formatNumber(durationMs / 1000, 1)} s`;
 }
 
-function getHoldStillDurationMeta(durationMs: number): {
+function getHoldStillDurationMeta(durationMs: number, t: EditorT): {
   label: string;
   description: string;
   tone: 'short' | 'normal' | 'long';
 } {
   if (durationMs < 2000) {
     return {
-      label: 'Kurz',
-      description:
-        'Kurze Dauer ist schnell geschafft und eignet sich für einfache Schritte.',
+      label: t('rrr.editor.duration.short'),
+      description: t('rrr.editor.duration.shortHint'),
       tone: 'short',
     };
   }
 
   if (durationMs <= 3000) {
     return {
-      label: 'Normal',
-      description:
-        'Normale Dauer ist gut verständlich, ohne den Spielfluss stark zu bremsen.',
+      label: t('rrr.editor.duration.normal'),
+      description: t('rrr.editor.duration.normalHint'),
       tone: 'normal',
     };
   }
 
   return {
-    label: 'Lang',
-    description:
-      'Lange Dauer macht den Schritt anspruchsvoller und verlangt ruhigeres Halten.',
+    label: t('rrr.editor.duration.long'),
+    description: t('rrr.editor.duration.longHint'),
     tone: 'long',
   };
 }
 
-function getTimerWaitDurationMeta(durationMs: number): {
+function getTimerWaitDurationMeta(durationMs: number, t: EditorT): {
   label: string;
   description: string;
   tone: 'short' | 'normal' | 'long';
 } {
   if (durationMs <= 5000) {
     return {
-      label: 'Kurz',
-      description:
-        'Kurze Wartezeit eignet sich als leichter Rhythmus- oder Verzögerungsschritt.',
+      label: t('rrr.editor.wait.short'),
+      description: t('rrr.editor.wait.shortHint'),
       tone: 'short',
     };
   }
 
   if (durationMs <= 30000) {
     return {
-      label: 'Normal',
-      description:
-        'Mittlere Wartezeit ist gut testbar und bleibt im Spielfluss verständlich.',
+      label: t('rrr.editor.wait.normal'),
+      description: t('rrr.editor.wait.normalHint'),
       tone: 'normal',
     };
   }
 
   return {
-    label: 'Lang',
-    description:
-      'Lange Wartezeit kann Spieler ausbremsen und sollte bewusst eingesetzt werden.',
+    label: t('rrr.editor.wait.long'),
+    description: t('rrr.editor.wait.longHint'),
     tone: 'long',
   };
 }
@@ -2410,7 +2506,7 @@ function normalizeCompassDegrees(value: number): number {
   return Math.round(normalized < 0 ? normalized + 360 : normalized);
 }
 
-function getCompassDirectionLabel(degrees: number): string {
+function getCompassDirectionLabel(degrees: number, t: EditorT): string {
   const nearestPreset = COMPASS_DIRECTION_PRESETS.reduce(
     (best, preset) =>
       getDegreeDistance(degrees, preset.degrees) <
@@ -2420,7 +2516,27 @@ function getCompassDirectionLabel(degrees: number): string {
     COMPASS_DIRECTION_PRESETS[0],
   );
 
-  return `Nahe ${nearestPreset.label}`;
+  return formatEditorText(t('rrr.editor.compass.near'), {
+    direction: t(nearestPreset.labelKey),
+  });
+}
+
+function getCompassCardinalInitial(key: EditorTextKey, t: EditorT): string {
+  return t(key).trim().slice(0, 1).toUpperCase();
+}
+
+function getConditionTypeLabel(type: FlatConditionType, t: EditorT): string {
+  return t(CONDITION_TYPE_LABEL_KEYS[type]);
+}
+
+function formatEditorText(
+  template: string,
+  values: Record<string, string>,
+): string {
+  return Object.entries(values).reduce(
+    (result, [key, value]) => result.replaceAll(`{${key}}`, value),
+    template,
+  );
 }
 
 function getDegreeDistance(left: number, right: number): number {

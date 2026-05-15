@@ -84,10 +84,10 @@ export function StationRailPreview({
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        borderRadius: 9999,
-        background: '#FFFFFF',
+        borderRadius: 'var(--stq-radius-pill)',
+        background: 'var(--stq-color-surface)',
         padding: '10px 12px',
-        boxShadow: '0 8px 24px rgba(35, 25, 25, 0.14)',
+        boxShadow: 'var(--stq-shadow-station-rail)',
         minWidth: 0,
         ...style,
       }}
@@ -98,9 +98,9 @@ export function StationRailPreview({
           placeItems: 'center',
           width: 44,
           height: 44,
-          borderRadius: 9999,
+          borderRadius: 'var(--stq-radius-pill)',
           background: activeColor.ring,
-          color: '#FFFFFF',
+          color: 'var(--stq-color-text-inverted)',
           fontSize: 28,
           fontWeight: 700,
           lineHeight: 1,
@@ -136,13 +136,19 @@ export function StationRailPreview({
               />
             );
           }
-          return <RailIcon key={entry.id} choice={choice} tint="#B8B0AF" />;
+          return (
+            <RailIcon
+              key={entry.id}
+              choice={choice}
+              tint="var(--stq-color-icon-muted)"
+            />
+          );
         })}
       </div>
 
       <div
         style={{
-          color: '#231919',
+          color: 'var(--stq-color-text)',
           fontSize: 36,
           lineHeight: 1,
           flex: 'none',
@@ -173,11 +179,11 @@ function RailIcon({
           width: 60,
           height: 60,
           padding: 6,
-          borderRadius: 9999,
-          border: `3px solid ${ringColor ?? '#A44F4A'}`,
+          borderRadius: 'var(--stq-radius-pill)',
+          border: `3px solid ${ringColor ?? 'var(--stq-color-primary)'}`,
           display: 'grid',
           placeItems: 'center',
-          background: '#FFFFFF',
+          background: 'var(--stq-color-surface)',
           flex: 'none',
         }}
       >

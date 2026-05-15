@@ -2,6 +2,17 @@
 
 ## Active cautions
 
+### AI workspace docs can drift from completed decomposition work
+
+Symptoms:
+Future agents may treat historical W2-W8 audit tasks or old line-count tables as current pending work.
+
+Risk:
+Completed lazy-loading, CSS split, token cleanup, route-workspace and MapLibre decomposition work could be repeated or refactored again without a fresh reason.
+
+Mitigation:
+Read `AI/CURRENT_STATE.md`, `AI/DECISIONS.md`, `AI/WORKSPACE_AUDIT.md` and `AI/WORKSPACE_OWNERSHIP.md` together. The W12 docs frame `WORKSPACE_AUDIT` as historical plus current orientation; use the post-W12 guidance sections for future PR scope.
+
 ### Map tiles are not fully offline-ready
 
 Symptoms:
@@ -12,6 +23,17 @@ Field use in weak-signal areas can appear broken if authors expect offline maps.
 
 Mitigation:
 Document offline limitations clearly and test map behavior in airplane mode before claiming offline map support.
+
+### Lazy chunks can create stale PWA asset edges
+
+Symptoms:
+After a deployment, an already-open app shell can reference older hashed route/view/action chunks until the service worker refresh path reloads the page.
+
+Risk:
+More lazy split points reduce startup payload but increase the number of assets that must stay coherent across Workbox precache updates. A stale chunk can show a loading state for too long or fall into the root error boundary.
+
+Mitigation:
+Keep lazy loading at coarse route, view or user-action boundaries with visible fallbacks. Current coarse split points include routes, Studio shells, Studio workspaces, the map provider, QR scanner and export action. Do not split schema, storage, active map gestures, route editing sessions, scanner ownership or export serialization internals without a dedicated PWA stale-chunk review. Verify production preview reload/update behavior after bundle changes.
 
 ### Browser speech recognition is inconsistent
 
@@ -34,6 +56,17 @@ Boundary tests fail and runtime becomes harder to test.
 
 Mitigation:
 Keep browser APIs in `src/rrr-sensors/`, hooks or component adapters.
+
+### RRR public imports can bypass the facade
+
+Symptoms:
+UI, schema or export code may import `@/rrr-core`, `@/rrr-runtime`, `@/rrr-preview` or `@/rrr-sensors` directly instead of using the public `src/rrr` facade.
+
+Risk:
+Implementation paths leak into app code, making the RRR/core boundary harder to reason about and easier to break during runtime changes.
+
+Mitigation:
+Use `@/rrr`, `@/rrr/types`, `@/rrr/runtime`, `@/rrr/preview` or `@/rrr/sensors` from app-facing code. `src/rrr/publicBoundary.test.ts` enforces this outside the internal RRR implementation directories.
 
 ### Mobile drawer and keyboard behavior can regress easily
 
@@ -68,7 +101,116 @@ Easy to reintroduce when adding new floating chrome to the mobile shell.
 Mitigation:
 New floating wrappers should set `pointer-events: none` and re-enable `pointer-events: auto` on their interactive children. The chip wrapper also pins `width/height: auto !important` to neutralise the legacy rule. Long-term: scope the `> div` rule to a specific descendant rather than every direct child.
 
+### CSS variable colors need resolution before MapLibre paint
+
+Symptoms:
+MapLibre style paint properties are not regular DOM CSS, so unresolved `var(--token)` color strings can fail or render unpredictably if passed directly to layers.
+
+Risk:
+Moving map route/selection colors onto design tokens can silently break route lines or selected-station circles.
+
+Mitigation:
+Resolve token colors inside the author-map boundary before assigning MapLibre paint properties. DOM marker styles can still use CSS variables directly. The helper in `src/components/map/mapLibrePaintTokens.ts` has focused tests and should remain provider-internal.
+
+### MapLibre provider hooks must stay behind the author-map boundary
+
+Symptoms:
+Future map changes may import `useMapLibre*` hooks from workspaces or move route/station business rules into provider hooks.
+
+Risk:
+MapLibre implementation details would leak past `AuthorMap`, making workspace tests less meaningful and coupling draft mutation or sheet state to provider lifecycle.
+
+Mitigation:
+Only `AuthorMap.tsx` / `MapLibreAuthorMap.tsx` should compose MapLibre internals. Workspaces should keep passing typed `AuthorMapProps` callbacks and data. Provider hooks may translate MapLibre events, but must not patch drafts, open sheets/drawers, or own route edit mode.
+
+### Route workspace helpers must stay deterministic
+
+Symptoms:
+Route geometry helpers can become a dumping ground for route editor state, React hooks, DOM events, or MapLibre-specific behavior.
+
+Risk:
+The route editor becomes harder to test and future mobile map changes can accidentally couple pure route calculations to UI or provider lifecycle.
+
+Mitigation:
+Keep `routeWorkspaceHelpers.ts` limited to stateless calculations over station/route data. Route editor state belongs in `RouteWorkspace.tsx` or a future focused hook; MapLibre behavior stays behind the author-map boundary.
+
+### Route workspace view components must stay presentational
+
+Symptoms:
+Small view components such as `RouteWorkspaceViews.tsx` can slowly absorb route editor state, segment rules, map behavior or layout decisions.
+
+Risk:
+The route workspace becomes harder to reason about because behavior is split across render-only components and parent state.
+
+Mitigation:
+Keep route state, disabled-state calculation, layout conditions and map callbacks outside `RouteWorkspaceViews.tsx`. View components should render existing class names, labels and controls from props only.
+
+### Route workspace controller hook must stay workspace-local
+
+Symptoms:
+`useWorkspaceRouteEditing.ts` can become a hidden global workspace store or start absorbing mobile drawer layout, map provider lifecycle, runtime/sensor logic, or persistence details.
+
+Risk:
+Route editing becomes coupled to unrelated app systems, making mobile gesture regressions and schema/runtime boundary leaks harder to spot.
+
+Mitigation:
+Keep the hook limited to route-segment controller state and derived map props for `RouteWorkspace`. Map provider behavior stays behind the author-map boundary, runtime/sensor code stays under the RRR facade, and draft persistence continues through the existing `onChange` contract.
+
+### Workspace token normalization can accidentally become a redesign
+
+Symptoms:
+Replacing hardcoded colors can drift into changing palette semantics, selector order, shadows, spacing, or mobile affordance placement.
+
+Risk:
+Small token cleanup can cause visual breaks in the desktop Studio, mobile phone frame, station sheet, map pill or route-edit controls.
+
+Mitigation:
+Only replace literals with existing tokens when the semantic match is direct. Keep layout and selector order unchanged, and use a visual desktop/mobile smoke check for workspace styling PRs.
+
+Note:
+Generated station artwork palettes in `src/stations/visuals.logic.ts` intentionally keep literal colors because they define content/asset artwork, not shared UI chrome tokens.
+
+### Split CSS aggregators are cascade contracts
+
+Symptoms:
+Future cleanup may inline split CSS files into `index.css`, alphabetize imports, or move route/map/sheet rules across aggregator boundaries.
+
+Risk:
+Mobile map controls, dock click suppression, station sheet overlays, right drawer hidden state, route-tool z-index, map overflow exceptions or RRR editor responsive rules can regress without TypeScript or unit-test failures.
+
+Mitigation:
+Keep `src/index.css` and aggregator files in their documented order. `phone-preview.css`, `map-workspace.css` and `rrr-module-editors.css` intentionally mirror former monolithic section order. `workspace/route-tools.css` must remain immediately after `studio-navigation.css` and before `map-workspace.css`.
+
+### Workspace component tests do not replace real mobile/map smoke checks
+
+Symptoms:
+Component tests with a mocked `AuthorMap` can pass while real MapLibre route hit layers, station marker drag/delete, dock pointer capture, touch gestures, keyboard viewport behavior, or CSS placement regress in a browser.
+
+Risk:
+The test suite can provide false confidence for map-provider and mobile gesture behavior.
+
+Mitigation:
+Keep component tests focused on stable contracts and accessible behavior. The workspace regression suite now covers route edit toggling, stale selection suppression, delete-mode cleanup, phone map controls and dock drag click suppression with mocked browser/map boundaries, but manual/browser smoke checks are still required for mobile viewports, map edit mode, route edit mode, station sheet transitions, drawer gestures, real touch behavior and MapLibre rendering.
+
 ## Resolved issues
+
+### 2026-05-15 — Route hit-layer clicks could also be treated as map clicks
+
+Files: `src/components/map/useMapLibreMapClick.ts`, `src/components/map/useMapLibreRouteLayers.ts`, `src/components/map/mapLibreUtils.ts`.
+Cause: `RouteWorkspace` passes both `onRouteClick` and `onMapClick` while editing routes. The previous MapLibre layer click handler called `preventDefault`, but the global map click handler did not check whether the pointer was over a route hit layer.
+Fix: map click translation now queries active route hit layers and suppresses ordinary `onMapClick` forwarding when a route hit is present. Route layer clicks still call the typed `onRouteClick` callback. Covered by `useMapLibreMapClick.test.tsx`.
+
+### 2026-05-15 — Active station drag cleanup was implicit
+
+Files: `src/components/map/mapLibreUtils.ts`, `src/components/map/useMapLibreStationMarkers.ts`.
+Cause: live station dragging attached window listeners during active drags and relied on pointer/touch end events to remove them.
+Fix: `attachLiveStationMarkerDrag` now returns a disposer. The station marker hook calls it during marker cleanup, so unmounts or marker-mode changes during an active drag also remove global listeners.
+
+### 2026-05-15 — Vitest editor tests inherited persisted expert mode
+
+Files: `src/components/rrr-author/RrrInteractionEditor.test.tsx`, `src/rrr-sensors/*.test.ts`, `src/storage/drafts.test.ts`.
+Cause: `RrrInteractionEditor` persists expert mode in `localStorage`; tests that toggled it on did not reset the key, so later tests could unexpectedly render expert-only JSON/debug/warning text. Additional cleanup gaps left started sensor adapters and the shared Dexie test DB open longer than necessary.
+Fix: reset `stq-rrr-expert-mode` in the editor test `beforeEach`/`afterEach`, make expert-warning assertions toggle expert mode explicitly, stop started sensor adapters in tests, and close the Dexie test DB in `afterAll`. Verified with normal Vitest, shuffled Vitest, and Vitest's hanging-process reporter.
 
 ### 2026-05-13 — Stale global CSS stayed bundled after UI replacements
 

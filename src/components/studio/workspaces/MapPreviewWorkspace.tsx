@@ -336,6 +336,10 @@ export function MapPreviewWorkspace({
   );
 
   const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
+  const editableStationIds = useMemo(
+    () => draft.stations.map((station) => station.id),
+    [draft.stations],
+  );
 
   return (
     <>
@@ -354,13 +358,9 @@ export function MapPreviewWorkspace({
         }
         onViewportCenterChange={setViewportCenter}
         draggableStationIds={
-          markerEditMode && !deleteMode
-            ? draft.stations.map((station) => station.id)
-            : undefined
+          markerEditMode && !deleteMode ? editableStationIds : undefined
         }
-        deletableStationIds={
-          deleteMode ? draft.stations.map((station) => station.id) : undefined
-        }
+        deletableStationIds={deleteMode ? editableStationIds : undefined}
         onDeleteStation={(stationId) => setPendingDeleteId(stationId)}
         onStationCoordinateChange={(stationId, coordinate) => {
           patchStation(stationId, (station) => ({
@@ -416,7 +416,11 @@ export function MapPreviewWorkspace({
                       <img src={selectedImageUrl} alt="" />
                     ) : (
                       <div className="stq-map-station-sheet-thumb-empty">
-                        <Icon name="camera" size={16} color="rgba(144,74,72,0.6)" />
+                        <Icon
+                          name="camera"
+                          size={16}
+                          color="var(--stq-alpha-primary-icon)"
+                        />
                       </div>
                     )}
                   </div>

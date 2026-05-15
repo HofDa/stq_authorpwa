@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { RrrInteraction } from '@/rrr-core';
+import type { RrrInteraction } from '@/rrr';
 import { createMockSensorAdapter } from '@/rrr-sensors';
 import { createRrrRuntimeBridge } from './createRrrRuntimeBridge';
 

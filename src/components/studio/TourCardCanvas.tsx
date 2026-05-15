@@ -540,9 +540,9 @@ const DIFFICULTY_OPTIONS: Array<{
   labelKey: 'studio.difficultyEasy' | 'studio.difficultyMedium' | 'studio.difficultyHard';
   dot: string;
 }> = [
-  { level: 'easy', labelKey: 'studio.difficultyEasy', dot: '#4a8a4a' },
-  { level: 'medium', labelKey: 'studio.difficultyMedium', dot: '#e6b73a' },
-  { level: 'hard', labelKey: 'studio.difficultyHard', dot: '#c84a3a' },
+  { level: 'easy', labelKey: 'studio.difficultyEasy', dot: 'var(--stq-color-success)' },
+  { level: 'medium', labelKey: 'studio.difficultyMedium', dot: 'var(--stq-color-warning)' },
+  { level: 'hard', labelKey: 'studio.difficultyHard', dot: 'var(--stq-color-danger)' },
 ];
 
 const INFO_OPTIONS: Array<{

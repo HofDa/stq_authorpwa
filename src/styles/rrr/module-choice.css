@@ -1,0 +1,49 @@
+/* RRR module-specific editors */
+.stq-rrr-report-export {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px dashed var(--stq-border);
+  padding-top: 10px;
+}
+
+.stq-rrr-multi-choice-editor__options,
+.stq-rrr-multi-choice-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stq-rrr-multi-choice-editor__option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.stq-rrr-multi-choice-editor__option > input {
+  min-width: 0;
+}
+
+.stq-rrr-multi-choice-preview {
+  margin: 0;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface-cream);
+  padding: 10px;
+}
+
+.stq-rrr-multi-choice-preview legend {
+  color: var(--stq-text);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  padding: 0 4px;
+}
+
+.stq-rrr-multi-choice-preview small {
+  color: var(--stq-color-text-soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+

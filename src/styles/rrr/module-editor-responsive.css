@@ -1,0 +1,40 @@
+@media (max-width: 620px) {
+  .stq-rrr-module__header {
+    flex-direction: column;
+  }
+
+  .stq-rrr-module__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .stq-rrr-compass-picker__main,
+  .stq-rrr-compass-picker__tolerance {
+    grid-template-columns: 1fr;
+  }
+
+  .stq-rrr-compass-picker__dial {
+    justify-self: center;
+  }
+
+  .stq-rrr-compass-picker__presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stq-rrr-gps-radius__header {
+    flex-direction: column;
+  }
+
+  .stq-rrr-hold-duration__header {
+    flex-direction: column;
+  }
+
+  .stq-rrr-hold-duration__presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stq-rrr-text-answer__header {
+    flex-direction: column;
+  }
+}
+

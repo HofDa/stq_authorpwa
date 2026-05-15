@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildValidDraft, buildValidStation } from '@/test/fixtures';
-import type { RrrInteraction } from '@/rrr-core';
+import type { RrrInteraction } from '@/rrr';
 import { getRrrTourReadiness } from './readiness';
 
 describe('getRrrTourReadiness', () => {

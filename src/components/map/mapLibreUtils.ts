@@ -1,4 +1,4 @@
-import maplibregl from 'maplibre-gl';
+import type maplibregl from 'maplibre-gl';
 import type { AuthorMapCoordinate } from './mapTypes';
 
 export interface RouteLayerRef {
@@ -52,6 +52,23 @@ export function removeRouteLayers(
   }
 }
 
+export interface RouteHitLayerLookup {
+  getLayer: (layerId: string) => unknown;
+}
+
+export function getActiveRouteHitLayerIds(
+  map: RouteHitLayerLookup,
+  routeLayers: RouteLayerRef[],
+): string[] {
+  return routeLayers.flatMap((routeLayer) => {
+    if (!routeLayer.hitLayerId || !map.getLayer(routeLayer.hitLayerId)) {
+      return [];
+    }
+
+    return [routeLayer.hitLayerId];
+  });
+}
+
 export function removeLayerAndSource(
   map: maplibregl.Map,
   layerId: string,
@@ -98,8 +115,8 @@ export function createRouteEndpointMarkerElement(color: string) {
   element.style.height = '12px';
   element.style.borderRadius = '999px';
   element.style.background = color;
-  element.style.border = '2px solid #ffffff';
-  element.style.boxShadow = '0 2px 8px rgba(25, 35, 45, 0.22)';
+  element.style.border = '2px solid var(--stq-color-surface)';
+  element.style.boxShadow = 'var(--stq-shadow-route-endpoint)';
   element.style.pointerEvents = 'none';
   element.style.zIndex = '20';
   return element;
@@ -112,9 +129,9 @@ export function createRoutePointMarkerElement(color: string) {
   element.style.width = '18px';
   element.style.height = '18px';
   element.style.borderRadius = '999px';
-  element.style.background = '#ffffff';
+  element.style.background = 'var(--stq-color-surface)';
   element.style.border = `3px solid ${color}`;
-  element.style.boxShadow = '0 2px 9px rgba(25, 35, 45, 0.25)';
+  element.style.boxShadow = 'var(--stq-shadow-route-marker)';
   element.style.cursor = 'grab';
   element.style.padding = '0';
   element.style.touchAction = 'none';
@@ -151,7 +168,7 @@ export function attachLiveStationMarkerDrag({
   marker: maplibregl.Marker;
   onDragStart: () => void;
   onDragEnd: () => void;
-}) {
+}): () => void {
   let active = false;
   let moved = false;
   let dragOffset = { x: 0, y: 0 };
@@ -220,50 +237,57 @@ export function attachLiveStationMarkerDrag({
     stop(event);
   };
 
-  element.addEventListener(
-    'mousedown',
-    (event) => {
-      if (event.button !== 0) return;
-      if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
-        return;
-      }
-      start(event.clientX, event.clientY);
-      window.addEventListener('mousemove', handleMouseMove, true);
-      window.addEventListener('mouseup', handleMouseUp, true);
-      stop(event);
-    },
-    true,
-  );
+  const handleMouseDown = (event: MouseEvent) => {
+    if (event.button !== 0) return;
+    if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
+      return;
+    }
+    start(event.clientX, event.clientY);
+    window.addEventListener('mousemove', handleMouseMove, true);
+    window.addEventListener('mouseup', handleMouseUp, true);
+    stop(event);
+  };
 
-  element.addEventListener(
-    'touchstart',
-    (event) => {
-      if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
-        return;
-      }
-      const touch = event.touches[0];
-      if (!touch) return;
-      start(touch.clientX, touch.clientY);
-      window.addEventListener('touchmove', handleTouchMove, {
-        capture: true,
-        passive: false,
-      });
-      window.addEventListener('touchend', handleTouchEnd, true);
-      window.addEventListener('touchcancel', handleTouchEnd, true);
-      stop(event);
-    },
-    { capture: true, passive: false },
-  );
+  const handleTouchStart = (event: TouchEvent) => {
+    if ((event.target as Element | null)?.closest('.stq-station-marker-delete')) {
+      return;
+    }
+    const touch = event.touches[0];
+    if (!touch) return;
+    start(touch.clientX, touch.clientY);
+    window.addEventListener('touchmove', handleTouchMove, {
+      capture: true,
+      passive: false,
+    });
+    window.addEventListener('touchend', handleTouchEnd, true);
+    window.addEventListener('touchcancel', handleTouchEnd, true);
+    stop(event);
+  };
 
-  element.addEventListener(
-    'click',
-    (event) => {
-      if (!moved) return;
-      moved = false;
-      stop(event);
-    },
-    true,
-  );
+  const handleClick = (event: MouseEvent) => {
+    if (!moved) return;
+    moved = false;
+    stop(event);
+  };
+
+  element.addEventListener('mousedown', handleMouseDown, true);
+  element.addEventListener('touchstart', handleTouchStart, {
+    capture: true,
+    passive: false,
+  });
+  element.addEventListener('click', handleClick, true);
+
+  return () => {
+    element.removeEventListener('mousedown', handleMouseDown, true);
+    element.removeEventListener('touchstart', handleTouchStart, true);
+    element.removeEventListener('click', handleClick, true);
+    active = false;
+    window.removeEventListener('mousemove', handleMouseMove, true);
+    window.removeEventListener('mouseup', handleMouseUp, true);
+    window.removeEventListener('touchmove', handleTouchMove, true);
+    window.removeEventListener('touchend', handleTouchEnd, true);
+    window.removeEventListener('touchcancel', handleTouchEnd, true);
+  };
 }
 
 function getMapClientPoint(map: maplibregl.Map, clientX: number, clientY: number) {

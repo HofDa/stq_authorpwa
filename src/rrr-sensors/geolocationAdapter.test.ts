@@ -102,6 +102,7 @@ describe('createGeolocationSensorAdapter', () => {
       code: 1,
       message: 'User denied Geolocation',
     });
+    adapter.stop();
 
     expect(adapter.getState()).toEqual({
       geolocationStatus: 'error',

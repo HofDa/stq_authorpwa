@@ -1,0 +1,191 @@
+.stq-rrr-gps-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stq-rrr-gps-radius {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface-cream);
+  padding: 12px;
+}
+
+.stq-rrr-gps-radius__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-gps-radius__header div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-rrr-gps-radius__header span {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stq-rrr-gps-radius__header strong {
+  color: var(--stq-text);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.stq-rrr-gps-radius__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid var(--stq-border);
+  border-radius: 9999px;
+  background: var(--stq-white);
+  color: var(--stq-color-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.stq-rrr-gps-radius__badge--precise {
+  border-color: var(--stq-alpha-danger);
+  background: var(--stq-color-bg-danger);
+  color: var(--stq-danger-ink);
+}
+
+.stq-rrr-gps-radius__badge--normal {
+  border-color: var(--stq-alpha-primary);
+  background: var(--stq-white);
+  color: var(--stq-primary);
+}
+
+.stq-rrr-gps-radius__badge--forgiving {
+  border-color: var(--stq-alpha-success);
+  background: var(--stq-color-bg-success);
+  color: var(--stq-color-success);
+}
+
+.stq-rrr-gps-radius input[type="range"] {
+  height: 24px;
+  border: 0;
+  background: transparent;
+  accent-color: var(--stq-primary);
+  padding: 0;
+}
+
+.stq-rrr-gps-radius__calibration {
+  margin: 0;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-color-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 8px 9px;
+}
+
+.stq-gps-quality {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--stq-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface-cream);
+  padding: 10px;
+}
+
+.stq-gps-quality--good {
+  border-color: var(--stq-alpha-success);
+  background: var(--stq-color-bg-success);
+}
+
+.stq-gps-quality--ok {
+  border-color: var(--stq-alpha-primary);
+  background: var(--stq-color-surface-cream);
+}
+
+.stq-gps-quality--poor {
+  border-color: var(--stq-alpha-danger);
+  background: var(--stq-color-bg-danger);
+}
+
+.stq-gps-quality__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stq-gps-quality__header strong {
+  color: var(--stq-text);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.stq-gps-quality__header span {
+  border: 1px solid var(--stq-alpha-primary);
+  border-radius: 9999px;
+  background: var(--stq-white);
+  color: var(--stq-primary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+.stq-gps-quality p,
+.stq-gps-quality__warning {
+  margin: 0;
+  color: var(--stq-color-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.stq-gps-quality__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.stq-gps-quality__facts div {
+  border: 1px solid var(--stq-alpha-warm-tint);
+  border-radius: 8px;
+  background: var(--stq-white);
+  padding: 7px 8px;
+}
+
+.stq-gps-quality__facts dt {
+  color: var(--stq-text-mute);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stq-gps-quality__facts dd {
+  margin: 2px 0 0;
+  color: var(--stq-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stq-gps-quality__warning {
+  border: 1px solid var(--stq-alpha-danger);
+  border-radius: 8px;
+  background: var(--stq-white);
+  color: var(--stq-danger-ink);
+  padding: 8px;
+}
+

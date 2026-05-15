@@ -2,7 +2,7 @@
 .stq-phone-map-dock-info {
   cursor: pointer;
   background: var(--stq-primary);
-  color: white;
+  color: var(--stq-color-text-inverted);
   font-style: normal;
 }
 

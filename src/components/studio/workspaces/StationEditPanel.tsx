@@ -7,7 +7,6 @@ import {
   type RrrFieldTestIssueTag,
   type RrrFieldTestStatus,
 } from '@/schema';
-import { RrrInteractionEditor } from '@/components/rrr-author/RrrInteractionEditor';
 import type { ContentBlock } from '@/schema/contentBlock';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import {
@@ -20,6 +19,7 @@ import { ImageAssetPanel } from '../ImageAssetPanel';
 import { Icon } from '../Icon';
 import type { EditPanelField } from '../EditPanel';
 import { EditableTextEntryList } from './EditableTextEntryList';
+import { LazyRrrInteractionEditor } from './LazyRrrInteractionEditor';
 import { TextBodyPanel } from './TextBodyPanel';
 
 export type StationEditPanelKey =
@@ -480,7 +480,7 @@ function renderRiddleSettingsPanelBody({
               />
             </label>
           </div>
-          <RrrInteractionEditor
+          <LazyRrrInteractionEditor
             interaction={station.interaction ?? createEmptyRrrInteraction()}
             stationId={station.id}
             fieldTestIssueTags={fieldTestIssueTags}

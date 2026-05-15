@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import {
   createRrrFieldTestReport,
   downloadRrrFieldTestReport,
@@ -10,17 +18,25 @@ import {
   type RrrModuleType,
 } from '@/rrr';
 import type { RrrFieldTestIssueTag } from '@/schema';
-import { evaluateMockInteraction } from '@/rrr-preview/evaluateMockInteraction';
-import type { RrrMockInputs, RrrMockStatus } from '@/rrr-preview/types';
+import {
+  evaluateMockInteraction,
+  type RrrMockInputs,
+  type RrrMockStatus,
+} from '@/rrr/preview';
 import {
   createRrrRuntimeSession,
   evaluateInteraction,
   reduceRrrRuntimeSession,
   type RrrInteractionResult,
   type RrrRuntimeSession,
-} from '@/rrr-runtime';
-import { QrScanner } from '@/components/rrr-runtime/QrScanner';
+} from '@/rrr/runtime';
 import { RrrConditionStatusTree } from './RrrConditionStatusTree';
+
+const QrScanner = lazy(() =>
+  import('@/components/rrr-runtime/QrScanner').then((module) => ({
+    default: module.QrScanner,
+  })),
+);
 
 const INITIAL_INPUTS: RrrMockInputs = {
   headingDegrees: 0,
@@ -599,10 +615,12 @@ function GuidedControl({
     case 'qr_scan':
       return (
         <div className="stq-rrr-guide__stack">
-          <QrScanner
-            fallbackAvailable={Boolean(module.fallbackModuleId)}
-            onScan={(value) => onPatchInputs({ qrScanValue: value })}
-          />
+          <Suspense fallback={<QrScannerLoadingState />}>
+            <QrScanner
+              fallbackAvailable={Boolean(module.fallbackModuleId)}
+              onScan={(value) => onPatchInputs({ qrScanValue: value })}
+            />
+          </Suspense>
           <label className="stq-rrr-field">
             <span>Simulierter QR-Wert</span>
             <input
@@ -698,6 +716,14 @@ function GuidedControl({
       );
     }
   }
+}
+
+function QrScannerLoadingState() {
+  return (
+    <div className="stq-rrr-editor__empty" role="status" aria-live="polite">
+      Loading QR scanner...
+    </div>
+  );
 }
 
 interface GuidedStep {

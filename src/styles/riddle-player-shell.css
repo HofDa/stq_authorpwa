@@ -231,7 +231,7 @@
   border: 0;
   border-radius: 9999px;
   background: transparent;
-  color: white;
+  color: var(--stq-color-text-inverted);
   padding: 0;
   touch-action: manipulation;
 }
@@ -324,16 +324,15 @@
 .stq-riddle-map-card-action--image {
   border-color: var(--stq-alpha-success);
   background: var(--stq-success);
-  color: white;
+  color: var(--stq-color-text-inverted);
 }
 
 .stq-riddle-map-card-action--danger {
   border-color: var(--stq-alpha-danger);
   background: var(--stq-error);
-  color: white;
+  color: var(--stq-color-text-inverted);
 }
 
 .stq-riddle-map-card-action:disabled {
   opacity: 0.72;
 }
-

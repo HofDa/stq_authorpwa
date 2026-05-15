@@ -137,7 +137,7 @@ export function ImageAssetPanel({
       />
 
       {error && (
-        <p style={{ color: '#c84a3a', fontSize: 12, margin: 0 }}>{error}</p>
+        <p style={{ color: 'var(--stq-color-danger)', fontSize: 12, margin: 0 }}>{error}</p>
       )}
 
       {children}

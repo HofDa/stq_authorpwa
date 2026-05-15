@@ -11,13 +11,13 @@ import {
   useRrrRuntimeBridge,
   type RrrRuntimeBridgeOptions,
   type RrrRuntimeSession,
-} from '@/rrr-runtime';
+} from '@/rrr/runtime';
 import {
   createDeviceOrientationSensorAdapter,
   createGeolocationSensorAdapter,
   type RrrSensorAvailability,
   type RrrSensorState,
-} from '@/rrr-sensors';
+} from '@/rrr/sensors';
 import {
   SensorPermissionGate,
   type SensorPermissionGateStatus,

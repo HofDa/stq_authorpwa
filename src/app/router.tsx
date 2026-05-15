@@ -1,9 +1,12 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './AppLayout';
-import { TourRedirectPage } from '@/pages/TourRedirectPage';
-import { TourEditorPage } from '@/pages/TourEditorPage';
-import { RrrRuntimeDemo } from '@/pages/RrrRuntimeDemo';
-import { RrrFieldTest } from '@/pages/RrrFieldTest';
+import {
+  LazyRouteElement,
+  RrrFieldTestRoute,
+  RrrRuntimeDemoRoute,
+  TourEditorRoute,
+  TourRedirectRoute,
+} from './LazyRouteElement';
 
 export const router = createBrowserRouter([
   {
@@ -11,12 +14,40 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <Navigate to="/tours" replace /> },
-      { path: 'tours', element: <TourRedirectPage /> },
-      { path: 'tours/:draftId', element: <TourEditorPage /> },
+      {
+        path: 'tours',
+        element: (
+          <LazyRouteElement>
+            <TourRedirectRoute />
+          </LazyRouteElement>
+        ),
+      },
+      {
+        path: 'tours/:draftId',
+        element: (
+          <LazyRouteElement>
+            <TourEditorRoute />
+          </LazyRouteElement>
+        ),
+      },
       ...(import.meta.env.DEV
         ? [
-            { path: 'rrr-runtime-demo', element: <RrrRuntimeDemo /> },
-            { path: 'rrr-field-test', element: <RrrFieldTest /> },
+            {
+              path: 'rrr-runtime-demo',
+              element: (
+                <LazyRouteElement>
+                  <RrrRuntimeDemoRoute />
+                </LazyRouteElement>
+              ),
+            },
+            {
+              path: 'rrr-field-test',
+              element: (
+                <LazyRouteElement>
+                  <RrrFieldTestRoute />
+                </LazyRouteElement>
+              ),
+            },
           ]
         : []),
     ],

@@ -97,8 +97,8 @@ function DraftErrorState({
         display: 'grid',
         placeItems: 'center',
         padding: 24,
-        background: 'var(--stq-color-bg, #fff8f7)',
-        color: 'var(--stq-color-text, #2b1f1c)',
+        background: 'var(--stq-color-bg)',
+        color: 'var(--stq-color-text)',
       }}
     >
       <div style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}>
@@ -115,9 +115,9 @@ function DraftErrorState({
               lineHeight: 1.4,
               padding: '8px 12px',
               marginBottom: 16,
-              background: 'rgba(0,0,0,0.04)',
-              border: '1px solid rgba(0,0,0,0.08)',
-              borderRadius: 8,
+              background: 'var(--stq-alpha-code-bg)',
+              border: '1px solid var(--stq-alpha-code-border)',
+              borderRadius: 'var(--stq-radius-sm)',
               whiteSpace: 'pre-wrap',
               textAlign: 'left',
               maxHeight: 160,

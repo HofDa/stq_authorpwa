@@ -30,7 +30,7 @@ export function AppLayout() {
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
             <Link
               to="/tours"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-white shadow-sm"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface shadow-sm"
               aria-label="SouthTyrolQuests home"
             >
               <img src="/favicon.svg" alt="" className="h-8 w-8" />
@@ -46,7 +46,7 @@ export function AppLayout() {
             </div>
 
             {isRoot ? (
-              <div className="rounded-full border border-border bg-white px-3 py-2 text-labelSm text-primary shadow-sm">
+              <div className="rounded-full border border-border bg-surface px-3 py-2 text-labelSm text-primary shadow-sm">
                 {t('app.mobileFirst')}
               </div>
             ) : (
