@@ -30,7 +30,12 @@ import { RrrMockPreview } from './RrrMockPreview';
 import { RrrTemplatePicker } from './RrrTemplatePicker';
 import { RrrWarningsPanel } from './RrrWarningsPanel';
 import { Icon, type IconName } from '@/components/studio/Icon';
-import { recommendGpsRadius } from '@/rrr/sensors';
+import {
+  createDeviceOrientationSensorAdapter,
+  recommendGpsRadius,
+  type RrrSensorAdapter,
+  type RrrSensorState,
+} from '@/rrr/sensors';
 import type { RrrInteractionEditorProps } from './types';
 
 type FlatConditionType = RrrFlatConditionType;
@@ -1311,6 +1316,7 @@ function CompassDirectionPicker({
   onPatchConfig: (patch: Record<string, unknown>) => void;
 }) {
   const { t } = useEditorLanguage();
+  const liveCompass = useLiveDeviceHeading();
   const resolvedToleranceLabel =
     toleranceLabel ?? t('rrr.editor.compass.defaultToleranceLabel');
   const resolvedToleranceHint =
@@ -1366,6 +1372,17 @@ function CompassDirectionPicker({
               } as CompassNeedleStyle
             }
           />
+          {liveCompass.heading !== undefined && (
+            <span
+              className="stq-rrr-compass-picker__needle stq-rrr-compass-picker__needle--live"
+              style={
+                {
+                  '--stq-rrr-compass-degrees': `${liveCompass.heading}deg`,
+                } as CompassNeedleStyle
+              }
+              aria-hidden
+            />
+          )}
           <span className="stq-rrr-compass-picker__center" />
         </button>
 
@@ -1373,6 +1390,7 @@ function CompassDirectionPicker({
           <span>{t('rrr.editor.compass.selected')}</span>
           <strong>{formatNumber(targetDegrees, 0)}°</strong>
           <small>{getCompassDirectionLabel(targetDegrees, t)}</small>
+          <LiveCompassControl state={liveCompass} />
         </div>
       </div>
 
@@ -1428,6 +1446,91 @@ function CompassDirectionPicker({
         />
       )}
     </div>
+  );
+}
+
+interface LiveDeviceHeadingState {
+  heading: number | undefined;
+  status: RrrSensorState['orientationStatus'];
+  start: () => void;
+}
+
+function useLiveDeviceHeading(): LiveDeviceHeadingState {
+  const [state, setState] = useState<RrrSensorState>({
+    orientationStatus: 'idle',
+    timestamp: 0,
+  });
+  const [adapter, setAdapter] = useState<RrrSensorAdapter | null>(null);
+
+  useEffect(() => {
+    if (!adapter) return undefined;
+    const unsubscribe = adapter.subscribe((next) => setState(next));
+    setState(adapter.getState());
+    return () => {
+      unsubscribe();
+      adapter.stop();
+    };
+  }, [adapter]);
+
+  const start = useCallback(() => {
+    if (adapter) {
+      void adapter.start();
+      return;
+    }
+    const created = createDeviceOrientationSensorAdapter();
+    setAdapter(created);
+    void created.start();
+  }, [adapter]);
+
+  return {
+    heading:
+      state.orientationStatus === 'available' && typeof state.heading === 'number'
+        ? state.heading
+        : undefined,
+    status: state.orientationStatus,
+    start,
+  };
+}
+
+function LiveCompassControl({ state }: { state: LiveDeviceHeadingState }) {
+  const { t } = useEditorLanguage();
+  const status = state.status ?? 'idle';
+
+  if (status === 'available' && state.heading !== undefined) {
+    return (
+      <small className="stq-rrr-compass-picker__live">
+        {t('rrr.editor.compass.liveHeading')} {formatNumber(state.heading, 0)}°
+      </small>
+    );
+  }
+
+  if (status === 'unavailable') {
+    return (
+      <small className="stq-rrr-compass-picker__live stq-rrr-compass-picker__live--muted">
+        {t('rrr.editor.compass.liveUnavailable')}
+      </small>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <small className="stq-rrr-compass-picker__live stq-rrr-compass-picker__live--muted">
+        {t('rrr.editor.compass.liveDenied')}
+      </small>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="stq-rrr-compass-picker__live-button"
+      onClick={state.start}
+      disabled={status === 'starting'}
+    >
+      {status === 'starting'
+        ? t('rrr.editor.compass.liveStarting')
+        : t('rrr.editor.compass.liveEnable')}
+    </button>
   );
 }
 

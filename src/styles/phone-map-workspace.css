@@ -119,12 +119,12 @@
   -webkit-line-clamp: 2;
 }
 
-/* Bottom-right cluster: round edit toggle next to the zoom controls. When
-   active, its content slides out to the left as a horizontal mini-menu. */
+/* Top-right cluster: shared round edit toggle. When active, its content
+   slides out to the left as a horizontal mini-menu. */
 .stq-phone-map-edit-pill {
   position: absolute;
-  right: calc(18px + 28px + 10px);
-  bottom: 121px;
+  top: max(84px, calc(env(safe-area-inset-top) + 84px));
+  right: max(18px, env(safe-area-inset-right));
   z-index: 20;
 }
 
@@ -246,8 +246,7 @@
 
 .stq-phone-map-tools {
   position: absolute;
-  top: max(15.4vh, calc(env(safe-area-inset-top) + 15.4vh));
-  top: max(15.4dvh, calc(env(safe-area-inset-top) + 15.4dvh));
+  top: max(84px, calc(env(safe-area-inset-top) + 84px));
   left: 16px;
   right: auto;
   z-index: 20;
@@ -324,4 +323,3 @@
   font-size: 12px;
   font-weight: 800;
 }
-

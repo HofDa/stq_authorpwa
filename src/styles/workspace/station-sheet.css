@@ -30,15 +30,6 @@
   flex-shrink: 0;
 }
 
-.stq-map-station-sheet-toolbar-trailing {
-  position: absolute;
-  top: 0;
-  right: 10px;
-  display: flex;
-  align-items: center;
-  height: 22px;
-}
-
 .stq-map-station-sheet-edit-toggle {
   display: grid;
   place-items: center;
@@ -260,4 +251,3 @@
 .stq-map-station-sheet-scroll .stq-riddle-heading-row--with-action .stq-riddle-heading {
   padding-left: 0;
 }
-

@@ -16,7 +16,7 @@ import {
 import { useExportTour } from '@/hooks/useExportTour';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { getRrrTourReadiness } from '@/rrr';
-import { deleteDraft, listDrafts } from '@/storage';
+import { deleteDraft, duplicateDraft, listDrafts } from '@/storage';
 import { useConfirm, useToast } from '@/components/ui/FeedbackProvider';
 import { getTourTitleLabel } from '@/utils/localizedContent';
 import type { StudioWorkflowSection } from './workflow/workflowTypes';
@@ -218,6 +218,23 @@ export function useStudioController({
     );
   }, [confirm, draft.draftId, draft.tour, locale, navigate, t, toast]);
 
+  const duplicateCurrentTour = useCallback(async () => {
+    const copy = await duplicateDraft(draft.draftId);
+    if (!copy) {
+      toast({
+        title: t('studio.tourCopyFailed'),
+        tone: 'error',
+      });
+      return;
+    }
+
+    toast({
+      title: t('studio.tourCopied'),
+      tone: 'success',
+    });
+    navigate(`/tours/${copy.draftId}?view=overview`);
+  }, [draft.draftId, navigate, t, toast]);
+
   const selectTourOverview = useCallback(() => {
     setActiveSection('plan');
   }, []);
@@ -282,6 +299,7 @@ export function useStudioController({
     actions: {
       addStation,
       deleteCurrentTour,
+      duplicateCurrentTour,
       deleteStation,
       backToTours,
       changeLanguage,

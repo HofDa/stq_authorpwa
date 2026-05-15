@@ -50,7 +50,7 @@ export function MobileStudioShell({
   const [outroEditMode, setOutroEditMode] = useState(false);
   const [routeEditMode, setRouteEditMode] = useState(false);
   const [view, setView] = useState<'map' | 'overview' | 'intro' | 'outro'>(
-    () => (searchParams.get('view') === 'overview' ? 'overview' : 'map'),
+    () => (searchParams.get('view') === 'map' ? 'map' : 'overview'),
   );
   const [introDraftId, setIntroDraftId] = useState<string | null>(null);
   const { locale, selectedId, drafts, actions } = useStudioController({
@@ -134,6 +134,7 @@ export function MobileStudioShell({
               locale={locale}
               onChange={onChange}
               onCreateTour={onCreateTour}
+              onDuplicateTour={actions.duplicateCurrentTour}
               onDeleteTour={() =>
                 actions.deleteCurrentTour({ redirectSearch: '?view=overview' })
               }
@@ -189,6 +190,11 @@ export function MobileStudioShell({
               }}
               onStartTour={() => {
                 setIntroEditMode(false);
+                setRouteEditMode(false);
+                actions.clearSelection();
+                if (introDraft.stations.length === 0) {
+                  setEditMode(true);
+                }
                 if (introDraft.draftId !== draft.draftId) {
                   (onSelectDraft ?? actions.selectTour)(introDraft.draftId);
                 }
@@ -274,14 +280,14 @@ function HeaderEditToggle({
   return (
     <button
       type="button"
-      className={`stq-mobile-studio__header-edit-toggle${
+      className={`stq-mobile-studio__header-edit-toggle stq-mobile-studio__major-edit-toggle${
         active ? ' is-active' : ''
       }`}
       onClick={onClick}
       aria-label={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
       aria-pressed={active}
     >
-      <Icon name="edit" size={14} />
+      <Icon name="edit" size={18} />
     </button>
   );
 }

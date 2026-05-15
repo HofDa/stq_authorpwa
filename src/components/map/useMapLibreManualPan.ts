@@ -34,6 +34,18 @@ export function useMapLibreManualPan({
     let downX = 0;
     let downY = 0;
     let didMove = false;
+    const activeTouchPointers = new Set<number>();
+
+    const releaseActivePointer = () => {
+      if (
+        activePointerId !== null &&
+        container.hasPointerCapture(activePointerId)
+      ) {
+        container.releasePointerCapture(activePointerId);
+      }
+      activePointerId = null;
+      didMove = false;
+    };
 
     const shouldIgnorePointer = (target: EventTarget | null) => {
       if (!(target instanceof Element)) {
@@ -58,6 +70,14 @@ export function useMapLibreManualPan({
     };
 
     const handlePointerDown = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') {
+        activeTouchPointers.add(event.pointerId);
+        if (activeTouchPointers.size > 1) {
+          releaseActivePointer();
+          return;
+        }
+      }
+
       if (event.button !== 0 || shouldIgnorePointer(event.target)) {
         return;
       }
@@ -71,6 +91,11 @@ export function useMapLibreManualPan({
     };
 
     const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch' && activeTouchPointers.size > 1) {
+        releaseActivePointer();
+        return;
+      }
+
       if (activePointerId !== event.pointerId) {
         return;
       }
@@ -100,6 +125,10 @@ export function useMapLibreManualPan({
     };
 
     const handlePointerEnd = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') {
+        activeTouchPointers.delete(event.pointerId);
+      }
+
       if (activePointerId !== event.pointerId) {
         return;
       }

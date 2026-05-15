@@ -8,7 +8,7 @@
   transition:
     outline-color 120ms ease,
     background-color 120ms ease;
-  outline: 1px dashed transparent;
+  outline: 1px dashed var(--stq-primary);
   outline-offset: 1px;
   z-index: 1;
 }
@@ -16,7 +16,6 @@
 .stq-editable-region:hover,
 .stq-editable-region--active,
 .stq-editable-region--selected {
-  outline-color: var(--stq-primary);
   background: transparent;
   z-index: 50;
 }
@@ -43,6 +42,11 @@
   z-index: 9999;
 }
 
+.stq-editable-image-frame {
+  outline: 1px dashed var(--stq-primary);
+  outline-offset: -2px;
+}
+
 .stq-editable-region:hover .stq-editable-pen,
 .stq-editable-region--active .stq-editable-pen,
 .stq-editable-region--selected .stq-editable-pen {
@@ -64,4 +68,3 @@
 .stq-riddle-hint-edit-target .stq-riddle-hint {
   margin-top: 0;
 }
-

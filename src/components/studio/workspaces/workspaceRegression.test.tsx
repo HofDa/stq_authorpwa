@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RiddleEntry, TourDraft } from '@/schema';
 import { buildValidDraft, buildValidStation } from '@/test/fixtures';
 import { TourCardCanvas } from '../TourCardCanvas';
+import { IntroPhonePreview } from './IntroPhonePreview';
+import { MapEditPill } from './MapEditPill';
 import { MapPreviewWorkspace } from './MapPreviewWorkspace';
 import { PhoneMapMockup } from './PhoneMapMockup';
 import { RouteWorkspace } from './RouteWorkspace';
@@ -20,10 +22,13 @@ vi.mock('@/i18n/editorLanguage', () => {
     'studio.back': 'Back',
     'studio.cancel': 'Abbrechen',
     'studio.close': 'Schließen',
+    'studio.copyTour': 'Tour kopieren',
+    'studio.coverImageEdit': 'Titelbild bearbeiten',
     'studio.edit': 'Bearbeiten',
     'studio.hints': 'Hinweise',
     'studio.iconLabel': 'Icon-Label',
     'studio.map': 'Karte',
+    'studio.noStations': 'Noch keine Stationen',
     'studio.noHint': 'Kein Hinweis',
     'studio.points': 'Punkte',
     'studio.riddleSettings': 'Riddle settings',
@@ -42,6 +47,7 @@ vi.mock('@/i18n/editorLanguage', () => {
     'studio.locationPlaceholder': 'Ort der Tour',
     'studio.noLocation': 'No location',
     'studio.tourOverview': 'Tour overview',
+    'studio.deleteTour': 'Tour löschen',
     'studio.untitledTour': 'Untitled tour',
     'workflow.route': 'Route',
   };
@@ -167,6 +173,172 @@ describe('workspace regression flows', () => {
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(persisted.tour.de.title).toBe('Neue Tour');
     expect(persisted.tour.de.location).toBe('Bozen');
+  });
+
+  it('keeps the primary intro action clickable without stations', () => {
+    const onStartTour = vi.fn();
+
+    render(
+      <IntroPhonePreview
+        draft={{ ...buildWorkspaceDraft(), stations: [] }}
+        locale="de"
+        onChange={vi.fn()}
+        onStartTour={onStartTour}
+        editable={false}
+      />,
+    );
+
+    const start = textButton('Noch keine Stationen');
+    expect(start?.disabled).toBe(false);
+
+    clickTextButton('Noch keine Stationen');
+
+    expect(onStartTour).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the shared major edit button styling for the map edit toggle', () => {
+    render(
+      <MapEditPill content={null} active={false} onToggle={vi.fn()} />,
+    );
+
+    expect(control('Bearbeiten')?.classList.contains(
+      'stq-mobile-studio__major-edit-toggle',
+    )).toBe(true);
+  });
+
+  it('keeps tour copy and delete actions on the editable cover overlay', () => {
+    const onDuplicateTour = vi.fn();
+    const onDeleteTour = vi.fn();
+
+    render(
+      <TourCardCanvas
+        draft={buildWorkspaceDraft()}
+        locale="de"
+        onChange={vi.fn()}
+        onDuplicateTour={onDuplicateTour}
+        onDeleteTour={onDeleteTour}
+        editable
+        mobileSelectionFlow
+      />,
+    );
+
+    clickControl('Tour kopieren');
+    clickControl('Tour löschen');
+
+    expect(onDuplicateTour).toHaveBeenCalledTimes(1);
+    expect(onDeleteTour).toHaveBeenCalledTimes(1);
+    expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
+      null,
+    );
+    expect(textButton('Tour löschen')).toBeNull();
+  });
+
+  it('uses the cover area camera control as the tour image edit entry', () => {
+    const draft = buildWorkspaceDraft();
+
+    render(
+      <TourCardCanvas
+        draft={{
+          ...draft,
+          tour: { ...draft.tour, imagePath: '', coverBlobId: undefined },
+        }}
+        locale="de"
+        onChange={vi.fn()}
+        editable
+        mobileSelectionFlow
+      />,
+    );
+
+    expect(
+      container
+        .querySelector('.stq-tour-card-cover')
+        ?.classList.contains('stq-editable-image-frame'),
+    ).toBe(true);
+
+    clickElement('.stq-tour-card-cover');
+
+    expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
+      null,
+    );
+
+    clickControl('Titelbild bearbeiten');
+
+    expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+  });
+
+  it('uses the intro cover camera control as the tour image edit entry', () => {
+    const draft = buildWorkspaceDraft();
+
+    render(
+      <IntroPhonePreview
+        draft={{
+          ...draft,
+          tour: { ...draft.tour, imagePath: '', coverBlobId: undefined },
+        }}
+        locale="de"
+        onChange={vi.fn()}
+        editable
+        mobileSelectionFlow
+      />,
+    );
+
+    expect(
+      container
+        .querySelector('.stq-intro-phone__hero')
+        ?.classList.contains('stq-editable-image-frame'),
+    ).toBe(true);
+
+    clickElement('.stq-intro-phone__hero');
+
+    expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
+      null,
+    );
+
+    clickControl('Titelbild bearbeiten');
+
+    expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+  });
+
+  it('uses only the station image camera control as the station image edit entry', () => {
+    const draft = buildWorkspaceDraft();
+
+    render(
+      <MapPreviewWorkspaceHarness
+        draft={draft}
+        locale="de"
+        onAddStation={vi.fn()}
+        onChange={vi.fn()}
+        layout="mobile"
+      />,
+    );
+
+    clickControl('Mock map station 1');
+    clickControl('Bearbeiten');
+
+    expect(
+      container
+        .querySelector('.stq-riddle-map-card-image')
+        ?.classList.contains('stq-editable-image-frame'),
+    ).toBe(true);
+
+    clickElement('.stq-riddle-map-card-image');
+
+    expect(container.textContent).not.toContain('Stations-Bild & Icon');
+
+    clickControl('Edit station image');
+
+    expect(control('Edit station image')?.getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+    expect(container.textContent).not.toContain('Stations-Bild & Icon');
+
+    clickControl('Edit station image');
+
+    expect(container.textContent).toContain('Stations-Bild & Icon');
   });
 
   it('renders RouteWorkspace route data and keeps toolbar actions reachable', () => {
@@ -361,6 +533,11 @@ describe('workspace regression flows', () => {
     );
 
     clickControl('Mock map station 1');
+
+    expect(control('Bearbeiten')?.classList.contains(
+      'stq-mobile-studio__major-edit-toggle',
+    )).toBe(true);
+
     clickControl('Bearbeiten');
     clickControl('Edit station title');
     clickControl('Edit station title');
@@ -546,15 +723,31 @@ async function clickTextButtonAsync(text: string) {
 }
 
 function clickTextButton(text: string) {
-  const target = Array.from(container.querySelectorAll('button')).find(
-    (button) => button.textContent?.trim() === text,
-  );
+  const target = textButton(text);
   if (!target) {
     throw new Error(`Button text not found: ${text}`);
   }
   act(() => {
     target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   });
+}
+
+function clickElement(selector: string) {
+  const target = container.querySelector<HTMLElement>(selector);
+  if (!target) {
+    throw new Error(`Element not found: ${selector}`);
+  }
+  act(() => {
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
+
+function textButton(text: string): HTMLButtonElement | null {
+  return (
+    Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === text,
+    ) ?? null
+  );
 }
 
 function controls(label: string): HTMLElement[] {

@@ -157,7 +157,11 @@ export function RiddleScreen({
         {isMapOverlay && !solvedView && (
           <EditableRegion config={editableRegions?.hero}>
             <div className="stq-riddle-map-card-hero">
-              <div className="stq-riddle-map-card-image">
+              <div
+                className={`stq-riddle-map-card-image${
+                  mapHeroAction ? ' stq-editable-image-frame' : ''
+                }`}
+              >
                 {imageUrl ? (
                   <img src={imageUrl} alt="" />
                 ) : (
@@ -287,16 +291,18 @@ export function RiddleScreen({
         {authorMode && (
           <div className="stq-render-target">
             {overlays?.successSection}
-            <StoryText
-              blocks={success.blocks}
-              fallbackTitle={success.fallbackTitle}
-              headingAction={isMapOverlay ? successHeadingAction : undefined}
-            />
+            <EditableRegion config={editableRegions?.successSection}>
+              <StoryText
+                blocks={success.blocks}
+                fallbackTitle={success.fallbackTitle}
+                headingAction={isMapOverlay ? successHeadingAction : undefined}
+              />
+            </EditableRegion>
           </div>
         )}
       </main>
 
-      {(successOpen || authorMode) && (
+      {successOpen && (
         <div className="stq-riddle-success-backdrop" role="presentation">
           <section
             className="stq-riddle-success-dialog"

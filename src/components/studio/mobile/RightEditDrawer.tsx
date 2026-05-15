@@ -33,6 +33,7 @@ export function RightEditDrawer({
 }: Props) {
   const { t } = useEditorLanguage();
   const firstRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
   const gestureRef = useRef<{
     pointerId: number;
     startX: number;
@@ -61,7 +62,8 @@ export function RightEditDrawer({
 
   useEffect(() => {
     if (expanded) {
-      setTimeout(() => firstRef.current?.focus(), 50);
+      bodyRef.current?.scrollTo({ top: 0 });
+      setTimeout(() => firstRef.current?.focus({ preventScroll: true }), 50);
     }
   }, [expanded, title]);
 
@@ -224,7 +226,7 @@ export function RightEditDrawer({
             </div>
           </div>
 
-          <div className="stq-right-edit-drawer__body">
+          <div className="stq-right-edit-drawer__body" ref={bodyRef}>
             {fields.map((field, index) => {
               const value = draftValues[field.id] ?? field.value ?? '';
 

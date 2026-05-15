@@ -292,24 +292,35 @@ export function IntroPhonePreview({
 
       <main className="stq-intro-phone__body">
         {mode === 'intro' && (
-          <Editable
-            label={t('studio.coverImageEdit')}
-            onClick={() => activateEditable('cover')}
-            active={activePanel === 'cover'}
-            selected={mobileSelectionFlow && selectedPanel === 'cover'}
-            editable={editable}
+          <div
+            className={`stq-intro-phone__hero${
+              editable ? ' stq-editable-image-frame' : ''
+            }`}
           >
-            <div className="stq-intro-phone__hero">
-              {coverUrl || draft.tour.imagePath ? (
-                <img src={coverUrl ?? draft.tour.imagePath} alt="" />
-              ) : (
-                <div className="stq-intro-phone__hero-placeholder">
-                  <Icon name="image" size={28} />
-                  <span>{t('studio.noCoverImage')}</span>
-                </div>
-              )}
-            </div>
-          </Editable>
+            {coverUrl || draft.tour.imagePath ? (
+              <img src={coverUrl ?? draft.tour.imagePath} alt="" />
+            ) : (
+              <div className="stq-intro-phone__hero-placeholder">
+                <Icon name="image" size={28} />
+                <span>{t('studio.noCoverImage')}</span>
+              </div>
+            )}
+            {editable && (
+              <button
+                type="button"
+                className="stq-image-edit-fab"
+                onClick={() => activateEditable('cover')}
+                aria-label={t('studio.coverImageEdit')}
+                aria-pressed={
+                  activePanel === 'cover' ||
+                  (mobileSelectionFlow && selectedPanel === 'cover') ||
+                  undefined
+                }
+              >
+                <Icon name="camera" size={20} />
+              </button>
+            )}
+          </div>
         )}
 
         <section className="stq-intro-phone__content">
@@ -410,7 +421,6 @@ export function IntroPhonePreview({
           <button
             type="button"
             className="stq-intro-phone__start"
-            disabled={mode === 'intro' && !firstStation}
             onClick={() => {
               if (mode === 'outro') {
                 onSelectTourOverview?.();

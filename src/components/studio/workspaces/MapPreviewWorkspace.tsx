@@ -293,6 +293,41 @@ export function MapPreviewWorkspace({
     };
   }
 
+  function activateStationImageEdit() {
+    if (
+      effectiveSelectionFlow &&
+      selectedEditableRegion !== 'hero' &&
+      activeStationPanel !== 'hero'
+    ) {
+      selectEditableRegion('hero');
+      return;
+    }
+
+    openStationPanel('hero');
+  }
+
+  const stationImageEditAction = effectiveEditMode ? (
+    <div className="stq-riddle-map-card-actions stq-riddle-map-card-actions--center">
+      <button
+        type="button"
+        className="stq-riddle-map-card-action stq-riddle-map-card-action--image stq-image-edit-fab"
+        onClick={(event) => {
+          event.stopPropagation();
+          activateStationImageEdit();
+        }}
+        aria-label="Edit station image"
+        aria-pressed={
+          activeStationPanel === 'hero' ||
+          (effectiveSelectionFlow && selectedEditableRegion === 'hero') ||
+          undefined
+        }
+        title="Edit station image"
+      >
+        <Icon name="camera" size={16} />
+      </button>
+    </div>
+  ) : undefined;
+
   const hasPillContent =
     Boolean(topRightPill) || showAddStationFab || showDeleteStationFab;
   const pillContent = hasPillContent ? (
@@ -322,20 +357,45 @@ export function MapPreviewWorkspace({
       {topRightPill}
     </div>
   ) : null;
-  const stationBeingEdited = sheetState === 'expanded';
-  const composedTopRightPill = onToggleMapEditMode ? (
-    stationBeingEdited ? undefined : (
-      <MapEditPill
-        content={mapEditMode ? pillContent : null}
-        active={Boolean(mapEditMode)}
-        onToggle={onToggleMapEditMode}
-      />
-    )
-  ) : (
-    pillContent ?? undefined
-  );
-
   const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
+  const stationBeingEdited = sheetState === 'expanded';
+  const stationCardEditPill =
+    layout === 'mobile' && sheetVisible ? (
+      <div
+        className={`stq-phone-map-edit-pill__cluster${
+          pillContent ? ' is-active' : ''
+        }`}
+      >
+        {pillContent}
+        <button
+          type="button"
+          className={`stq-phone-map-edit-pill__toggle stq-map-station-sheet-edit-toggle stq-mobile-studio__major-edit-toggle${
+            internalStationEditMode ? ' is-active' : ''
+          }`}
+          onClick={() => setInternalStationEditMode((value) => !value)}
+          aria-label={
+            internalStationEditMode ? 'Bearbeiten beenden' : 'Bearbeiten'
+          }
+          aria-pressed={internalStationEditMode}
+        >
+          <Icon name="edit" size={18} />
+        </button>
+      </div>
+    ) : undefined;
+  let composedTopRightPill = stationCardEditPill;
+  if (!composedTopRightPill) {
+    if (onToggleMapEditMode) {
+      composedTopRightPill = stationBeingEdited ? undefined : (
+        <MapEditPill
+          content={mapEditMode ? pillContent : null}
+          active={Boolean(mapEditMode)}
+          onToggle={onToggleMapEditMode}
+        />
+      );
+    } else {
+      composedTopRightPill = pillContent ?? undefined;
+    }
+  }
   const editableStationIds = useMemo(
     () => draft.stations.map((station) => station.id),
     [draft.stations],
@@ -382,27 +442,6 @@ export function MapPreviewWorkspace({
                   setRightDrawerState('closed');
                 }
               }}
-              toolbarTrailing={
-                layout === 'mobile' ? (
-                  <button
-                    type="button"
-                    className={`stq-map-station-sheet-edit-toggle${
-                      internalStationEditMode ? ' is-active' : ''
-                    }`}
-                    onClick={() =>
-                      setInternalStationEditMode((value) => !value)
-                    }
-                    aria-label={
-                      internalStationEditMode
-                        ? 'Bearbeiten beenden'
-                        : 'Bearbeiten'
-                    }
-                    aria-pressed={internalStationEditMode}
-                  >
-                    <Icon name="edit" size={14} />
-                  </button>
-                ) : undefined
-              }
               collapsedHeader={
                 <div className="stq-map-station-sheet-collapsed-row">
                   <div className="stq-map-station-sheet-icon">
@@ -437,6 +476,7 @@ export function MapPreviewWorkspace({
             >
               <RiddleScreen
                 title={getStoryHeading(selectedStation, locale, t)}
+                authorMode={effectiveEditMode}
                 stationNumber={selectedStation.number}
                 totalStations={draft.stations.length}
                 imageUrl={selectedImageUrl}
@@ -458,6 +498,7 @@ export function MapPreviewWorkspace({
                 historyOpen={historyOpen}
                 onHistoryToggle={() => setHistoryOpen((open) => !open)}
                 presentation="mapOverlay"
+                mapHeroAction={stationImageEditAction}
                 onBack={() => {
                   setSheetState('closed');
                   setActiveStationPanel(null);
@@ -472,7 +513,6 @@ export function MapPreviewWorkspace({
                 editableRegions={
                   effectiveEditMode
                     ? {
-                        hero: editableRegion('hero', 'Edit station image'),
                         title: editableRegion('title', 'Edit station title'),
                         story: editableRegion('story', 'Edit story'),
                         history: editableRegion('history', 'Edit more infos'),

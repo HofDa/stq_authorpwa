@@ -6,7 +6,7 @@ interface EditableTextEntryListProps {
   sourceEntries: string[];
   onCommit: (entries: string[]) => void;
   heading: string;
-  placeholder: string;
+  placeholder: string | string[];
   inputMode?: 'textarea' | 'input';
   fixedEntryCount?: number;
   maxEntries?: number;
@@ -84,14 +84,14 @@ export function EditableTextEntryList({
               <input
                 className="stq-lines-input"
                 value={entry}
-                placeholder={placeholder}
+                placeholder={resolvePlaceholder(placeholder, index)}
                 onChange={(event) => setEntry(index, event.target.value)}
               />
             ) : (
               <textarea
                 className="stq-textbody-textarea"
                 value={entry}
-                placeholder={placeholder}
+                placeholder={resolvePlaceholder(placeholder, index)}
                 rows={rows}
                 onChange={(event) => setEntry(index, event.target.value)}
               />
@@ -138,6 +138,13 @@ export function EditableTextEntryList({
       )}
     </>
   );
+}
+
+function resolvePlaceholder(placeholder: string | string[], index: number): string {
+  if (Array.isArray(placeholder)) {
+    return placeholder[index] ?? placeholder[placeholder.length - 1] ?? '';
+  }
+  return placeholder;
 }
 
 function normalizeEntries(entries: string[], fixedEntryCount?: number): string[] {

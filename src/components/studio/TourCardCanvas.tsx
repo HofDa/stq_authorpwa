@@ -24,6 +24,7 @@ interface Props {
     patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft),
   ) => void | Promise<void>;
   onCreateTour?: () => void | Promise<void>;
+  onDuplicateTour?: () => void | Promise<void>;
   onDeleteTour?: () => void | Promise<void>;
   otherDrafts?: TourDraft[];
   onSelectDraft?: (draftId: string) => void;
@@ -41,6 +42,7 @@ export function TourCardCanvas({
   locale,
   onChange,
   onCreateTour,
+  onDuplicateTour,
   onDeleteTour,
   otherDrafts,
   onSelectDraft,
@@ -287,28 +289,73 @@ export function TourCardCanvas({
               }
             }}
           >
-            <Editable
-              label={t('studio.coverImageEdit')}
-              onClick={() => activateEditable('cover')}
-              active={activePanel === 'cover'}
-              selected={mobileSelectionFlow && selectedPanel === 'cover'}
-              editable={editable}
-            >
-              <div className="stq-tour-card-cover">
-                {coverUrl || draft.tour.imagePath ? (
-                  <img
-                    src={coverUrl ?? draft.tour.imagePath}
-                    alt=""
-                    className="stq-tour-card-cover-img"
-                  />
-                ) : (
-                  <div className="stq-tour-card-cover-placeholder">
-                    <Icon name="image" size={24} />
-                    <span>{t('studio.noCoverImage')}</span>
-                  </div>
+            <div className="stq-tour-card-cover-frame">
+              <div
+                className={`stq-tour-card-cover${
+                  editable ? ' stq-editable-image-frame' : ''
+                }${
+                  editable && activePanel === 'cover'
+                    ? ' stq-tour-card-cover--active'
+                    : ''
+                }${
+                  editable && mobileSelectionFlow && selectedPanel === 'cover'
+                    ? ' stq-tour-card-cover--selected'
+                    : ''
+                }`}
+              >
+                <TourCoverContent
+                  imageUrl={coverUrl ?? draft.tour.imagePath}
+                  emptyLabel={t('studio.noCoverImage')}
+                />
+                {editable && (
+                  <button
+                    type="button"
+                    className="stq-image-edit-fab"
+                    onClick={() => activateEditable('cover')}
+                    aria-label={t('studio.coverImageEdit')}
+                    aria-pressed={
+                      activePanel === 'cover' ||
+                      (mobileSelectionFlow && selectedPanel === 'cover') ||
+                      undefined
+                    }
+                  >
+                    <Icon name="camera" size={20} />
+                  </button>
                 )}
               </div>
-            </Editable>
+              {editable && (onDuplicateTour || onDeleteTour) && (
+                <div className="stq-tour-card-cover-actions">
+                  {onDuplicateTour && (
+                    <button
+                      type="button"
+                      className="stq-tour-card-cover-action"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDuplicateTour();
+                      }}
+                      aria-label={t('studio.copyTour')}
+                      title={t('studio.copyTour')}
+                    >
+                      <Icon name="copy" size={16} />
+                    </button>
+                  )}
+                  {onDeleteTour && (
+                    <button
+                      type="button"
+                      className="stq-tour-card-cover-action stq-tour-card-cover-action--danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDeleteTour();
+                      }}
+                      aria-label={t('studio.deleteTour')}
+                      title={t('studio.deleteTour')}
+                    >
+                      <Icon name="trash" size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="stq-tour-card-body">
               <Editable
@@ -432,16 +479,6 @@ export function TourCardCanvas({
             <Icon name="plus" size={16} />
             {t('studio.createNewTour')}
           </button>
-          {editable && onDeleteTour && (
-            <button
-              type="button"
-              className="stq-tour-card-add-btn stq-tour-card-add-btn--danger"
-              onClick={() => onDeleteTour()}
-            >
-              <Icon name="trash" size={16} />
-              {t('studio.deleteTour')}
-            </button>
-          )}
         </div>
       </DeviceMockup>
 
@@ -524,6 +561,24 @@ function Editable({
       <span className="stq-editable-pen" aria-hidden>
         <Icon name="pen" size={12} />
       </span>
+    </div>
+  );
+}
+
+function TourCoverContent({
+  imageUrl,
+  emptyLabel,
+}: {
+  imageUrl: string | undefined;
+  emptyLabel: string;
+}) {
+  if (imageUrl) {
+    return <img src={imageUrl} alt="" className="stq-tour-card-cover-img" />;
+  }
+
+  return (
+    <div className="stq-tour-card-cover-placeholder">
+      <span>{emptyLabel}</span>
     </div>
   );
 }

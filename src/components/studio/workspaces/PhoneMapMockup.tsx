@@ -21,7 +21,7 @@ import { DeviceMockup } from '../DeviceMockup';
 import { Icon } from '../Icon';
 
 const DEFAULT_CENTER = { lat: 46.6703, lng: 11.1594 };
-const STUDIO_MAP_FIT_PADDING: [number, number] = [40, 40];
+const STUDIO_MAP_FIT_PADDING: [number, number] = [64, 64];
 
 export interface PhoneMapMockupProps {
   draft: TourDraft;

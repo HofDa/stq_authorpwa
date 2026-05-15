@@ -307,6 +307,13 @@
   gap: 8px;
 }
 
+.stq-riddle-map-card-actions--center {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+}
+
 .stq-riddle-map-card-action {
   display: grid;
   place-items: center;
@@ -319,6 +326,16 @@
   padding: 0;
   box-shadow: 0 10px 22px var(--stq-alpha-brown);
   backdrop-filter: blur(10px);
+}
+
+.stq-riddle-map-card-action.stq-image-edit-fab {
+  position: static;
+  transform: none;
+  border: 3px solid var(--stq-bg);
+  background: var(--stq-primary);
+  color: var(--stq-white);
+  box-shadow: 0 4px 10px var(--stq-alpha-brown);
+  backdrop-filter: none;
 }
 
 .stq-riddle-map-card-action--image {

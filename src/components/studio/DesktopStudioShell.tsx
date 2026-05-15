@@ -181,6 +181,7 @@ export function DesktopStudioShell({
           onSelectStation={actions.selectStationOnly}
           onAddStation={actions.addStation}
           onCreateTour={onCreateTour}
+          onDuplicateTour={actions.duplicateCurrentTour}
           onDeleteTour={actions.deleteCurrentTour}
           onSelectDraft={onSelectDraft}
           drafts={drafts}

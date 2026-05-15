@@ -194,6 +194,36 @@ Keep component tests focused on stable contracts and accessible behavior. The wo
 
 ## Resolved issues
 
+### 2026-05-15 — Mobile map manual pan blocked pinch zoom
+
+Files: `src/components/map/useMapLibreManualPan.ts`.
+Cause: the phone map uses a custom one-finger pan handler while MapLibre's drag pan is disabled. The handler kept treating the first finger as an active pan even when a second touch joined, competing with MapLibre's touch zoom recognizer.
+Fix: `useMapLibreManualPan` now tracks active touch pointer ids and yields/cancels manual pan when more than one touch pointer is active, preserving MapLibre pinch zoom in normal and edit modes. Covered by `useMapLibreManualPan.test.tsx`.
+
+### 2026-05-15 — Mobile edit toggle styling and placement drifted by surface
+
+Files: `src/components/studio/mobile/MobileStudioShell.tsx`, `src/components/studio/workspaces/MapEditPill.tsx`, `src/components/studio/workspaces/MapPreviewWorkspace.tsx`, `src/styles/workspace/mobile-shell.css`, `src/styles/phone-map-workspace.css`.
+Cause: overview/intro/outro used a small translucent floating chip while the map edit pill anchored next to zoom controls and the station/riddle card edit toggle lived inside the sheet toolbar, so the primary edit affordance looked and behaved differently across mobile surfaces.
+Fix: overview, intro, outro, map and station/riddle card edit toggles now share the larger token-styled `.stq-mobile-studio__major-edit-toggle` and the same top-right floating anchor. `MapEditPill` keeps ownership of expanded map actions, and the station-card toggle remains independent while preserving adjacent map actions when present. Covered by `workspaceRegression.test.tsx`.
+
+### 2026-05-15 — Edit mode hid most editable frames until hover or selection
+
+Files: `src/styles/editable-overlay.css`, `src/components/studio/TourCardCanvas.tsx`, `src/components/studio/workspaces/IntroPhonePreview.tsx`, `src/renderer/RiddleScreen.tsx`.
+Cause: editable-region outlines were transparent by default and only appeared on hover, active or selected state. Camera-only image edit areas also had no passive frame after the full-surface edit target was removed.
+Fix: rendered editable-region wrappers now show dashed frames immediately in edit mode, and camera-only image areas get passive dashed frames while keeping the camera button as the only edit target. Covered by `workspaceRegression.test.tsx`.
+
+### 2026-05-15 — Tour overview edit actions were detached from the cover context
+
+Files: `src/components/studio/TourCardCanvas.tsx`, `src/components/studio/useStudioController.ts`, `src/storage/drafts.ts`.
+Cause: delete lived as a full-width bottom action in overview edit mode, while the existing draft duplication storage path was not exposed in the Studio controller. Cover editing was only available through a generic editable region without a clear camera affordance.
+Fix: tour-level copy/delete actions now render as cover-image overlay icon buttons. Copy calls the existing `duplicateDraft()` implementation, delete keeps the shared confirm flow, and tour overview, intro cover and station image editing are sensitive only on the floating camera button rather than the full image surface. Covered by `workspaceRegression.test.tsx` and existing `duplicateDraft` storage tests.
+
+### 2026-05-15 — Zero-station tours could not reach the map from mobile overview edit mode
+
+Files: `src/components/studio/mobile/MobileStudioShell.tsx`, `src/components/studio/workspaces/IntroPhonePreview.tsx`.
+Cause: the intro primary CTA was disabled when there was no first station, but the map is the place where authors create the first station.
+Fix: the no-stations primary CTA now stays clickable and calls the existing start handler. The mobile shell opens the map, turns on map edit mode, and clears stale selection for zero-station tours. Covered by `workspaceRegression.test.tsx`.
+
 ### 2026-05-15 — Route hit-layer clicks could also be treated as map clicks
 
 Files: `src/components/map/useMapLibreMapClick.ts`, `src/components/map/useMapLibreRouteLayers.ts`, `src/components/map/mapLibreUtils.ts`.

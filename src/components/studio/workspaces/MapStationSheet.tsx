@@ -7,8 +7,6 @@ interface Props {
   onStateChange: (state: MapSheetState) => void;
   collapsedHeader: ReactNode;
   children: ReactNode;
-  /** Optional control rendered next to the drag handle. */
-  toolbarTrailing?: ReactNode;
 }
 
 export function MapStationSheet({
@@ -16,7 +14,6 @@ export function MapStationSheet({
   onStateChange,
   collapsedHeader,
   children,
-  toolbarTrailing,
 }: Props) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const dragStartY = useRef<number | null>(null);
@@ -99,11 +96,6 @@ export function MapStationSheet({
         >
           <span aria-hidden />
         </button>
-        {toolbarTrailing && (
-          <div className="stq-map-station-sheet-toolbar-trailing">
-            {toolbarTrailing}
-          </div>
-        )}
       </div>
       {state === 'collapsed' ? (
         <div

@@ -38,6 +38,7 @@ interface StudioWorkspaceRendererProps {
   onSelectStation: (id: string) => void;
   onAddStation: (coordinate?: AuthorMapCoordinate) => void;
   onCreateTour?: () => void | Promise<void>;
+  onDuplicateTour?: () => void | Promise<void>;
   onDeleteTour?: () => void | Promise<void>;
   onSelectDraft?: (draftId: string) => void;
   drafts?: TourDraft[];
@@ -105,6 +106,7 @@ function renderWorkspaceBody(props: StudioWorkspaceRendererProps) {
           locale={props.locale}
           onChange={props.onChange}
           onCreateTour={props.onCreateTour}
+          onDuplicateTour={props.onDuplicateTour}
           onDeleteTour={props.onDeleteTour}
           drafts={props.drafts}
           onSelectDraft={props.onSelectDraft}

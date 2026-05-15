@@ -33,6 +33,62 @@ The docs retain original audit measurements for context, so readers must disting
 Rejected alternatives:
 Deleting the original audit snapshot; leaving the W2-W8 plan unchanged; combining more code refactors into the documentation update.
 
+## 2026-05-15 — Keep zero-station mobile tours able to reach the map through the primary CTA
+
+Decision:
+The intro phone preview's primary CTA remains clickable even when the tour has no stations. In that zero-station path, the mobile shell clears stale selection, opens the map view, and enables map edit mode so the first-station controls are reachable.
+
+Reason:
+The primary button is the expected forward path from the tour preview. Disabling it for empty tours created a dead end before the map, where the first station is created.
+
+Tradeoffs:
+The CTA still uses the existing `studio.noStations` copy for empty tours, but it now behaves as an authoring navigation command instead of a disabled status. This avoids adding another map-pin entry point to the overview.
+
+Rejected alternatives:
+Adding a separate map-pin button to the tour overview; making the editable card itself navigate; creating the first station automatically.
+
+## 2026-05-15 — Place tour-level edit actions on the cover image
+
+Decision:
+Tour overview edit mode renders copy and delete as stacked icon buttons over the top-right of the cover image. Tour cover, intro cover and station hero image editing are exposed through the shared floating camera button only; the image/placeholder surfaces themselves are not edit targets. Copy is exposed through `useStudioController` and delegates to the existing `duplicateDraft()` storage function before navigating to the copied draft.
+
+Reason:
+Copy/delete are tour-level actions, so placing them on the tour card cover keeps them in context without adding bottom-list clutter. The existing storage duplicate path already owns blob-id rewriting and draft-id/riddles-path updates, so reusing it preserves offline/local image ownership and schema contracts.
+
+Tradeoffs:
+The image edit affordance is now a dedicated button instead of the generic full-surface `Editable` wrapper. This adds a small amount of local markup, but avoids broad accidental hit areas and keeps copy/delete clicks from opening the image editor.
+
+Rejected alternatives:
+Keeping delete as a full-width bottom action; adding a new ad hoc cloning implementation in UI code; putting copy/delete into a separate global toolbar.
+
+## 2026-05-15 — Show editable frames whenever edit mode is active
+
+Decision:
+Rendered `.stq-editable-region` wrappers show their dashed frame immediately instead of waiting for hover, active or selected state. Camera-only image edit areas use a passive `.stq-editable-image-frame` so the editable image area is visible while the camera button remains the only edit target.
+
+Reason:
+Mobile authors need to see all editable elements as soon as edit mode is on. Hidden frames made edit mode look incomplete and forced discovery by tapping or hovering, which is weak on touch screens.
+
+Tradeoffs:
+More visual chrome is visible during edit mode, but it is constrained to authoring-only rendered edit wrappers and passive image frames. Runtime/player rendering remains unchanged.
+
+Rejected alternatives:
+Making entire image surfaces clickable again; adding per-component bespoke frame styles; showing frames only after region selection.
+
+## 2026-05-15 — Preserve mobile map pinch zoom with manual pan
+
+Decision:
+Keep the phone map's custom one-finger `manualDragPan` behavior, but make `useMapLibreManualPan` cancel/yield as soon as a second touch pointer is active. Multi-touch gestures are reserved for MapLibre's built-in `touchZoomRotate` handler, so pinch zoom works in normal map use and in edit modes.
+
+Reason:
+The phone map needs manual one-finger pan to keep authoring gestures stable inside the mocked mobile frame, but that custom pointer handler must not compete with MapLibre's pinch zoom recognizer.
+
+Tradeoffs:
+The hook now tracks active touch pointer ids. This is slightly more state in the provider-internal gesture hook, but it keeps the change behind the `AuthorMap` boundary and avoids changing workspace contracts.
+
+Rejected alternatives:
+Re-enabling MapLibre drag pan for the phone map; removing `touch-action` guards from the map shell; adding separate edit-mode gesture paths.
+
 ## 2026-05-10 — Mobile edit toggle as a shared floating chip — PARTIALLY SUPERSEDED 2026-05-11
 
 The map view no longer uses the shared chip; see the 2026-05-11 `MapEditPill` decision. Overview, intro and outro still use the floating chip.
@@ -51,8 +107,11 @@ Restoring the bottom-right FAB pattern; per-surface bespoke chrome.
 
 ## 2026-05-10 — Independent station-card edit mode on mobile
 
+Update 2026-05-15:
+The station/riddle card edit toggle now renders in the same top-right shared major floating-button position as the other mobile edit toggles while a station sheet is visible. It still owns only station-card content edit mode; adjacent map actions can remain to its left when present.
+
 Decision:
-Mobile `MapPreviewWorkspace` owns its own `internalStationEditMode` state and renders a dedicated edit toggle inside `MapStationSheet.toolbarTrailing`. The map's marker-edit chip and the station-card edit toggle are separate concerns. Desktop continues to use the externally controlled `editMode` prop unchanged.
+Mobile `MapPreviewWorkspace` owns its own `internalStationEditMode` state and renders a dedicated station-card edit toggle through the mobile map top-right pill slot while the station sheet is visible. The map's marker-edit chip and the station-card edit toggle are separate concerns. Desktop continues to use the externally controlled `editMode` prop unchanged.
 
 Reason:
 Before this change, mobile passed `editMode={false}` to the workspace, so `editableRegions` never appeared on mobile and the riddle card was effectively read-only. Authors couldn't enter content edit mode on mobile at all.
@@ -79,14 +138,17 @@ Original decision: when the route editor was active, the right-edge action pill 
 
 ## 2026-05-11 — Map edit pill replaces the top-right floating chip on the map view
 
+Update 2026-05-15:
+The map view now shares the same top-right major edit-toggle button and styling as overview, intro and outro. `MapEditPill` still owns the expanded map actions, but its main toggle no longer anchors to the zoom controls.
+
 Decision:
-On the mobile map view (and only on the mobile map view), the edit affordance moved from the shared `.stq-mobile-studio__floating-edit-chip` to a new round `MapEditPill` (`src/components/studio/workspaces/MapEditPill.tsx`) anchored to the left of the zoom controls. When inactive it shows only the round pen toggle; when active the pill grows leftward to expose `[plus][trash][flag][toggle]` (marker view) or `[route-editor tools][flag][toggle]` plus a centered stats line below (route view).
+On the mobile map view, `MapEditPill` (`src/components/studio/workspaces/MapEditPill.tsx`) owns the expanded edit actions but uses the same top-right `.stq-mobile-studio__major-edit-toggle` button styling and anchor as overview, intro and outro. When inactive it shows only the round edit toggle; when active the pill grows leftward to expose `[plus][trash][flag][toggle]` (marker view) or `[route-editor tools][flag][toggle]` plus a centered stats line below (route view).
 
 Reason:
-The previous design placed the FAB bottom-right above where zoom-controls would be, which collided with the route-stats panel and required `:has()` gymnastics for route-edit layout. Co-locating the toggle with the zoom controls and using one pill that grows on demand keeps the affordance discoverable, eliminates collision with route stats, and reduces CSS surface (drops the `:has()` rule and the `--below-header` modifier on the map view).
+The previous design placed the FAB bottom-right above where zoom controls would be, which collided with the route-stats panel and required `:has()` gymnastics for route-edit layout. The next iteration anchored the map pill near zoom controls, but that left the primary edit affordance inconsistent with overview, intro and outro. Keeping `MapEditPill` for expanded map actions while moving its main toggle to the shared top-right button preserves the map action model and restores cross-surface recognition.
 
 Tradeoffs:
-The pill's position uses fixed `right` / `bottom` offsets calibrated to the zoom-control geometry. If zoom controls change size or position, the pill's anchor must be re-checked.
+The pill still has map-specific expanded content, but the primary edit toggle now uses the shared mobile authoring button. The shared top-right anchor must be re-checked against phone headers, map title chrome and small mobile viewports.
 
 Rejected alternatives:
 Keeping the top-right floating chip with conditional content; threading a `mapEditMode` prop directly into `PhoneMapMockup` (more plumbing for the same end state).

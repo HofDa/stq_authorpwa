@@ -15,13 +15,15 @@ export function MapEditPill({ content, active, onToggle }: Props) {
       {content}
       <button
         type="button"
-        className={`stq-phone-map-edit-pill__toggle${active ? ' is-active' : ''}`}
+        className={`stq-phone-map-edit-pill__toggle stq-mobile-studio__major-edit-toggle${
+          active ? ' is-active' : ''
+        }`}
         onClick={onToggle}
         aria-label={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
         aria-pressed={active}
         title={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
       >
-        <Icon name="pen" size={15} />
+        <Icon name="edit" size={18} />
       </button>
     </div>
   );

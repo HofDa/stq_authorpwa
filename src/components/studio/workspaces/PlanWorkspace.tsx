@@ -5,6 +5,7 @@ import { TourCardCanvas } from '../TourCardCanvas';
 type Props = Partial<Pick<BaseWorkspaceProps, 'onChange'>> &
   Omit<BaseWorkspaceProps, 'onChange'> & {
     onCreateTour?: () => void | Promise<void>;
+    onDuplicateTour?: () => void | Promise<void>;
     onDeleteTour?: () => void | Promise<void>;
     drafts?: TourDraft[];
     onSelectDraft?: (draftId: string) => void;
@@ -15,6 +16,7 @@ export function PlanWorkspace({
   locale,
   onChange,
   onCreateTour,
+  onDuplicateTour,
   onDeleteTour,
   drafts,
   onSelectDraft,
@@ -40,6 +42,7 @@ export function PlanWorkspace({
           })
         }
         onCreateTour={onCreateTour}
+        onDuplicateTour={onDuplicateTour}
         onDeleteTour={onDeleteTour}
         otherDrafts={drafts?.filter((d) => d.draftId !== draft.draftId)}
         onSelectDraft={onSelectDraft}

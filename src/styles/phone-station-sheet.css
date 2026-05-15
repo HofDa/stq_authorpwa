@@ -99,9 +99,16 @@
   left: auto;
 }
 
+.stq-phone-station-sheet .stq-riddle-map-card-actions--center {
+  top: 50%;
+  right: auto;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .stq-phone-station-sheet .stq-riddle-map-card-action {
-  width: 28px;
-  height: 28px;
+  width: 42px;
+  height: 42px;
   color: var(--stq-color-text-inverted);
 }
 

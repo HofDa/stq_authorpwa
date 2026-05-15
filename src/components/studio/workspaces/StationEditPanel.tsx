@@ -290,7 +290,11 @@ export function getStationEditPanel({
           sourceEntries={localized.hints}
           onCommit={(hints) => onPatchLocale({ hints: hints.slice(0, 3) })}
           heading={t('studio.hintLevels')}
-          placeholder={t('studio.hint1Placeholder')}
+          placeholder={[
+            t('studio.hint1Placeholder'),
+            t('studio.hint2Placeholder'),
+            t('studio.hint3Placeholder'),
+          ]}
           fixedEntryCount={3}
           rows={2}
         />
