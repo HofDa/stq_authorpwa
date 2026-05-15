@@ -2,6 +2,23 @@
 
 Use this file to prevent repeated architectural debates and agent drift.
 
+## 2026-05-15 — Implement riddle-module visuals from the Claude Design handoff incrementally
+
+Decision:
+The visual riddle modules introduced by the Claude Design "SouthTyrolQuests Riddle Modules" handoff are implemented module-by-module behind the existing RRR mock-preview integration point. The compass dial lands first as a real, working component used by the runtime preview: `src/components/rrr-author/CompassDial.tsx` (presentational SVG dial), `src/components/rrr-author/CompassControl.tsx` (dial + live-heading control + slider fallback), `src/components/rrr-author/useLiveDeviceHeading.ts` (shared hook over the `@/rrr/sensors` adapter), and `src/styles/rrr/module-compass-dial.css` (token-based styling). `RrrMockPreview` mounts `CompassControl` for `compass_align` and `direction_hotcold` modules.
+
+Reason:
+The design is high-quality and consistent across modules, but rolling out all eight modules in one PR would be a broad rewrite. The mock preview is the right boundary because it already owns the simulated runtime inputs (`RrrMockInputs.headingDegrees`), so the visual integrates with the real evaluator rather than being a static mockup. The compass also has an existing sensor adapter (`createDeviceOrientationSensorAdapter`), letting the dial drive real heading data on supported devices.
+
+Tradeoffs:
+The dial uses CSS variables from `src/styles/tokens.css` (`--stq-primary`, `--stq-color-primary-rgb`, `--stq-color-border`, `--stq-text`, `--stq-text-mute`) rather than introducing the design's parallel `--stq-burgundy*` palette. This avoids token duplication but means the dial inherits the slightly different reddish-burgundy of the existing system. Remaining design palette tokens (success green, hint ocker, terracotta error, surface-2) are not introduced until a module needs them.
+
+Followups:
+Add the next module visuals (code, NFC, QR, suchbild, reihenfolge, wissen, slot) one at a time under the same shape: small presentational component + small CSS file + minimal mock-preview wiring.
+
+Rejected alternatives:
+Porting the entire design canvas (`stq-modules-a.jsx`/`stq-modules-b.jsx`) in one PR; introducing a parallel design-token system; building the compass as a pure visual decoration disconnected from the runtime evaluator inputs.
+
 ## 2026-05-10 — Add project-local AI memory
 
 Decision:

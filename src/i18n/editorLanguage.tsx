@@ -318,6 +318,8 @@ export type EditorTextKey =
   | 'rrr.editor.compass.liveHeading'
   | 'rrr.editor.compass.liveUnavailable'
   | 'rrr.editor.compass.liveDenied'
+  | 'rrr.editor.compass.simulateTarget'
+  | 'rrr.editor.compass.simulateHeading'
   | 'rrr.editor.gps.lat'
   | 'rrr.editor.gps.lng'
   | 'rrr.editor.gps.radius'

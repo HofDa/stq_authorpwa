@@ -1,0 +1,94 @@
+.stq-riddle-text-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.stq-riddle-text-answer__field {
+  width: 100%;
+  border: 1px solid var(--stq-color-border);
+  border-radius: var(--stq-r-md, 12px);
+  background: var(--stq-color-surface, #ffffff);
+  padding: 12px 14px;
+  color: var(--stq-text);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.stq-riddle-text-answer__field:focus-visible {
+  outline: 2px solid var(--stq-primary);
+  outline-offset: 2px;
+}
+
+.stq-riddle-text-answer__field--error {
+  border-color: var(--stq-error, #b5533f);
+  animation: stq-riddle-text-answer-shake 280ms ease;
+}
+
+.stq-riddle-text-answer__submit {
+  align-self: stretch;
+  border: 0;
+  border-radius: var(--stq-r-md, 12px);
+  background: var(--stq-primary);
+  padding: 12px 16px;
+  color: var(--stq-inverted, #fbf6ec);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.stq-riddle-text-answer__submit:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+@keyframes stq-riddle-text-answer-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.stq-riddle-compass-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.stq-riddle-compass-player__status {
+  min-height: 24px;
+  text-align: center;
+}
+
+.stq-riddle-compass-player__hint {
+  color: var(--stq-text-mute);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stq-riddle-compass-player__hint--ok {
+  color: var(--stq-success, #4f7a4a);
+}
+
+.stq-riddle-compass-player__hint--muted {
+  opacity: 0.75;
+}
+
+.stq-riddle-compass-player__enable {
+  border: 1px solid var(--stq-color-border);
+  border-radius: 999px;
+  background: var(--stq-color-surface, #ffffff);
+  padding: 8px 16px;
+  color: var(--stq-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stq-riddle-compass-player__enable:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

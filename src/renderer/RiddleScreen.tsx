@@ -3,12 +3,14 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Icon } from '@/components/studio/Icon';
 import type { StationVisualChoice } from '@/stations/visuals';
+import type { RrrInteraction } from '@/rrr/types';
 import { BottomNav } from './BottomNav';
 import { CenterIcon } from './CenterIcon';
 import { HeroImage } from './HeroImage';
 import { HistoryPanel } from './HistoryPanel';
 import { StoryText } from './StoryText';
 import type { RendererSectionKey } from './stationSections';
+import { InteractionHost, type InteractionHostLabels } from './interaction/InteractionHost';
 
 export type { RendererSectionKey } from './stationSections';
 
@@ -44,6 +46,8 @@ interface Props {
   overlays?: Partial<Record<RendererSectionKey | 'hero' | 'title' | 'answers', ReactNode>>;
   authorToggle?: ReactNode;
   authorMode?: boolean;
+  interaction?: RrrInteraction;
+  interactionLabels?: InteractionHostLabels;
   mapHeroAction?: ReactNode;
   mapIconAction?: ReactNode;
   storyHeadingAction?: ReactNode;
@@ -97,6 +101,8 @@ export function RiddleScreen({
   overlays,
   authorToggle,
   authorMode = false,
+  interaction,
+  interactionLabels,
   mapHeroAction,
   mapIconAction,
   storyHeadingAction,
@@ -108,16 +114,10 @@ export function RiddleScreen({
   const isMapOverlay = presentation === 'mapOverlay';
   const solvedView = solved && !authorMode;
   const [story, history, riddle, success] = sections;
-  const [answerDraft, setAnswerDraft] = useState('');
   const [successOpen, setSuccessOpen] = useState(false);
-  const normalizedAnswers = acceptedAnswers.map(normalizeAnswer).filter(Boolean);
-  const submittedAnswer = answerDraft;
-  const canSubmit = authorMode || submittedAnswer.trim().length > 0;
-  const answerIsCorrect =
-    normalizedAnswers.length === 0 ||
-    normalizedAnswers.includes(normalizeAnswer(submittedAnswer));
   const stationTotal = totalStations && totalStations > 0 ? totalStations : stationNumber;
   const progressPercent = Math.max(0, Math.min(100, (stationNumber / stationTotal) * 100));
+  const resolvedLabels: InteractionHostLabels = interactionLabels ?? DEFAULT_INTERACTION_LABELS;
 
   return (
     <div
@@ -258,23 +258,13 @@ export function RiddleScreen({
                 config={editableRegions?.riddleSettings}
                 className="stq-riddle-answer-edit-target"
               >
-                <input
-                  className="stq-riddle-answer-field"
-                  value={answerDraft}
-                  onChange={(event) => setAnswerDraft(event.target.value)}
+                <InteractionHost
+                  interaction={interaction}
+                  acceptedAnswers={acceptedAnswers}
+                  labels={resolvedLabels}
                   disabled={authorMode}
+                  onCorrect={() => setSuccessOpen(true)}
                 />
-                <button
-                  type="button"
-                  className="stq-riddle-submit"
-                  disabled={!canSubmit}
-                  onClick={() => {
-                    if (authorMode) return;
-                    if (answerIsCorrect) setSuccessOpen(true);
-                  }}
-                >
-                  Lösung einreichen
-                </button>
               </EditableRegion>
               <EditableRegion
                 config={editableRegions?.answers}
@@ -417,6 +407,12 @@ function EditableRegion({
   );
 }
 
-function normalizeAnswer(answer: string) {
-  return answer.trim().toLocaleLowerCase();
-}
+const DEFAULT_INTERACTION_LABELS: InteractionHostLabels = {
+  submit: 'Lösung einreichen',
+  compassEnable: 'Kompass aktivieren',
+  compassStarting: 'Kompass wird gestartet…',
+  compassUnavailable: 'Kompass nicht verfügbar',
+  compassDenied: 'Kompasszugriff verweigert',
+  compassAligned: 'Ausrichtung gehalten',
+  compassAlign: 'Richte das Gerät auf die Zielrichtung aus',
+};

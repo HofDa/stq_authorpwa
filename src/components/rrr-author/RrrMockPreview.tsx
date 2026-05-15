@@ -31,6 +31,7 @@ import {
   type RrrRuntimeSession,
 } from '@/rrr/runtime';
 import { RrrConditionStatusTree } from './RrrConditionStatusTree';
+import { CompassControl } from './CompassControl';
 
 const QrScanner = lazy(() =>
   import('@/components/rrr-runtime/QrScanner').then((module) => ({
@@ -485,28 +486,17 @@ function GuidedControl({
       const targetDegrees = normalizeDegrees(
         readNumber(module.config.targetDegrees),
       );
+      const tolerance = Math.max(
+        2,
+        readNumber(module.config.tolerance) || 15,
+      );
       return (
-        <label className="stq-rrr-field">
-          <span>
-            Richtung simulieren: {Math.round(inputs.headingDegrees)} Grad
-          </span>
-          <input
-            type="range"
-            min="0"
-            max="359"
-            value={inputs.headingDegrees}
-            onChange={(event) =>
-              onPatchInputs({ headingDegrees: readNumber(event.target.value) })
-            }
-          />
-          <button
-            type="button"
-            className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
-            onClick={() => onPatchInputs({ headingDegrees: targetDegrees })}
-          >
-            Zielrichtung simulieren
-          </button>
-        </label>
+        <CompassControl
+          heading={inputs.headingDegrees}
+          targetDegrees={targetDegrees}
+          tolerance={tolerance}
+          onHeadingChange={(heading) => onPatchInputs({ headingDegrees: heading })}
+        />
       );
     }
     case 'gps_enter':

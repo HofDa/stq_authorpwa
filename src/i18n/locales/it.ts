@@ -307,6 +307,8 @@ const text: EditorText = {
   "rrr.editor.compass.liveHeading": "Live:",
   "rrr.editor.compass.liveUnavailable": "Bussola non disponibile su questo dispositivo.",
   "rrr.editor.compass.liveDenied": "Accesso alla bussola negato.",
+  "rrr.editor.compass.simulateTarget": "Simula direzione target",
+  "rrr.editor.compass.simulateHeading": "Simula direzione",
   "rrr.editor.gps.lat": "Latitudine",
   "rrr.editor.gps.lng": "Longitudine",
   "rrr.editor.gps.radius": "Raggio",

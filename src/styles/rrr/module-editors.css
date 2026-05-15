@@ -1,6 +1,7 @@
 /* Do not reorder: mirrors the former monolithic rrr-module-editors.css section order. */
 @import './module-choice.css';
 @import './module-compass.css';
+@import './module-compass-dial.css';
 @import './module-gps.css';
 @import './module-hold.css';
 @import './module-text-answer.css';

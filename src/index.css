@@ -24,6 +24,7 @@
 @import './styles/riddle-player-shell.css';
 @import './styles/riddle-content.css';
 @import './styles/riddle-answer-success.css';
+@import './styles/workspace/riddle-interaction.css';
 @import './styles/riddle-text-block-editor.css';
 @import './styles/desktop-map-workspace.css';
 @import './styles/phone-map-workspace.css';

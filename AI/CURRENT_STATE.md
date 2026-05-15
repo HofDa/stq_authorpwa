@@ -49,6 +49,7 @@
 
 ## In progress / likely next areas
 
+- Visual riddle-module rollout based on the Claude Design handoff (`SouthTyrolQuests Riddle Modules`): compass dial landed in `src/components/rrr-author/CompassDial.tsx` + `CompassControl.tsx`, used by `RrrMockPreview` for `compass_align` and `direction_hotcold`. Remaining modules (code, slot, NFC, QR, suchbild, reihenfolge, wissen) still mockup-only.
 - Mobile authoring UX hardening.
 - Field assistant workflow refinement.
 - RRR authoring UI and runtime bridge improvements.

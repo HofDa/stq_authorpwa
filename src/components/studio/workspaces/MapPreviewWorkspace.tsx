@@ -477,6 +477,7 @@ export function MapPreviewWorkspace({
               <RiddleScreen
                 title={getStoryHeading(selectedStation, locale, t)}
                 authorMode={effectiveEditMode}
+                interaction={selectedStation.interaction}
                 stationNumber={selectedStation.number}
                 totalStations={draft.stations.length}
                 imageUrl={selectedImageUrl}

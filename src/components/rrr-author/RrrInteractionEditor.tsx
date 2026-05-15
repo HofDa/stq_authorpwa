@@ -30,12 +30,11 @@ import { RrrMockPreview } from './RrrMockPreview';
 import { RrrTemplatePicker } from './RrrTemplatePicker';
 import { RrrWarningsPanel } from './RrrWarningsPanel';
 import { Icon, type IconName } from '@/components/studio/Icon';
+import { recommendGpsRadius } from '@/rrr/sensors';
 import {
-  createDeviceOrientationSensorAdapter,
-  recommendGpsRadius,
-  type RrrSensorAdapter,
-  type RrrSensorState,
-} from '@/rrr/sensors';
+  useLiveDeviceHeading,
+  type LiveDeviceHeadingState,
+} from '@/components/rrr-runtime/useLiveDeviceHeading';
 import type { RrrInteractionEditorProps } from './types';
 
 type FlatConditionType = RrrFlatConditionType;
@@ -1447,49 +1446,6 @@ function CompassDirectionPicker({
       )}
     </div>
   );
-}
-
-interface LiveDeviceHeadingState {
-  heading: number | undefined;
-  status: RrrSensorState['orientationStatus'];
-  start: () => void;
-}
-
-function useLiveDeviceHeading(): LiveDeviceHeadingState {
-  const [state, setState] = useState<RrrSensorState>({
-    orientationStatus: 'idle',
-    timestamp: 0,
-  });
-  const [adapter, setAdapter] = useState<RrrSensorAdapter | null>(null);
-
-  useEffect(() => {
-    if (!adapter) return undefined;
-    const unsubscribe = adapter.subscribe((next) => setState(next));
-    setState(adapter.getState());
-    return () => {
-      unsubscribe();
-      adapter.stop();
-    };
-  }, [adapter]);
-
-  const start = useCallback(() => {
-    if (adapter) {
-      void adapter.start();
-      return;
-    }
-    const created = createDeviceOrientationSensorAdapter();
-    setAdapter(created);
-    void created.start();
-  }, [adapter]);
-
-  return {
-    heading:
-      state.orientationStatus === 'available' && typeof state.heading === 'number'
-        ? state.heading
-        : undefined,
-    status: state.orientationStatus,
-    start,
-  };
 }
 
 function LiveCompassControl({ state }: { state: LiveDeviceHeadingState }) {
