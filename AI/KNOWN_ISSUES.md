@@ -210,7 +210,7 @@ Fix: `useMapLibreManualPan` now tracks active touch pointer ids and yields/cance
 
 Files: `src/components/studio/mobile/MobileStudioShell.tsx`, `src/components/studio/workspaces/MapEditPill.tsx`, `src/components/studio/workspaces/MapPreviewWorkspace.tsx`, `src/styles/workspace/mobile-shell.css`, `src/styles/phone-map-workspace.css`.
 Cause: overview/intro/outro used a small translucent floating chip while the map edit pill anchored next to zoom controls and the station/riddle card edit toggle lived inside the sheet toolbar, so the primary edit affordance looked and behaved differently across mobile surfaces.
-Fix: overview, intro, outro, map and station/riddle card edit toggles now share the larger token-styled `.stq-mobile-studio__major-edit-toggle` and the same top-right floating anchor. `MapEditPill` keeps ownership of expanded map actions, and the station-card toggle remains independent while preserving adjacent map actions when present. Covered by `workspaceRegression.test.tsx`.
+Fix: overview, intro, outro, map and station/riddle card edit toggles now share the larger token-styled `.stq-mobile-studio__major-edit-toggle` and the same top-right floating anchor. `MapEditPill` keeps ownership of expanded map actions, and the station-card toggle remains independent while map edit actions are hidden whenever the station/riddle card is open. Covered by `workspaceRegression.test.tsx`.
 
 ### 2026-05-16 — Safe dial depends on browser/device sensor and feedback behavior
 
@@ -288,7 +288,7 @@ Fix: track whether the effect has already received at least one selection update
 
 Files: `src/components/studio/workspaces/MapPreviewWorkspace.tsx`, `MapStationSheet.tsx`, `mobile/MobileStudioShell.tsx`.
 Cause: mobile passed `editMode={false}` so `editableRegions` never appeared. The bottom FAB only toggled marker-edit (drag/delete pins).
-Fix: workspace now owns `internalStationEditMode` when `layout === 'mobile'`, surfaced via a toggle inside `MapStationSheet.toolbarTrailing`. Resets when the sheet closes. Commit `1ae1207`.
+Fix: workspace now owns `internalStationEditMode` when `layout === 'mobile'`, surfaced via the station-card edit toggle in the map title action slot. Resets when the sheet closes. Commit `1ae1207`; placement was later aligned with the shared top-right edit affordance.
 
 ### 2026-05-10 — Production build broken on `refractor` branch
 

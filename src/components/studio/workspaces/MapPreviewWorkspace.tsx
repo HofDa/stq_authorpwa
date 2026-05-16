@@ -310,9 +310,10 @@ export function MapPreviewWorkspace({
     </div>
   ) : undefined;
 
-  const hasPillContent =
+  const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
+  const hasMapEditActions =
     Boolean(topRightPill) || showAddStationFab || showDeleteStationFab;
-  const pillContent = hasPillContent ? (
+  const mapEditActions = hasMapEditActions ? (
     <div className="stq-mobile-map-edit-actions">
       {showAddStationFab && (
         <button
@@ -339,8 +340,7 @@ export function MapPreviewWorkspace({
       {topRightPill}
     </div>
   ) : null;
-  const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
-  const stationCardEditPill =
+  const stationCardEditToggle =
     layout === 'mobile' && sheetVisible ? (
       <div className="stq-phone-map-edit-pill__cluster stq-phone-map-edit-pill__cluster--title">
         <button
@@ -358,21 +358,19 @@ export function MapPreviewWorkspace({
         </button>
       </div>
     ) : undefined;
-  let composedTopRightPill = stationCardEditPill;
-  if (!sheetVisible && !composedTopRightPill) {
-    if (onToggleMapEditMode) {
-      composedTopRightPill = (
-        <MapEditPill
-          content={mapEditMode ? pillContent : null}
-          active={Boolean(mapEditMode)}
-          onToggle={onToggleMapEditMode}
-          variant="title"
-        />
-      );
-    } else {
-      composedTopRightPill = pillContent ?? undefined;
-    }
-  }
+  const mapEditPill = onToggleMapEditMode ? (
+    <MapEditPill
+      content={mapEditMode ? mapEditActions : null}
+      active={Boolean(mapEditMode)}
+      onToggle={onToggleMapEditMode}
+      variant="title"
+    />
+  ) : (
+    mapEditActions ?? undefined
+  );
+  const composedTopRightPill = sheetVisible
+    ? stationCardEditToggle
+    : mapEditPill;
   const editableStationIds = useMemo(
     () => draft.stations.map((station) => station.id),
     [draft.stations],

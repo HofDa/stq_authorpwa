@@ -190,7 +190,7 @@ Restoring the bottom-right FAB pattern; per-surface bespoke chrome.
 ## 2026-05-10 — Independent station-card edit mode on mobile
 
 Update 2026-05-15:
-The station/riddle card edit toggle now renders in the same top-right shared major floating-button position as the other mobile edit toggles while a station sheet is visible. It still owns only station-card content edit mode; adjacent map actions can remain to its left when present.
+The station/riddle card edit toggle now renders in the same top-right shared major floating-button position as the other mobile edit toggles while a station sheet is visible. It still owns only station-card content edit mode, and map edit actions are hidden while the station/riddle card is open.
 
 Decision:
 Mobile `MapPreviewWorkspace` owns its own `internalStationEditMode` state and renders a dedicated station-card edit toggle through the mobile map top-right pill slot while the station sheet is visible. The map's marker-edit chip and the station-card edit toggle are separate concerns. Desktop continues to use the externally controlled `editMode` prop unchanged.
@@ -224,7 +224,7 @@ Update 2026-05-15:
 The map view now shares the same top-right major edit-toggle button and styling as overview, intro and outro. `MapEditPill` still owns the expanded map actions, but its main toggle no longer anchors to the zoom controls.
 
 Decision:
-On the mobile map view, `MapEditPill` (`src/components/studio/workspaces/MapEditPill.tsx`) owns the expanded edit actions but uses the same top-right `.stq-mobile-studio__major-edit-toggle` button styling and anchor as overview, intro and outro. When inactive it shows only the round edit toggle; when active the pill grows leftward to expose `[plus][trash][flag][toggle]` (marker view) or `[route-editor tools][flag][toggle]` plus a centered stats line below (route view).
+On the mobile map view, `MapEditPill` (`src/components/studio/workspaces/MapEditPill.tsx`) owns the expanded edit actions but uses the same top-right `.stq-mobile-studio__major-edit-toggle` button styling and anchor as overview, intro and outro. When inactive it shows only the round edit toggle; when active the pill exposes `[plus][trash][flag]` (marker view) or `[route-editor tools][flag]` (route view) under the toggle. Route stats remain in the bottom route stats panel.
 
 Reason:
 The previous design placed the FAB bottom-right above where zoom controls would be, which collided with the route-stats panel and required `:has()` gymnastics for route-edit layout. The next iteration anchored the map pill near zoom controls, but that left the primary edit affordance inconsistent with overview, intro and outro. Keeping `MapEditPill` for expanded map actions while moving its main toggle to the shared top-right button preserves the map action model and restores cross-surface recognition.
@@ -238,13 +238,13 @@ Keeping the top-right floating chip with conditional content; threading a `mapEd
 ## 2026-05-11 — Hide the map pill while a station/riddle is being edited
 
 Decision:
-When the station sheet is in the `expanded` state, the `MapEditPill` is not rendered. Only station markers and the GPS marker remain on the map. The old on-map context toolbar (settings cog + map-pin buttons mounted via `mobileContextToolbar`) is removed entirely.
+When the station/riddle sheet is open, map edit actions are not rendered. On mobile, only the independent station-card edit toggle remains in the top-right slot. The old on-map context toolbar (settings cog + map-pin buttons mounted via `mobileContextToolbar`) is removed entirely.
 
 Reason:
 The pill's edit actions are redundant while the station sheet is open showing per-region pencil affordances. Hiding the pill keeps the map readable and the editing context unambiguous. The two context-toolbar buttons duplicated `openStationPanel('station')` / `openStationPanel('marker')` already reachable from the sheet's editable-region pencils.
 
 Tradeoffs:
-Users cannot toggle edit-mode while the station sheet is fully expanded. They must collapse or close the sheet first. Acceptable because the station sheet has its own independent edit toggle (`MapStationSheet.toolbarTrailing`).
+Users cannot toggle map edit actions while the station/riddle card is open. They must close the card first. Acceptable because the station/riddle card has its own independent edit toggle.
 
 ## 2026-05-11 — Clear selection when closing route-edit or edit-mode
 
