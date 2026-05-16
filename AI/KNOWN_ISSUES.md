@@ -194,6 +194,12 @@ Keep component tests focused on stable contracts and accessible behavior. The wo
 
 ## Resolved issues
 
+### 2026-05-16 — `qr_scan` test failed in isolation due to short waitForText loop
+
+Files: `src/components/rrr-author/RrrInteractionEditor.test.tsx`.
+Cause: `waitForText` ran 10 zero-delay ticks. When the suite was warm or the lazy QR chunk had been resolved by earlier tests, that was enough. In isolation (`vitest run -t qr_scan ...`), the dynamic import of `@/components/rrr-runtime/QrScanner` had not finished within those ticks, so the test asserted on the Suspense fallback instead of the scanner copy.
+Fix: `waitForText` now runs up to 80 iterations with a 5 ms delay each, giving real lazy chunks time to resolve in cold-cache test runs. Verified by running the qr test in isolation and in the full suite.
+
 ### 2026-05-15 — Mobile map manual pan blocked pinch zoom
 
 Files: `src/components/map/useMapLibreManualPan.ts`.

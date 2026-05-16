@@ -1,3 +1,59 @@
+.stq-module-feedback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: var(--stq-r-md, 12px);
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.stq-module-feedback__badge {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--stq-color-surface, #ffffff);
+  display: grid;
+  place-items: center;
+}
+
+.stq-module-feedback__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stq-module-feedback__body strong {
+  font-weight: 600;
+}
+
+.stq-module-feedback__body small {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.stq-module-feedback--success {
+  background: rgba(var(--stq-color-success-rgb), 0.12);
+  color: var(--stq-color-success);
+}
+
+.stq-module-feedback--error {
+  background: rgba(var(--stq-color-danger-rgb), 0.10);
+  color: var(--stq-color-danger-text);
+}
+
+.stq-module-feedback--running {
+  background: var(--stq-color-surface, #ffffff);
+  border: 1px solid var(--stq-color-border);
+  color: var(--stq-text-mute);
+}
+
+.stq-module-feedback--running .stq-module-feedback__badge {
+  background: rgba(var(--stq-color-primary-rgb), 0.10);
+}
+
 .stq-riddle-text-answer {
   display: flex;
   flex-direction: column;
@@ -91,4 +147,47 @@
 .stq-riddle-compass-player__enable:disabled {
   cursor: default;
   opacity: 0.6;
+}
+
+.stq-riddle-qr-player {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.stq-riddle-qr-player__loading {
+  border: 1px dashed var(--stq-color-border);
+  border-radius: var(--stq-r-md, 12px);
+  background: var(--stq-color-surface, #ffffff);
+  padding: 16px;
+  color: var(--stq-text-mute);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stq-riddle-qr-player__hint {
+  margin: 0;
+  color: var(--stq-text-mute);
+  font-size: 13px;
+}
+
+.stq-riddle-qr-player__hint--error {
+  color: var(--stq-error, #b5533f);
+}
+
+.stq-riddle-qr-player__fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--stq-color-border);
+  padding-top: 12px;
+}
+
+.stq-riddle-qr-player__fallback-hint {
+  margin: 0;
+  color: var(--stq-text-mute);
+  font-size: 13px;
+  font-weight: 600;
 }

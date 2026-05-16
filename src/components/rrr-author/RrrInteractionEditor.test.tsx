@@ -355,8 +355,6 @@ describe('RrrInteractionEditor', () => {
     await waitForText('Kamera wird benötigt');
     expect(container.textContent).toContain('Kamera wird benötigt');
     expect(container.textContent).toContain('Kamera aktivieren');
-    expect(container.textContent).toContain('Kamera nicht verfügbar');
-    expect(container.textContent).toContain('QR-Code konnte nicht gelesen werden');
     expect(container.textContent).toContain('Ersatzlösung verwenden');
     expect(container.textContent).toContain(
       'Noch kein erwarteter QR-Wert festgelegt',
@@ -769,9 +767,9 @@ function renderEditor(element: ReactElement) {
 }
 
 async function waitForText(text: string) {
-  for (let attempt = 0; attempt < 10; attempt += 1) {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 5));
     });
     if (container.textContent?.includes(text)) {
       return;

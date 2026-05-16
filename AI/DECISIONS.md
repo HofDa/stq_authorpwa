@@ -2,6 +2,40 @@
 
 Use this file to prevent repeated architectural debates and agent drift.
 
+## 2026-05-16 — Unify player feedback through `<ModuleFeedback />`
+
+Decision:
+Every riddle-module player in `src/renderer/interaction/` renders idle/running/success/error feedback through a single small component, `ModuleFeedback.tsx`. Each player keeps its own correctness check (text equality, angular tolerance, QR string match) but stops inventing its own banner. The component matches the Claude Design "ResultBanner" pattern: tinted background, circular badge icon (check/x), one heading line plus optional detail line. Idle renders nothing.
+
+Reason:
+Before this, three players had three different feedback patterns: `TextAnswerPlayer` showed a shake animation with no message, `CompassPlayer` used three modifier classes on a span (`--ok`, default, `--muted`), and `QrScanPlayer` printed an ad-hoc `<p>`. The Claude Design handoff explicitly defines a single "ResultBanner" shape for all eight visual modules, and the riddle-card design should look consistent regardless of module type.
+
+Scope kept small:
+The evaluator (`RrrModuleResult.status` / `.message`) is not yet wired into players — that would make the editor mock preview and the player share message strings by construction, but is a larger change. This PR is the shared chrome only.
+
+Tradeoffs:
+Per-player message strings are still hard-coded inside the players for now. When the next refactor wires players to `evaluateInteraction()`, those strings become redundant and can be deleted. The shared component is presentational and has no dependency on the runtime evaluator, so the future migration only changes call sites, not `ModuleFeedback` itself.
+
+Rejected alternatives:
+Rewriting each player to consume `RrrInteractionResult` in the same PR (too large); using inline copy in each player with a shared CSS class only (the JSX would have stayed divergent); putting the feedback inside the existing fullscreen success popup (popup remains for solve celebration; the banner is for inline running/error state).
+
+## 2026-05-16 — Wire `qr_scan` end-to-end through the player riddle card
+
+Decision:
+The runtime player riddle card now renders a real QR scanner for stations whose RRR interaction has a `qr_scan` module. `InteractionHost` dispatches `qr_scan` to a new `src/renderer/interaction/QrScanPlayer.tsx`, which lazy-loads the existing `src/components/rrr-runtime/QrScanner.tsx` and submits the scanned value to the evaluator by comparing against `expectedValue` (the same field the editor's `QrScanEditor` writes). When `acceptedAnswers` contains text fallbacks, the player additionally shows a `TextAnswerPlayer` underneath so the riddle remains solvable when the camera is unavailable.
+
+Reason:
+The QR scanner had been mounted only in the author's mock preview. The player path previously fell through to a generic text input even when the station was configured as `qr_scan`. The editor side was already complete (`QrScanEditor` writes `expectedValue` and surfaces empty-value warnings), so the missing piece was the player-side host wiring. Reusing the existing lazy-loaded `QrScanner` instead of duplicating it keeps the ZXing dependency in one place and respects the `KNOWN_ISSUES` rule that scanner internals must not be split for PWA cache reasons.
+
+Tradeoffs:
+The QR player chunk is now reachable from a second caller, which slightly broadens the lazy-loading surface. We did not change the scanner's internals, so the existing precache/stale-chunk story is unchanged. The fallback text input renders only when `acceptedAnswers` has content, so authors who configure a pure QR riddle still get a focused scanner UI.
+
+Followups:
+Field-test page still says `qr_scan` is "not available" for in-field tests. That's a separate scope: the player path already works; the field-test step-by-step harness needs its own integration if/when that flow is prioritized.
+
+Rejected alternatives:
+Duplicating the scanner inside the renderer tree; eagerly bundling ZXing into the initial player chunk; introducing a new "QR riddle type" outside the RRR module system; changing the schema/JSON contract for `expectedValue`.
+
 ## 2026-05-15 — Implement riddle-module visuals from the Claude Design handoff incrementally
 
 Decision:

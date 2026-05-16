@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ModuleFeedback } from './ModuleFeedback';
 
 interface TextAnswerPlayerProps {
   acceptedAnswers: string[];
@@ -62,6 +63,10 @@ export function TextAnswerPlayer({
       >
         {submitLabel}
       </button>
+      <ModuleFeedback
+        kind={error ? 'error' : 'idle'}
+        message={error ? 'Nicht ganz — versuch es noch einmal' : undefined}
+      />
     </div>
   );
 }

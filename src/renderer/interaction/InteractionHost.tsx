@@ -1,5 +1,6 @@
 import type { RrrInteraction, RrrModule } from '@/rrr/types';
 import { CompassPlayer } from './CompassPlayer';
+import { QrScanPlayer } from './QrScanPlayer';
 import { TextAnswerPlayer } from './TextAnswerPlayer';
 
 export interface InteractionHostLabels {
@@ -71,6 +72,18 @@ export function InteractionHost({
         />
       );
     }
+    case 'qr_scan': {
+      const expectedValue = readString(activeModule.config.expectedValue);
+      return (
+        <QrScanPlayer
+          expectedValue={expectedValue}
+          fallbackAnswers={acceptedAnswers}
+          submitLabel={labels.submit}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    }
     default:
       return (
         <TextAnswerPlayer
@@ -104,4 +117,8 @@ function readAcceptedAnswers(
 function readNumber(value: unknown): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   return 0;
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserQRCodeReader, type IScannerControls } from '@zxing/browser';
 
-type QrScannerStatus =
+export type QrScannerStatus =
   | 'idle'
   | 'requesting'
   | 'scanning'
@@ -13,6 +13,8 @@ type QrScannerStatus =
 interface QrScannerProps {
   fallbackAvailable?: boolean;
   onScan: (value: string) => void;
+  onStatusChange?: (status: QrScannerStatus) => void;
+  onUseFallback?: () => void;
 }
 
 const STATUS_COPY: Record<QrScannerStatus, string> = {
@@ -28,12 +30,18 @@ const STATUS_COPY: Record<QrScannerStatus, string> = {
 export function QrScanner({
   fallbackAvailable = false,
   onScan,
+  onStatusChange,
+  onUseFallback,
 }: QrScannerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const mountedRef = useRef(true);
   const completedRef = useRef(false);
   const [status, setStatus] = useState<QrScannerStatus>('idle');
+
+  useEffect(() => {
+    onStatusChange?.(status);
+  }, [status, onStatusChange]);
   const [detail, setDetail] = useState(
     'Die Kamera startet erst nach dem Tippen auf Kamera aktivieren. Kamera nicht verfügbar und QR-Code konnte nicht gelesen werden erscheinen als klare Hinweise.',
   );
@@ -121,34 +129,18 @@ export function QrScanner({
   }
 
   const isBusy = status === 'requesting' || status === 'scanning';
-  const statusTone =
+  const tone =
     status === 'denied' || status === 'unavailable' || status === 'error'
-      ? 'failed'
+      ? 'error'
       : status === 'success'
         ? 'success'
-        : 'running';
+        : 'neutral';
 
   return (
     <div className="stq-qr-scanner">
-      <div className="stq-rrr-guide__feedback">
-        <div>
-          <span>{STATUS_COPY[status]}</span>
-          <strong>
-            {status === 'idle'
-              ? 'Zum echten Scannen muss der Spieler die Kamera freigeben.'
-              : STATUS_COPY[status]}
-          </strong>
-          <small>{detail}</small>
-          {fallbackAvailable ? (
-            <small>
-              Falls die Kamera nicht funktioniert, kann die Ersatzlösung
-              verwendet werden.
-            </small>
-          ) : null}
-        </div>
-        <span className={`stq-rrr-status stq-rrr-status--${statusTone}`}>
-          {getStatusLabel(status)}
-        </span>
+      <div className={`stq-qr-scanner__status stq-qr-scanner__status--${tone}`}>
+        <strong>{STATUS_COPY[status]}</strong>
+        {detail && status !== 'idle' ? <small>{detail}</small> : null}
       </div>
 
       <video
@@ -173,8 +165,9 @@ export function QrScanner({
           <button
             type="button"
             className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
-            disabled
-            aria-disabled="true"
+            onClick={onUseFallback}
+            disabled={!onUseFallback}
+            aria-disabled={!onUseFallback || undefined}
           >
             Ersatzlösung verwenden
           </button>
@@ -239,19 +232,3 @@ function getCameraFailure(error: unknown): {
   };
 }
 
-function getStatusLabel(status: QrScannerStatus): string {
-  switch (status) {
-    case 'idle':
-      return 'Bereit';
-    case 'requesting':
-      return 'Fragt an';
-    case 'scanning':
-      return 'Aktiv';
-    case 'success':
-      return 'Erfüllt';
-    case 'denied':
-    case 'unavailable':
-    case 'error':
-      return 'Hinweis';
-  }
-}

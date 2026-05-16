@@ -602,13 +602,21 @@ function GuidedControl({
         </fieldset>
       );
     }
-    case 'qr_scan':
+    case 'qr_scan': {
+      const expectedQrValue = readString(module.config.expectedValue).trim();
+      const hasExpectedQrValue = expectedQrValue.length > 0;
+      const hasFallbackModule = Boolean(module.fallbackModuleId);
       return (
         <div className="stq-rrr-guide__stack">
           <Suspense fallback={<QrScannerLoadingState />}>
             <QrScanner
-              fallbackAvailable={Boolean(module.fallbackModuleId)}
+              fallbackAvailable={hasFallbackModule}
               onScan={(value) => onPatchInputs({ qrScanValue: value })}
+              onUseFallback={
+                hasFallbackModule && hasExpectedQrValue
+                  ? () => onPatchInputs({ qrScanValue: expectedQrValue })
+                  : undefined
+              }
             />
           </Suspense>
           <label className="stq-rrr-field">
@@ -623,6 +631,7 @@ function GuidedControl({
           </label>
         </div>
       );
+    }
     case 'code_word':
       return (
         <label className="stq-rrr-field">

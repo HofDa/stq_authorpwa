@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CompassDial } from '@/components/rrr-runtime/CompassDial';
 import { useLiveDeviceHeading } from '@/components/rrr-runtime/useLiveDeviceHeading';
+import { ModuleFeedback, type ModuleFeedbackKind } from './ModuleFeedback';
 
 interface CompassPlayerProps {
   targetDegrees: number;
@@ -54,86 +55,67 @@ export function CompassPlayer({
         targetDegrees={targetDegrees}
         tolerance={tolerance}
       />
-      <div className="stq-riddle-compass-player__status">
-        {renderStatus({
-          status: live.status,
-          heading,
-          inZone,
-          solved,
-          enableLabel,
-          startingLabel,
-          unavailableLabel,
-          deniedLabel,
-          alignedLabel,
-          alignLabel,
-          onEnable: live.start,
-        })}
-      </div>
+      <CompassFeedback
+        status={live.status}
+        heading={heading}
+        inZone={inZone}
+        solved={solved}
+        unavailableLabel={unavailableLabel}
+        deniedLabel={deniedLabel}
+        alignedLabel={alignedLabel}
+        alignLabel={alignLabel}
+      />
+      {live.status !== 'available' && live.status !== 'unavailable' && (
+        <button
+          type="button"
+          className="stq-riddle-compass-player__enable"
+          onClick={live.start}
+          disabled={live.status === 'starting'}
+        >
+          {live.status === 'starting' ? startingLabel : enableLabel}
+        </button>
+      )}
     </div>
   );
 }
 
-interface StatusRenderArgs {
-  status: ReturnType<typeof useLiveDeviceHeading>['status'];
-  heading: number | undefined;
-  inZone: boolean;
-  solved: boolean;
-  enableLabel: string;
-  startingLabel: string;
-  unavailableLabel: string;
-  deniedLabel: string;
-  alignedLabel: string;
-  alignLabel: string;
-  onEnable: () => void;
-}
-
-function renderStatus({
+function CompassFeedback({
   status,
   heading,
   inZone,
   solved,
-  enableLabel,
-  startingLabel,
   unavailableLabel,
   deniedLabel,
   alignedLabel,
   alignLabel,
-  onEnable,
-}: StatusRenderArgs) {
+}: {
+  status: ReturnType<typeof useLiveDeviceHeading>['status'];
+  heading: number | undefined;
+  inZone: boolean;
+  solved: boolean;
+  unavailableLabel: string;
+  deniedLabel: string;
+  alignedLabel: string;
+  alignLabel: string;
+}) {
+  let kind: ModuleFeedbackKind = 'idle';
+  let message: string | undefined;
+
   if (solved || inZone) {
-    return (
-      <span className="stq-riddle-compass-player__hint stq-riddle-compass-player__hint--ok">
-        {alignedLabel}
-      </span>
-    );
+    kind = 'success';
+    message = alignedLabel;
+  } else if (status === 'available' && heading !== undefined) {
+    kind = 'running';
+    message = alignLabel;
+  } else if (status === 'unavailable') {
+    kind = 'error';
+    message = unavailableLabel;
+  } else if (status === 'error') {
+    kind = 'error';
+    message = deniedLabel;
   }
-  if (status === 'available' && heading !== undefined) {
-    return <span className="stq-riddle-compass-player__hint">{alignLabel}</span>;
-  }
-  if (status === 'unavailable') {
-    return (
-      <span className="stq-riddle-compass-player__hint stq-riddle-compass-player__hint--muted">
-        {unavailableLabel}
-      </span>
-    );
-  }
-  if (status === 'error') {
-    return (
-      <span className="stq-riddle-compass-player__hint stq-riddle-compass-player__hint--muted">
-        {deniedLabel}
-      </span>
-    );
-  }
-  return (
-    <button
-      type="button"
-      className="stq-riddle-compass-player__enable"
-      onClick={onEnable}
-      disabled={status === 'starting'}
-    >
-      {status === 'starting' ? startingLabel : enableLabel}
-    </button>
-  );
+
+  return <ModuleFeedback kind={kind} message={message} />;
 }
 
 function angularDistance(a: number, b: number): number {

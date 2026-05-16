@@ -120,6 +120,32 @@
   object-fit: cover;
 }
 
+.stq-qr-scanner__status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--stq-text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.stq-qr-scanner__status strong {
+  font-weight: 600;
+}
+
+.stq-qr-scanner__status small {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+}
+
+.stq-qr-scanner__status--error strong {
+  color: var(--stq-error, #b5533f);
+}
+
+.stq-qr-scanner__status--success strong {
+  color: var(--stq-success, #4f7a4a);
+}
+
 .stq-rrr-guide__feedback {
   border: 1px solid var(--stq-border);
   border-radius: 8px;

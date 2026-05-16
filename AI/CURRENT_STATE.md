@@ -49,7 +49,7 @@
 
 ## In progress / likely next areas
 
-- Visual riddle-module rollout based on the Claude Design handoff (`SouthTyrolQuests Riddle Modules`): compass dial landed in `src/components/rrr-author/CompassDial.tsx` + `CompassControl.tsx`, used by `RrrMockPreview` for `compass_align` and `direction_hotcold`. Remaining modules (code, slot, NFC, QR, suchbild, reihenfolge, wissen) still mockup-only.
+- Visual riddle-module rollout based on the Claude Design handoff (`SouthTyrolQuests Riddle Modules`): compass dial landed in `src/components/rrr-runtime/CompassDial.tsx` + `useLiveDeviceHeading.ts`, with author wrapper `CompassControl.tsx` (mock preview) and player wrapper `CompassPlayer.tsx` (player riddle card). QR scan landed end-to-end: `src/components/rrr-runtime/QrScanner.tsx` (existing) is now mounted both in the author mock preview AND in the player riddle card via `src/renderer/interaction/QrScanPlayer.tsx`. Player wiring goes through `src/renderer/interaction/InteractionHost.tsx`, which dispatches by `activeModule.type` (text/code → `TextAnswerPlayer`; compass → `CompassPlayer`; qr_scan → `QrScanPlayer`; others fall through to text). Remaining modules (slot, NFC, suchbild, reihenfolge, wissen) still mockup-only.
 - Mobile authoring UX hardening.
 - Field assistant workflow refinement.
 - RRR authoring UI and runtime bridge improvements.
