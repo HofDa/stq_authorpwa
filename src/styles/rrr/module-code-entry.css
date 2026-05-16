@@ -1,0 +1,130 @@
+.stq-rrr-code-entry,
+.stq-rrr-code-entry-control,
+.stq-riddle-code-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.stq-rrr-code-entry {
+  gap: 12px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(var(--stq-color-primary-rgb), 0.08),
+      rgba(var(--stq-color-success-rgb), 0.04)
+    ),
+    var(--stq-color-surface, #ffffff);
+  padding: 14px;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.stq-rrr-code-entry--error {
+  border-color: var(--stq-error, #b5533f);
+  box-shadow: 0 0 0 3px rgba(var(--stq-color-danger-rgb), 0.08);
+}
+
+.stq-rrr-code-entry__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stq-rrr-code-entry__header div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-rrr-code-entry__header span {
+  color: var(--stq-text-mute);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.stq-rrr-code-entry__header strong {
+  color: var(--stq-text);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.stq-rrr-code-entry__badge {
+  display: grid;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(var(--stq-color-primary-rgb), 0.22);
+  border-radius: 8px;
+  background: rgba(var(--stq-color-primary-rgb), 0.10);
+  color: var(--stq-primary);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.stq-rrr-code-entry__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stq-rrr-code-entry__field span {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stq-rrr-code-entry__field input {
+  width: 100%;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface, #ffffff);
+  color: var(--stq-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 12px 13px;
+}
+
+.stq-rrr-code-entry__field input:focus-visible {
+  outline: 2px solid var(--stq-primary);
+  outline-offset: 2px;
+}
+
+.stq-rrr-code-entry--error .stq-rrr-code-entry__field input {
+  border-color: var(--stq-error, #b5533f);
+  animation: stq-riddle-text-answer-shake 280ms ease;
+}
+
+.stq-rrr-code-entry__helper {
+  color: var(--stq-text-mute);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.stq-rrr-code-entry__submit {
+  align-self: stretch;
+  border: 0;
+  border-radius: 8px;
+  background: var(--stq-primary);
+  padding: 12px 16px;
+  color: var(--stq-inverted, #fbf6ec);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.stq-rrr-code-entry__submit:disabled {
+  cursor: default;
+  opacity: 0.55;
+}

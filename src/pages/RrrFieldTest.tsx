@@ -407,6 +407,8 @@ function getModuleInstruction(module: RrrModule): string {
       return 'Wähle die passende Antwortoption aus.';
     case 'qr_scan':
       return 'QR-Scan ist in diesem Feldtest noch nicht verfügbar.';
+    case 'morse_code':
+      return 'Höre den Morsecode und gib kurz/lang mit den Tasten nach.';
     case 'code_word':
       return 'Gib das erwartete Codewort ein.';
     case 'sequential_code':

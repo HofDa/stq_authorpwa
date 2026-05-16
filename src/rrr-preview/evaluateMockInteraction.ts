@@ -17,6 +17,7 @@ export function evaluateMockInteraction(
     {
       textAnswer: inputs.textAnswer,
       qrScanValue: inputs.qrScanValue,
+      morseCodeValue: inputs.morseCodeValue,
       codeWordValue: inputs.codeWordValue,
       sequentialCodeValue: inputs.sequentialCodeValue,
       multiChoiceSelectionsByModuleId: inputs.multiChoiceSelectionsByModuleId,

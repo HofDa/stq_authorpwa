@@ -307,6 +307,40 @@ describe('evaluateModule', () => {
     expect(result.message).toBe('Noch kein Codewort festgelegt');
   });
 
+  it('evaluates morse_code modules from dot and dash input', () => {
+    const module = moduleWithConfig('morse_code', {
+      pattern: '.- --',
+      shortAudioUrl: 'short.mp3',
+      longAudioUrl: 'long.mp3',
+    });
+
+    expect(
+      evaluateModule(module, {
+        ...baseInput,
+        userInput: { morseCodeValue: '.---' },
+      }).status,
+    ).toBe('success');
+    expect(
+      evaluateModule(module, {
+        ...baseInput,
+        userInput: { morseCodeValue: '.-.' },
+      }).status,
+    ).toBe('failed');
+    expect(evaluateModule(module, baseInput).status).toBe('running');
+  });
+
+  it('keeps morse_code modules running when pattern is empty', () => {
+    const module = moduleWithConfig('morse_code', { pattern: '' });
+
+    const result = evaluateModule(module, {
+      ...baseInput,
+      userInput: { morseCodeValue: '.-' },
+    });
+
+    expect(result.status).toBe('running');
+    expect(result.message).toBe('Noch kein Morsecode festgelegt');
+  });
+
   it('evaluates sequential_code modules from final code input', () => {
     const module = moduleWithConfig('sequential_code', {
       code: 'A1B2',

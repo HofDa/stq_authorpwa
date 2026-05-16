@@ -10,6 +10,7 @@ const baseInputs: RrrMockInputs = {
   isStill: false,
   textAnswer: '',
   qrScanValue: '',
+  morseCodeValue: '',
   codeWordValue: '',
   sequentialCodeValue: '',
   multiChoiceSelectionsByModuleId: {},
@@ -186,6 +187,41 @@ describe('evaluateMockInteraction', () => {
     expect(matching.status).toBe('success');
     expect(wrong.modules.qr_scan_1.status).toBe('failed');
     expect(wrong.modules.qr_scan_1.message).toBe('QR-Wert passt nicht');
+    expect(wrong.status).toBe('failed');
+  });
+
+  it('simulates a Morse code module with manual input', () => {
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'morse_code_1',
+          type: 'morse_code',
+          label: 'Morse code',
+          config: {
+            pattern: '.-',
+            shortAudioUrl: 'short.mp3',
+            longAudioUrl: 'long.mp3',
+          },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'morse_code_1' },
+    };
+
+    const matching = evaluateMockInteraction(interaction, {
+      ...baseInputs,
+      morseCodeValue: '.-',
+    });
+    const wrong = evaluateMockInteraction(interaction, {
+      ...baseInputs,
+      morseCodeValue: '..',
+    });
+
+    expect(matching.modules.morse_code_1.status).toBe('success');
+    expect(matching.modules.morse_code_1.message).toBe('Morsecode passt');
+    expect(matching.status).toBe('success');
+    expect(wrong.modules.morse_code_1.status).toBe('failed');
+    expect(wrong.modules.morse_code_1.message).toBe('Morsecode passt nicht');
     expect(wrong.status).toBe('failed');
   });
 

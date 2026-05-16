@@ -15,6 +15,7 @@ export type RrrAuthoringWarningCode =
   | 'multi_choice_options_empty'
   | 'multi_choice_correct_empty'
   | 'qr_scan_expected_value_empty'
+  | 'morse_code_pattern_empty'
   | 'code_word_empty'
   | 'sequential_code_empty'
   | 'timer_wait_duration_missing'
@@ -206,6 +207,18 @@ function getModuleWarnings(
       }
       return [];
     }
+    case 'morse_code': {
+      if (normalizeMorsePattern(readString(module.config.pattern)) === '') {
+        return [
+          {
+            code: 'morse_code_pattern_empty',
+            message: `Morse code module "${module.label}" has no pattern.`,
+            path: `modules.${index}.config.pattern`,
+          },
+        ];
+      }
+      return [];
+    }
     case 'code_word': {
       if (readString(module.config.code).trim() === '') {
         return [
@@ -305,6 +318,13 @@ function getConditionChildren(
 
 function readString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function normalizeMorsePattern(value: string): string {
+  return value
+    .replace(/[·•]/g, '.')
+    .replace(/[–—_]/g, '-')
+    .replace(/[^.-]/g, '');
 }
 
 function readStringArray(value: unknown): string[] {

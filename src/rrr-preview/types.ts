@@ -14,6 +14,7 @@ export interface RrrMockInputs {
   isStill: boolean;
   textAnswer: string;
   qrScanValue: string;
+  morseCodeValue: string;
   codeWordValue: string;
   sequentialCodeValue: string;
   multiChoiceSelectionsByModuleId: Record<string, number[]>;

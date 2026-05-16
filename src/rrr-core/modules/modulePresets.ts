@@ -111,6 +111,20 @@ export const RRR_MODULE_PRESETS: Record<RrrModuleType, RrrModulePreset> = {
     recommendedFallbackTypes: ['code_word'],
     createConfig: () => ({ expectedValue: '' }),
   },
+  morse_code: {
+    type: 'morse_code',
+    label: 'Morsecode hören',
+    category: 'Scannen & Medien',
+    difficulty: 'medium',
+    reliability: 'high',
+    needsFallback: false,
+    recommendedFallbackTypes: [],
+    createConfig: () => ({
+      pattern: '',
+      shortAudioUrl: '',
+      longAudioUrl: '',
+    }),
+  },
   code_word: {
     type: 'code_word',
     label: 'Codewort eingeben',

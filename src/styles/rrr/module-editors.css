@@ -1,8 +1,13 @@
 /* Do not reorder: mirrors the former monolithic rrr-module-editors.css section order. */
 @import './module-choice.css';
+@import './module-code-entry.css';
 @import './module-compass.css';
 @import './module-compass-dial.css';
+@import './module-feedback.css';
 @import './module-gps.css';
 @import './module-hold.css';
+@import './module-hotcold.css';
+@import './module-morse-code.css';
+@import './module-radar.css';
 @import './module-text-answer.css';
 @import './module-editor-responsive.css';

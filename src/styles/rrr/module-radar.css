@@ -1,0 +1,142 @@
+.stq-rrr-radar,
+.stq-rrr-radar-control,
+.stq-riddle-radar-player {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.stq-rrr-radar {
+  max-width: 320px;
+  align-items: center;
+  align-self: center;
+  border: 1px solid var(--stq-color-border);
+  border-radius: var(--stq-radius-sm);
+  background: var(--stq-color-surface);
+  padding: 14px;
+}
+
+.stq-rrr-radar__screen {
+  position: relative;
+  width: min(240px, 100%);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(var(--stq-color-route-rgb), 0.32);
+  border-radius: 50%;
+  background:
+    linear-gradient(rgba(var(--stq-color-route-rgb), 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--stq-color-route-rgb), 0.10) 1px, transparent 1px),
+    radial-gradient(circle, transparent 0 24%, rgba(var(--stq-color-route-rgb), 0.16) 25% 25.5%, transparent 26% 49%, rgba(var(--stq-color-route-rgb), 0.16) 50% 50.5%, transparent 51% 74%, rgba(var(--stq-color-route-rgb), 0.16) 75% 75.5%, transparent 76%),
+    var(--stq-color-surface);
+  background-size:
+    24px 24px,
+    24px 24px,
+    100% 100%,
+    100% 100%;
+  box-shadow: inset 0 0 28px rgba(var(--stq-color-route-rgb), 0.10);
+}
+
+.stq-rrr-radar__sweep {
+  position: absolute;
+  inset: 50% 50% 0 0;
+  background: linear-gradient(
+    35deg,
+    rgba(var(--stq-color-success-rgb), 0.30),
+    transparent 58%
+  );
+  transform-origin: 100% 0;
+  animation: stq-radar-sweep 4s linear infinite;
+}
+
+.stq-rrr-radar__success-zone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid rgba(var(--stq-color-success-rgb), 0.58);
+  border-radius: 50%;
+  background: rgba(var(--stq-color-success-rgb), 0.10);
+  transform: translate(-50%, -50%);
+}
+
+.stq-rrr-radar__player {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--stq-color-surface);
+  border-radius: 50%;
+  background: var(--stq-color-route);
+  box-shadow: 0 0 0 1px rgba(var(--stq-color-route-rgb), 0.42);
+  transform: translate(-50%, -50%);
+}
+
+.stq-rrr-radar__target {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--stq-color-surface);
+  border-radius: 50%;
+  background: var(--stq-color-primary);
+  box-shadow: 0 0 0 1px rgba(var(--stq-color-primary-rgb), 0.46);
+}
+
+.stq-rrr-radar__target--edge {
+  width: 0;
+  height: 0;
+  border-top: 10px solid var(--stq-color-primary);
+  border-right: 7px solid transparent;
+  border-bottom: 0;
+  border-left: 7px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stq-rrr-radar__stats {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.stq-rrr-radar__stats div {
+  border: 1px solid var(--stq-color-border);
+  border-radius: var(--stq-radius-sm);
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.stq-rrr-radar__stats dt {
+  color: var(--stq-color-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stq-rrr-radar__stats dd {
+  margin: 2px 0 0;
+  color: var(--stq-color-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stq-rrr-radar-control__live {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stq-riddle-radar-player {
+  align-items: center;
+}
+
+@keyframes stq-radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}

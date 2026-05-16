@@ -2,6 +2,23 @@
 
 Use this file to prevent repeated architectural debates and agent drift.
 
+## 2026-05-16 — Keep visual riddle modules split into visual, author control and player wrapper
+
+Decision:
+New visual riddle modules should follow the `direction_hotcold` shape: keep the schema/runtime contract stable, put reusable presentational UI in `src/components/rrr-runtime/`, put author preview controls in `src/components/rrr-author/`, and put live player ownership in `src/renderer/interaction/`. Presentational components may display runtime feedback objects, but they should not start sensors or submit answers themselves.
+
+Reason:
+The warm/cold direction module needed to feel visually distinct from the strict compass-align module, but it already had a working runtime evaluator and editor schema. Splitting `DirectionHotColdVisual`, `DirectionHotColdControl` and `DirectionHotColdPlayer` keeps files small, lets author mock preview and player share the same visual, and preserves the existing JSON keys (`targetDegrees`, `successTolerance`).
+
+Update:
+The proximity/radar module follows the same pattern by reusing the existing `proximity_hint` runtime contract (`lat`, `lng`, `successRadiusMeters`). `ProximityRadarVisual` renders target placement and edge direction pointers from evaluator feedback, `ProximityRadarControl` owns author simulation/live GPS handoff, and `ProximityRadarPlayer` owns player GPS permission and solve submission. The radar display range is derived for presentation; success still depends only on the editor-defined success radius.
+
+Tradeoffs:
+The warm/cold copy is still local to the module UI and evaluator messages. A later localization pass can move those strings into the editor/player locale layer without changing the module contract.
+
+Rejected alternatives:
+Creating a new module type for warm/cold or radar; folding warm/cold behavior into `CompassPlayer`; adding sensor startup logic to visual components; changing the editor schema to introduce new config keys.
+
 ## 2026-05-16 — Unify player feedback through `<ModuleFeedback />`
 
 Decision:

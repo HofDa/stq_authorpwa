@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { CompassDial } from '@/components/rrr-runtime/CompassDial';
+import {
+  ModuleFeedback,
+  type ModuleFeedbackKind,
+} from '@/components/rrr-runtime/ModuleFeedback';
 import { useLiveDeviceHeading } from '@/components/rrr-runtime/useLiveDeviceHeading';
-import { ModuleFeedback, type ModuleFeedbackKind } from './ModuleFeedback';
 
 interface CompassPlayerProps {
   targetDegrees: number;
@@ -115,7 +118,17 @@ function CompassFeedback({
     message = deniedLabel;
   }
 
-  return <ModuleFeedback kind={kind} message={message} />;
+  return (
+    <ModuleFeedback
+      kind={kind}
+      message={message}
+      sensoryFeedback={
+        kind === 'success' || kind === 'error'
+          ? { playKey: `compass-${kind}-${message ?? ''}` }
+          : false
+      }
+    />
+  );
 }
 
 function angularDistance(a: number, b: number): number {

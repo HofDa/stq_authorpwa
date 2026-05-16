@@ -33,6 +33,8 @@ export function evaluateModule(
       return evaluateProximityHint(module, input);
     case 'qr_scan':
       return evaluateQrScan(module, input);
+    case 'morse_code':
+      return evaluateMorseCode(module, input);
     case 'code_word':
       return evaluateCodeWord(module, input);
     case 'sequential_code':
@@ -294,6 +296,28 @@ function evaluateQrScan(
     module,
     matches ? 'success' : 'failed',
     matches ? 'QR-Wert passt' : 'QR-Wert passt nicht',
+  );
+}
+
+function evaluateMorseCode(
+  module: RrrModule,
+  input: RrrRuntimeEvaluationInput,
+): RrrModuleResult {
+  const expected = normalizeMorsePattern(readString(module.config.pattern));
+  const actual = normalizeMorsePattern(input.userInput.morseCodeValue ?? '');
+
+  if (!expected) {
+    return moduleResult(module, 'running', 'Noch kein Morsecode festgelegt');
+  }
+  if (!actual) {
+    return moduleResult(module, 'running', 'Warte auf Morsecode');
+  }
+
+  const matches = actual === expected;
+  return moduleResult(
+    module,
+    matches ? 'success' : 'failed',
+    matches ? 'Morsecode passt' : 'Morsecode passt nicht',
   );
 }
 
@@ -618,6 +642,13 @@ function toRadians(value: number): number {
 
 function readString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function normalizeMorsePattern(value: string): string {
+  return value
+    .replace(/[·•]/g, '.')
+    .replace(/[–—_]/g, '-')
+    .replace(/[^.-]/g, '');
 }
 
 function readStringArray(value: unknown): string[] {

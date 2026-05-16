@@ -22,6 +22,7 @@ export type RrrWarningCode =
   | 'proximity_radius_small'
   | 'hold_duration_long'
   | 'qr_scan_expected_value_empty'
+  | 'morse_code_pattern_empty'
   | 'code_word_empty'
   | 'sequential_code_empty'
   | 'timer_wait_duration_missing'
@@ -230,6 +231,19 @@ function getModuleWarnings(module: RrrModule): RrrWarning[] {
       }
       return [];
     }
+    case 'morse_code': {
+      if (normalizeMorsePattern(readString(module.config.pattern)) === '') {
+        return [
+          {
+            code: 'morse_code_pattern_empty',
+            message: `Baustein "${module.label}" hat noch keinen Morsecode.`,
+            severity: 'warning',
+            moduleId: module.id,
+          },
+        ];
+      }
+      return [];
+    }
     case 'code_word': {
       if (readString(module.config.code).trim() === '') {
         return [
@@ -389,6 +403,13 @@ function getConditionChildren(
 
 function readString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function normalizeMorsePattern(value: string): string {
+  return value
+    .replace(/[·•]/g, '.')
+    .replace(/[–—_]/g, '-')
+    .replace(/[^.-]/g, '');
 }
 
 function readStringArray(value: unknown): string[] {

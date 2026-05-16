@@ -266,6 +266,7 @@ describe('workspace regression flows', () => {
     expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
       'true',
     );
+    expect(container.textContent).toContain('studio.tourImage');
   });
 
   it('uses the intro cover camera control as the tour image edit entry', () => {
@@ -301,6 +302,7 @@ describe('workspace regression flows', () => {
     expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
       'true',
     );
+    expect(container.textContent).toContain('studio.tourImage');
   });
 
   it('uses only the station image camera control as the station image edit entry', () => {
@@ -334,10 +336,6 @@ describe('workspace regression flows', () => {
     expect(control('Edit station image')?.getAttribute('aria-pressed')).toBe(
       'true',
     );
-    expect(container.textContent).not.toContain('Stations-Bild & Icon');
-
-    clickControl('Edit station image');
-
     expect(container.textContent).toContain('Stations-Bild & Icon');
   });
 
@@ -540,7 +538,6 @@ describe('workspace regression flows', () => {
 
     clickControl('Bearbeiten');
     clickControl('Edit station title');
-    clickControl('Edit station title');
 
     expect(stationSheet()).not.toBeNull();
     expect(labeledField('Stationsname')).not.toBeNull();
@@ -566,7 +563,6 @@ describe('workspace regression flows', () => {
 
     clickControl('Mock map station 1');
     clickControl('Bearbeiten');
-    clickControl('Edit station title');
     clickControl('Edit station title');
 
     expect(control('Editor einklappen')).not.toBeNull();

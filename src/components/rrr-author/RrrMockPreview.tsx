@@ -17,6 +17,8 @@ import {
   type RrrModule,
   type RrrModuleType,
 } from '@/rrr';
+import { ModuleFeedback } from '@/components/rrr-runtime/ModuleFeedback';
+import { moduleFeedbackKindFromStatus } from '@/components/rrr-runtime/moduleFeedbackTypes';
 import type { RrrFieldTestIssueTag } from '@/schema';
 import {
   evaluateMockInteraction,
@@ -31,7 +33,12 @@ import {
   type RrrRuntimeSession,
 } from '@/rrr/runtime';
 import { RrrConditionStatusTree } from './RrrConditionStatusTree';
+import { CodeEntryControl } from './CodeEntryControl';
 import { CompassControl } from './CompassControl';
+import { DirectionHotColdControl } from './DirectionHotColdControl';
+import { MorseCodeControl } from './MorseCodeControl';
+import { ProximityRadarControl } from './ProximityRadarControl';
+import { TextAnswerControl } from './TextAnswerControl';
 
 const QrScanner = lazy(() =>
   import('@/components/rrr-runtime/QrScanner').then((module) => ({
@@ -46,6 +53,7 @@ const INITIAL_INPUTS: RrrMockInputs = {
   isStill: false,
   textAnswer: '',
   qrScanValue: '',
+  morseCodeValue: '',
   codeWordValue: '',
   sequentialCodeValue: '',
   multiChoiceSelectionsByModuleId: {},
@@ -88,6 +96,7 @@ export function RrrMockPreview({
     () => ({
       textAnswer: inputs.textAnswer,
       qrScanValue: inputs.qrScanValue,
+      morseCodeValue: inputs.morseCodeValue,
       codeWordValue: inputs.codeWordValue,
       sequentialCodeValue: inputs.sequentialCodeValue,
       multiChoiceSelectionsByModuleId: inputs.multiChoiceSelectionsByModuleId,
@@ -100,6 +109,7 @@ export function RrrMockPreview({
       inputs.objectFoundModuleIds,
       inputs.photoCheckManualModuleIds,
       inputs.qrScanValue,
+      inputs.morseCodeValue,
       inputs.sequentialCodeValue,
       inputs.textAnswer,
     ],
@@ -260,13 +270,13 @@ export function RrrMockPreview({
               inputs={inputs}
               onPatchInputs={patchInputs}
             />
-            <div className="stq-rrr-guide__feedback">
-              <div>
-                <span>Rückmeldung</span>
-                <strong>{activeResult?.message ?? 'Warte auf Eingabe'}</strong>
-              </div>
-              <StatusBadge status={activeResult?.status ?? 'running'} />
-            </div>
+            <ModuleFeedback
+              kind={moduleFeedbackKindFromStatus(
+                activeResult?.status ?? 'running',
+              )}
+              eyebrow="Rückmeldung"
+              message={activeResult?.message ?? 'Warte auf Eingabe'}
+            />
           </>
         ) : (
           <div className="stq-rrr-editor__empty">
@@ -301,27 +311,24 @@ export function RrrMockPreview({
       </div>
 
       {session.status === 'success' && (
-        <div className="stq-rrr-guide__feedback stq-rrr-guide__feedback--success">
-          <div>
-            <span>Testergebnis</span>
-            <strong>Das Rätsel wurde erfolgreich gelöst.</strong>
-          </div>
-          <StatusBadge status="success" />
-        </div>
+        <ModuleFeedback
+          kind="success"
+          eyebrow="Testergebnis"
+          message="Das Rätsel wurde erfolgreich gelöst."
+        />
       )}
 
       {session.status === 'failed' && (
-        <div className="stq-rrr-guide__feedback stq-rrr-guide__feedback--failed">
-          <div>
-            <span>Testergebnis</span>
-            <strong>
-              {activeResult?.timeout?.retryable
-                ? 'Zeit abgelaufen. Du kannst es noch einmal versuchen.'
-                : 'Dieser Testlauf ist fehlgeschlagen. Setze ihn zurück.'}
-            </strong>
-          </div>
-          <StatusBadge status="failed" />
-          {activeResult?.timeout?.retryable && (
+        <ModuleFeedback
+          kind="error"
+          eyebrow="Testergebnis"
+          message={
+            activeResult?.timeout?.retryable
+              ? 'Zeit abgelaufen. Du kannst es noch einmal versuchen.'
+              : 'Dieser Testlauf ist fehlgeschlagen. Setze ihn zurück.'
+          }
+          action={
+            activeResult?.timeout?.retryable ? (
             <button
               type="button"
               className="stq-rrr-editor__button stq-rrr-editor__button--ghost"
@@ -329,8 +336,9 @@ export function RrrMockPreview({
             >
               Noch einmal versuchen
             </button>
-          )}
-        </div>
+            ) : undefined
+          }
+        />
       )}
 
       <div className="stq-rrr-report-export">
@@ -445,29 +453,25 @@ function FallbackGuidance({
   const fallbackModule = modules.find(
     (candidate) => candidate.id === module.fallbackModuleId,
   );
+  const fallbackStatus = fallbackModule
+    ? results[fallbackModule.id]?.status ?? 'running'
+    : 'failed';
 
   return (
-    <div className="stq-rrr-guide__feedback">
-      <div>
-        <span>Ersatzlösung</span>
-        <strong>
-          Falls dieser Schritt auf dem Gerät nicht funktioniert, kann alternativ
-          diese Ersatzlösung verwendet werden.
-        </strong>
-        {fallbackModule ? (
-          <small>{fallbackModule.label}</small>
-        ) : (
-          <small>Die Ersatzlösung fehlt oder wurde gelöscht.</small>
-        )}
-      </div>
-      {fallbackModule ? (
-        <StatusBadge
-          status={results[fallbackModule.id]?.status ?? 'running'}
-        />
-      ) : (
-        <StatusBadge status="failed" />
-      )}
-    </div>
+    <ModuleFeedback
+      kind={
+        fallbackModule
+          ? moduleFeedbackKindFromStatus(fallbackStatus)
+          : 'error'
+      }
+      eyebrow="Ersatzlösung"
+      message="Falls dieser Schritt auf dem Gerät nicht funktioniert, kann alternativ diese Ersatzlösung verwendet werden."
+      detail={
+        fallbackModule
+          ? `${fallbackModule.label} · ${getStatusLabel(fallbackStatus)}`
+          : 'Die Ersatzlösung fehlt oder wurde gelöscht.'
+      }
+    />
   );
 }
 
@@ -481,8 +485,7 @@ function GuidedControl({
   onPatchInputs: (patch: Partial<RrrMockInputs>) => void;
 }) {
   switch (module.type) {
-    case 'compass_align':
-    case 'direction_hotcold': {
+    case 'compass_align': {
       const targetDegrees = normalizeDegrees(
         readNumber(module.config.targetDegrees),
       );
@@ -499,8 +502,24 @@ function GuidedControl({
         />
       );
     }
-    case 'gps_enter':
-    case 'proximity_hint': {
+    case 'direction_hotcold': {
+      const targetDegrees = normalizeDegrees(
+        readNumber(module.config.targetDegrees),
+      );
+      const successTolerance = Math.max(
+        2,
+        readNumber(module.config.successTolerance) || 15,
+      );
+      return (
+        <DirectionHotColdControl
+          heading={inputs.headingDegrees}
+          targetDegrees={targetDegrees}
+          successTolerance={successTolerance}
+          onHeadingChange={(heading) => onPatchInputs({ headingDegrees: heading })}
+        />
+      );
+    }
+    case 'gps_enter': {
       const lat = readNumber(module.config.lat);
       const lng = readNumber(module.config.lng);
       return (
@@ -524,6 +543,26 @@ function GuidedControl({
         </div>
       );
     }
+    case 'proximity_hint': {
+      const lat = readNumber(module.config.lat);
+      const lng = readNumber(module.config.lng);
+      const successRadiusMeters = Math.max(
+        1,
+        readNumber(module.config.successRadiusMeters) || 20,
+      );
+      return (
+        <ProximityRadarControl
+          currentLat={inputs.gpsLat}
+          currentLng={inputs.gpsLng}
+          targetLat={lat}
+          targetLng={lng}
+          successRadiusMeters={successRadiusMeters}
+          onPositionChange={(position) =>
+            onPatchInputs({ gpsLat: position.lat, gpsLng: position.lng })
+          }
+        />
+      );
+    }
     case 'hold_still':
       return (
         <label className="stq-rrr-check">
@@ -537,14 +576,11 @@ function GuidedControl({
       );
     case 'text_answer':
       return (
-        <label className="stq-rrr-field">
-          <span>Antwort eingeben</span>
-          <input
-            type="text"
-            value={inputs.textAnswer}
-            onChange={(event) => onPatchInputs({ textAnswer: event.target.value })}
-          />
-        </label>
+        <TextAnswerControl
+          value={inputs.textAnswer}
+          acceptedAnswers={readTextAnswers(module)}
+          onValueChange={(textAnswer) => onPatchInputs({ textAnswer })}
+        />
       );
     case 'multi_choice': {
       const question = readString(module.config.question).trim();
@@ -632,31 +668,37 @@ function GuidedControl({
         </div>
       );
     }
+    case 'morse_code':
+      return (
+        <MorseCodeControl
+          value={inputs.morseCodeValue}
+          expectedPattern={readString(module.config.pattern)}
+          shortAudioUrl={readString(module.config.shortAudioUrl)}
+          longAudioUrl={readString(module.config.longAudioUrl)}
+          onValueChange={(morseCodeValue) =>
+            onPatchInputs({ morseCodeValue })
+          }
+        />
+      );
     case 'code_word':
       return (
-        <label className="stq-rrr-field">
-          <span>Codewort eingeben</span>
-          <input
-            type="text"
-            value={inputs.codeWordValue}
-            onChange={(event) =>
-              onPatchInputs({ codeWordValue: event.target.value })
-            }
-          />
-        </label>
+        <CodeEntryControl
+          value={inputs.codeWordValue}
+          expectedCode={readString(module.config.code)}
+          variant="code_word"
+          onValueChange={(codeWordValue) => onPatchInputs({ codeWordValue })}
+        />
       );
     case 'sequential_code':
       return (
-        <label className="stq-rrr-field">
-          <span>Gesammelten Code eingeben</span>
-          <input
-            type="text"
-            value={inputs.sequentialCodeValue}
-            onChange={(event) =>
-              onPatchInputs({ sequentialCodeValue: event.target.value })
-            }
-          />
-        </label>
+        <CodeEntryControl
+          value={inputs.sequentialCodeValue}
+          expectedCode={readString(module.config.code)}
+          variant="sequential_code"
+          onValueChange={(sequentialCodeValue) =>
+            onPatchInputs({ sequentialCodeValue })
+          }
+        />
       );
     case 'timer_wait':
       return (
@@ -808,6 +850,8 @@ function getPlayerInstruction(module: RrrModule): string {
       return 'Der Spieler nähert sich dem Zielort und erhält Nähe-Hinweise.';
     case 'qr_scan':
       return 'Der Spieler scannt den vorgesehenen QR-Code.';
+    case 'morse_code':
+      return 'Der Spieler hört den Morsecode und baut ihn mit kurz/lang nach.';
     case 'code_word':
       return 'Der Spieler gibt das gefundene Codewort ein.';
     case 'sequential_code':
@@ -845,6 +889,8 @@ function getModuleTypeLabel(type: RrrModuleType): string {
       return 'Nähe-Hinweis';
     case 'qr_scan':
       return 'QR-Code';
+    case 'morse_code':
+      return 'Morsecode';
     case 'code_word':
       return 'Codewort';
     case 'sequential_code':
@@ -898,6 +944,12 @@ function readStringArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.map((entry) => (typeof entry === 'string' ? entry : ''))
     : [];
+}
+
+function readTextAnswers(module: RrrModule): string[] {
+  const acceptedAnswers = readStringArray(module.config.acceptedAnswers);
+  const answer = readString(module.config.answer);
+  return [...acceptedAnswers, answer].filter((entry) => entry.trim().length > 0);
 }
 
 function readNumberArray(value: unknown): number[] {

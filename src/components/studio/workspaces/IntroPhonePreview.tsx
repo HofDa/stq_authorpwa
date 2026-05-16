@@ -178,12 +178,6 @@ export function IntroPhonePreview({
   };
   const panel = activePanel ? panelConfig[activePanel] : null;
 
-  function selectPanel(panelKey: Exclude<ActivePanel, null>) {
-    setSelectedPanel(panelKey);
-    setActivePanel(null);
-    setRightDrawerState('closed');
-  }
-
   function openPanel(panelKey: Exclude<ActivePanel, null>) {
     setSelectedPanel(panelKey);
     setActivePanel(panelKey);
@@ -192,12 +186,6 @@ export function IntroPhonePreview({
 
   function activateEditable(panelKey: Exclude<ActivePanel, null>) {
     if (!editable) return;
-
-    if (mobileSelectionFlow && selectedPanel !== panelKey) {
-      selectPanel(panelKey);
-      return;
-    }
-
     openPanel(panelKey);
   }
 

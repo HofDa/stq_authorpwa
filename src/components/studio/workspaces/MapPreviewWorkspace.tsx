@@ -251,12 +251,6 @@ export function MapPreviewWorkspace({
     setRightDrawerState('closed');
   }
 
-  function selectEditableRegion(panel: StationEditPanelKey) {
-    setSelectedEditableRegion(panel);
-    setActiveStationPanel(null);
-    setRightDrawerState('closed');
-  }
-
   function openStationPanel(panel: StationEditPanelKey) {
     setSelectedEditableRegion(panel);
     setActiveStationPanel(panel);
@@ -286,23 +280,11 @@ export function MapPreviewWorkspace({
       active: activeStationPanel === panel,
       selected: effectiveSelectionFlow && selectedEditableRegion === panel,
       icon,
-      onSelect: effectiveSelectionFlow
-        ? () => selectEditableRegion(panel)
-        : undefined,
       onEdit: () => openStationPanel(panel),
     };
   }
 
   function activateStationImageEdit() {
-    if (
-      effectiveSelectionFlow &&
-      selectedEditableRegion !== 'hero' &&
-      activeStationPanel !== 'hero'
-    ) {
-      selectEditableRegion('hero');
-      return;
-    }
-
     openStationPanel('hero');
   }
 

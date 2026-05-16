@@ -1,5 +1,9 @@
 import type { RrrInteraction, RrrModule } from '@/rrr/types';
+import { CodeEntryPlayer } from './CodeEntryPlayer';
 import { CompassPlayer } from './CompassPlayer';
+import { DirectionHotColdPlayer } from './DirectionHotColdPlayer';
+import { MorseCodePlayer } from './MorseCodePlayer';
+import { ProximityRadarPlayer } from './ProximityRadarPlayer';
 import { QrScanPlayer } from './QrScanPlayer';
 import { TextAnswerPlayer } from './TextAnswerPlayer';
 
@@ -43,8 +47,6 @@ export function InteractionHost({
 
   switch (activeModule.type) {
     case 'text_answer':
-    case 'code_word':
-    case 'sequential_code':
       return (
         <TextAnswerPlayer
           acceptedAnswers={readAcceptedAnswers(activeModule, acceptedAnswers)}
@@ -53,14 +55,47 @@ export function InteractionHost({
           disabled={disabled}
         />
       );
-    case 'compass_align':
-    case 'direction_hotcold': {
+    case 'code_word':
+    case 'sequential_code':
+      return (
+        <CodeEntryPlayer
+          expectedCode={readString(activeModule.config.code)}
+          fallbackAnswers={acceptedAnswers}
+          caseSensitive={Boolean(activeModule.config.caseSensitive)}
+          variant={activeModule.type}
+          submitLabel={labels.submit}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    case 'compass_align': {
       const targetDegrees = readNumber(activeModule.config.targetDegrees);
       const tolerance = Math.max(2, readNumber(activeModule.config.tolerance) || 15);
       return (
         <CompassPlayer
           targetDegrees={targetDegrees}
           tolerance={tolerance}
+          enableLabel={labels.compassEnable}
+          startingLabel={labels.compassStarting}
+          unavailableLabel={labels.compassUnavailable}
+          deniedLabel={labels.compassDenied}
+          alignedLabel={labels.compassAligned}
+          alignLabel={labels.compassAlign}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    }
+    case 'direction_hotcold': {
+      const targetDegrees = readNumber(activeModule.config.targetDegrees);
+      const successTolerance = Math.max(
+        2,
+        readNumber(activeModule.config.successTolerance) || 15,
+      );
+      return (
+        <DirectionHotColdPlayer
+          targetDegrees={targetDegrees}
+          successTolerance={successTolerance}
           enableLabel={labels.compassEnable}
           startingLabel={labels.compassStarting}
           unavailableLabel={labels.compassUnavailable}
@@ -84,6 +119,30 @@ export function InteractionHost({
         />
       );
     }
+    case 'morse_code':
+      return (
+        <MorseCodePlayer
+          expectedPattern={readString(activeModule.config.pattern)}
+          shortAudioUrl={readString(activeModule.config.shortAudioUrl)}
+          longAudioUrl={readString(activeModule.config.longAudioUrl)}
+          submitLabel={labels.submit}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    case 'proximity_hint':
+      return (
+        <ProximityRadarPlayer
+          targetLat={readNumber(activeModule.config.lat)}
+          targetLng={readNumber(activeModule.config.lng)}
+          successRadiusMeters={Math.max(
+            1,
+            readNumber(activeModule.config.successRadiusMeters) || 20,
+          )}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
     default:
       return (
         <TextAnswerPlayer

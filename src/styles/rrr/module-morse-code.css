@@ -1,0 +1,150 @@
+.stq-rrr-morse-code {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(var(--stq-color-primary-rgb), 0.08),
+      rgba(var(--stq-color-success-rgb), 0.04)
+    ),
+    var(--stq-color-surface, #ffffff);
+  padding: 14px;
+}
+
+.stq-rrr-morse-code--error {
+  border-color: var(--stq-error, #b5533f);
+  box-shadow: 0 0 0 3px rgba(var(--stq-color-danger-rgb), 0.08);
+}
+
+.stq-rrr-morse-code__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stq-rrr-morse-code__header div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stq-rrr-morse-code__header span {
+  color: var(--stq-text-mute);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.stq-rrr-morse-code__header strong {
+  color: var(--stq-text);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.stq-rrr-morse-code__badge {
+  display: grid;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(var(--stq-color-primary-rgb), 0.22);
+  border-radius: 8px;
+  background: rgba(var(--stq-color-primary-rgb), 0.10);
+  color: var(--stq-primary);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.stq-rrr-morse-code__play,
+.stq-rrr-morse-code__submit {
+  border: 0;
+  border-radius: 8px;
+  background: var(--stq-primary);
+  color: var(--stq-inverted, #fbf6ec);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  padding: 12px 16px;
+}
+
+.stq-rrr-morse-code__play:disabled,
+.stq-rrr-morse-code__submit:disabled,
+.stq-rrr-morse-code__key:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.stq-rrr-morse-code__sequence {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface, #ffffff);
+  padding: 8px;
+}
+
+.stq-rrr-morse-code__sequence span,
+.stq-rrr-morse-code__sequence em {
+  display: grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 6px;
+  background: rgba(var(--stq-color-primary-rgb), 0.09);
+  color: var(--stq-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.stq-rrr-morse-code__keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stq-rrr-morse-code__key {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 8px;
+  background: var(--stq-color-surface, #ffffff);
+  color: var(--stq-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 12px 10px;
+}
+
+.stq-rrr-morse-code__key span {
+  color: var(--stq-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.stq-rrr-morse-code__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stq-rrr-morse-code__actions > * {
+  flex: 1 1 0;
+}

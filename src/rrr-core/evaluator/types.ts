@@ -27,6 +27,7 @@ export interface RrrRuntimeMockState {
 export interface RrrRuntimeUserInput {
   textAnswer?: string;
   qrScanValue?: string;
+  morseCodeValue?: string;
   codeWordValue?: string;
   sequentialCodeValue?: string;
   multiChoiceSelectionsByModuleId?: Record<string, number[]>;

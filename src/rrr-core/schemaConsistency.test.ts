@@ -24,6 +24,7 @@ const CORE_EVALUATED_MODULE_TYPES = [
   'gps_enter',
   'proximity_hint',
   'qr_scan',
+  'morse_code',
   'code_word',
   'sequential_code',
   'timer_wait',

@@ -80,20 +80,8 @@ export function TourCardCanvas({
     }
   }
 
-  function selectPanel(panel: Exclude<ActivePanel, null>) {
-    setSelectedPanel(panel);
-    setActivePanel(null);
-    setRightDrawerState('closed');
-  }
-
   function activateEditable(panel: Exclude<ActivePanel, null>) {
     if (!editable) return;
-
-    if (mobileSelectionFlow && selectedPanel !== panel) {
-      selectPanel(panel);
-      return;
-    }
-
     openPanel(panel);
   }
 

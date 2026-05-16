@@ -15,6 +15,7 @@ import {
   createRrrModuleFromPreset,
   getRrrWarnings,
   isFlatCondition,
+  normalizeMorseSymbolPattern,
   repairRrrCondition,
   type RrrCondition,
   type RrrFlatConditionType,
@@ -849,6 +850,10 @@ function RrrModuleEditor({
             <QrScanEditor config={config} onPatchConfig={patchConfig} />
           )}
 
+          {module.type === 'morse_code' && (
+            <MorseCodeEditor config={config} onPatchConfig={patchConfig} />
+          )}
+
           {module.type === 'code_word' && (
             <CodeWordEditor config={config} onPatchConfig={patchConfig} />
           )}
@@ -1647,6 +1652,102 @@ function QrScanEditor({
   );
 }
 
+function MorseCodeEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const { t } = useEditorLanguage();
+  const pattern = normalizeMorseSymbolPattern(readString(config.pattern));
+  const shortAudioUrl = readString(config.shortAudioUrl);
+  const longAudioUrl = readString(config.longAudioUrl);
+  const hasPattern = pattern !== '';
+  const hasAudio = shortAudioUrl.trim() !== '' && longAudioUrl.trim() !== '';
+
+  return (
+    <div className="stq-rrr-text-answer-editor">
+      <section
+        className={`stq-rrr-text-answer ${
+          hasPattern ? '' : 'stq-rrr-text-answer--empty'
+        }`}
+        aria-label={t('rrr.editor.morse.aria')}
+      >
+        <div className="stq-rrr-text-answer__header">
+          <div>
+            <span>{t('rrr.editor.morse.eyebrow')}</span>
+            <strong>
+              {hasPattern
+                ? t('rrr.editor.morse.set')
+                : t('rrr.editor.morse.missing')}
+            </strong>
+          </div>
+          <span
+            className={`stq-rrr-text-answer__badge ${
+              hasPattern ? '' : 'stq-rrr-text-answer__badge--empty'
+            }`}
+          >
+            {hasAudio
+              ? t('rrr.editor.morse.audioReady')
+              : t('rrr.editor.morse.syntheticAudio')}
+          </span>
+        </div>
+
+        <label className="stq-rrr-field">
+          <span>{t('rrr.editor.morse.pattern')}</span>
+          <input
+            type="text"
+            value={pattern}
+            placeholder={t('rrr.editor.morse.patternPlaceholder')}
+            onChange={(event) =>
+              onPatchConfig({
+                pattern: normalizeMorseSymbolPattern(event.target.value),
+              })
+            }
+          />
+          <small className="stq-rrr-field__hint">
+            {t('rrr.editor.morse.patternHint')}
+          </small>
+        </label>
+
+        <label className="stq-rrr-field">
+          <span>{t('rrr.editor.morse.shortAudio')}</span>
+          <input
+            type="text"
+            value={shortAudioUrl}
+            placeholder={t('rrr.editor.morse.shortAudioPlaceholder')}
+            onChange={(event) =>
+              onPatchConfig({ shortAudioUrl: event.target.value })
+            }
+          />
+        </label>
+
+        <label className="stq-rrr-field">
+          <span>{t('rrr.editor.morse.longAudio')}</span>
+          <input
+            type="text"
+            value={longAudioUrl}
+            placeholder={t('rrr.editor.morse.longAudioPlaceholder')}
+            onChange={(event) =>
+              onPatchConfig({ longAudioUrl: event.target.value })
+            }
+          />
+          <small className="stq-rrr-field__hint">
+            {t('rrr.editor.morse.audioHint')}
+          </small>
+        </label>
+
+        {!hasPattern && (
+          <p className="stq-rrr-text-answer__warning">
+            {t('rrr.editor.morse.warning')}
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function CodeWordEditor({
   config,
   onPatchConfig,
@@ -2093,6 +2194,12 @@ function getModuleCardMeta(module: RrrModule, t: EditorT): {
         description: t('rrr.editor.card.qrDescription'),
         icon: 'qr-code',
       };
+    case 'morse_code':
+      return {
+        title: t('rrr.editor.card.morseTitle'),
+        description: t('rrr.editor.card.morseDescription'),
+        icon: 'mic',
+      };
     case 'code_word':
       return {
         title: t('rrr.editor.card.codeWordTitle'),
@@ -2245,6 +2352,24 @@ function getModuleSettingsSummary(
         {
           label: t('rrr.editor.summary.qrValue'),
           value: expectedValue ? `"${expectedValue}"` : notSet,
+        },
+      ];
+    }
+    case 'morse_code': {
+      const pattern = normalizeMorseSymbolPattern(readString(config.pattern));
+      const hasShortAudio = readString(config.shortAudioUrl).trim() !== '';
+      const hasLongAudio = readString(config.longAudioUrl).trim() !== '';
+      return [
+        {
+          label: t('rrr.editor.summary.morsePattern'),
+          value: pattern ? `"${pattern}"` : notSet,
+        },
+        {
+          label: t('rrr.editor.summary.morseAudio'),
+          value:
+            hasShortAudio && hasLongAudio
+              ? t('rrr.editor.morse.audioReady')
+              : t('rrr.editor.morse.syntheticAudio'),
         },
       ];
     }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ModuleFeedback } from './ModuleFeedback';
+import { ModuleFeedback } from '@/components/rrr-runtime/ModuleFeedback';
+import { TextAnswerVisual } from '@/components/rrr-runtime/TextAnswerVisual';
 
 interface TextAnswerPlayerProps {
   acceptedAnswers: string[];
@@ -37,35 +38,26 @@ export function TextAnswerPlayer({
 
   return (
     <div className="stq-riddle-text-answer">
-      <input
-        className={`stq-riddle-text-answer__field${
-          error ? ' stq-riddle-text-answer__field--error' : ''
-        }`}
+      <TextAnswerVisual
         value={value}
-        onChange={(event) => {
-          setValue(event.target.value);
+        onValueChange={(nextValue) => {
+          setValue(nextValue);
           if (error) setError(false);
         }}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && canSubmit) {
-            event.preventDefault();
-            submit();
-          }
-        }}
+        title="Antwort eingeben"
+        eyebrow="Textantwort"
+        placeholder="Deine Antwort"
         disabled={disabled}
-        aria-invalid={error || undefined}
+        error={error}
+        submitLabel={submitLabel}
+        onSubmit={canSubmit ? submit : undefined}
       />
-      <button
-        type="button"
-        className="stq-riddle-text-answer__submit"
-        disabled={!canSubmit}
-        onClick={submit}
-      >
-        {submitLabel}
-      </button>
       <ModuleFeedback
         kind={error ? 'error' : 'idle'}
         message={error ? 'Nicht ganz — versuch es noch einmal' : undefined}
+        sensoryFeedback={
+          error ? { playKey: `text-error-${value.trim()}` } : false
+        }
       />
     </div>
   );

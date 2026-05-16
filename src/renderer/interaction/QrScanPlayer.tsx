@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState } from 'react';
+import { ModuleFeedback } from '@/components/rrr-runtime/ModuleFeedback';
 import type { QrScannerStatus } from '@/components/rrr-runtime/QrScanner';
-import { ModuleFeedback } from './ModuleFeedback';
 import { TextAnswerPlayer } from './TextAnswerPlayer';
 
 const QrScanner = lazy(() =>
@@ -85,6 +85,11 @@ export function QrScanPlayer({
               ? `Der gelesene Wert „${scanned}“ passt nicht.`
               : 'Für diese Station ist noch kein QR-Wert hinterlegt.'
             : undefined
+        }
+        sensoryFeedback={
+          mismatch && scanned !== null
+            ? { playKey: `qr-error-${scanned}` }
+            : false
         }
       />
 

@@ -2,6 +2,7 @@ export * from './types';
 export * from './authoringWarnings';
 export * from './conditions';
 export * from './fieldTestReport';
+export * from './feedbackPatterns';
 export * from './interactionTemplates';
 export * from './migrateInteraction';
 export * from './moduleIds';
