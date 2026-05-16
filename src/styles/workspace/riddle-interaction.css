@@ -30,7 +30,7 @@
 }
 
 .stq-riddle-compass-player__hint--ok {
-  color: var(--stq-success, #4f7a4a);
+  color: var(--stq-color-success);
 }
 
 .stq-riddle-compass-player__hint--muted {
@@ -40,7 +40,7 @@
 .stq-riddle-compass-player__enable {
   border: 1px solid var(--stq-color-border);
   border-radius: 999px;
-  background: var(--stq-color-surface, #ffffff);
+  background: var(--stq-color-surface);
   padding: 8px 16px;
   color: var(--stq-text);
   font-size: 13px;
@@ -62,8 +62,8 @@
 
 .stq-riddle-qr-player__loading {
   border: 1px dashed var(--stq-color-border);
-  border-radius: var(--stq-r-md, 12px);
-  background: var(--stq-color-surface, #ffffff);
+  border-radius: var(--stq-radius-md);
+  background: var(--stq-color-surface);
   padding: 16px;
   color: var(--stq-text-mute);
   text-align: center;
@@ -78,7 +78,7 @@
 }
 
 .stq-riddle-qr-player__hint--error {
-  color: var(--stq-error, #b5533f);
+  color: var(--stq-color-danger);
 }
 
 .stq-riddle-qr-player__fallback {

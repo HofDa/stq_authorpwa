@@ -20,14 +20,26 @@ export default {
         body: [tokens.fonts.body],
       },
       fontSize: {
-        h3: ['20.8px', { fontWeight: '700' }],
-        h4: ['19.2px', { fontWeight: '700' }],
-        h5: ['17.6px', { fontWeight: '700' }],
-        h6: ['16px', { fontWeight: '700' }],
-        body: ['16px', { fontWeight: '400' }],
-        bodySm: ['12px', { fontWeight: '400' }],
-        labelLg: ['14px', { fontWeight: '600' }],
-        labelSm: ['12px', { fontWeight: '600' }],
+        h3: [tokens.textStyles.h3.fontSize, { fontWeight: tokens.textStyles.h3.fontWeight }],
+        h4: [tokens.textStyles.h4.fontSize, { fontWeight: tokens.textStyles.h4.fontWeight }],
+        h5: [tokens.textStyles.h5.fontSize, { fontWeight: tokens.textStyles.h5.fontWeight }],
+        h6: [tokens.textStyles.h6.fontSize, { fontWeight: tokens.textStyles.h6.fontWeight }],
+        body: [
+          tokens.textStyles.body.fontSize,
+          { fontWeight: tokens.textStyles.body.fontWeight },
+        ],
+        bodySm: [
+          tokens.textStyles.bodySmall.fontSize,
+          { fontWeight: tokens.textStyles.bodySmall.fontWeight },
+        ],
+        labelLg: [
+          tokens.textStyles.labelLarge.fontSize,
+          { fontWeight: tokens.textStyles.labelLarge.fontWeight },
+        ],
+        labelSm: [
+          tokens.textStyles.labelSmall.fontSize,
+          { fontWeight: tokens.textStyles.labelSmall.fontWeight },
+        ],
       },
       borderRadius: {
         xs: tokens.radius.xs,

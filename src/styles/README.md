@@ -1,5 +1,15 @@
 # Style Import Order
 
+`src/styles/tokens.css` is the canonical source of design-token values for the
+app. TypeScript bridges such as `src/theme/tokens.ts`, Tailwind config, inline
+React styles, MapLibre paint token resolution and the PWA manifest should point
+back to those custom properties rather than introducing duplicate color values.
+
+`src/theme/tokens.test.ts` guards this contract by failing on shared `--stq-*`
+references that are not defined in `tokens.css`, and on `var(--stq-..., #hex)`
+fallbacks that would hide token drift. Component-local custom properties are
+allowed only for scoped behavior, not shared design values.
+
 `src/index.css` is the only global style entrypoint. Keep its order intact:
 
 1. Tailwind, tokens and foundation.

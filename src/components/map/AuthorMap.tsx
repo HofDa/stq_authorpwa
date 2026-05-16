@@ -33,7 +33,7 @@ function AuthorMapLoadingState({ props }: { props: AuthorMapProps }) {
         placeItems: 'center',
         background:
           'linear-gradient(180deg, var(--stq-color-surface-cream) 0%, var(--stq-bg-alt) 100%)',
-        color: 'var(--stq-text-muted)',
+        color: 'var(--stq-color-text-muted)',
       }}
       role="status"
       aria-live="polite"

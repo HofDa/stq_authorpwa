@@ -41,7 +41,6 @@ export function RouteWorkspace({
     editable,
     onChange,
   });
-
   const fromLabel = routeEditing.selectedStation
     ? routeEditing.selectedStation[locale].location ||
       `${t('studio.station')} ${routeEditing.selectedStation.number}`
@@ -104,21 +103,19 @@ export function RouteWorkspace({
             }
           : undefined
       }
-      topRightPill={
+      titlePillAction={
         layout === 'desktop'
           ? undefined
           : onToggleMapEditMode ? (
               <MapEditPill
                 active={Boolean(mapEditMode)}
                 onToggle={onToggleMapEditMode}
+                variant="title"
                 content={
                   mapEditMode && editable ? (
                     <RouteWorkspaceEditPillContent
                       toolbar={routeEditorTools}
                       trailing={topRightPill}
-                      distanceLabel={distanceLabel}
-                      pointCount={draft.recordedRoute.length}
-                      pointsLabel={pointsLabel}
                     />
                   ) : null
                 }
@@ -158,16 +155,14 @@ export function RouteWorkspace({
           : undefined
       }
       bottomSheet={
-        layout === 'mobile' && onToggleMapEditMode ? undefined : (
-          <RouteWorkspaceStats
-            label={t('workflow.route')}
-            distanceLabel={distanceLabel}
-            fromLabel={fromLabel}
-            toLabel={toLabel}
-            pointCount={draft.recordedRoute.length}
-            pointsLabel={pointsLabel}
-          />
-        )
+        <RouteWorkspaceStats
+          label={t('workflow.route')}
+          distanceLabel={distanceLabel}
+          fromLabel={fromLabel}
+          toLabel={toLabel}
+          pointCount={draft.recordedRoute.length}
+          pointsLabel={pointsLabel}
+        />
       }
       segmentArrows={
         editable

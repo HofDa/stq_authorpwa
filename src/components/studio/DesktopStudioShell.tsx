@@ -185,6 +185,7 @@ export function DesktopStudioShell({
           onDeleteTour={actions.deleteCurrentTour}
           onSelectDraft={onSelectDraft}
           drafts={drafts}
+          onLocaleChange={actions.changeLanguage}
           onSelectTourOverview={actions.selectTourOverview}
           routeEditMode
           stationsEditMode

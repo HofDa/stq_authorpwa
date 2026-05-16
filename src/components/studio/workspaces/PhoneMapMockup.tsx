@@ -53,6 +53,8 @@ export interface PhoneMapMockupProps {
 
   /** Optional pill button on the top-right (e.g. pen for Karte edit toggle). */
   topRightPill?: ReactNode;
+  /** Optional action rendered inside the tour title pill's right slot. */
+  titlePillAction?: ReactNode;
 
   /** If provided, fit the map to these coordinates when fitTrigger changes. */
   fitToCoordinates?: AuthorMapCoordinate[];
@@ -134,6 +136,7 @@ export function PhoneMapMockup({
   toolbar,
   showLayersControl = false,
   topRightPill,
+  titlePillAction,
   fitToCoordinates,
   fitTrigger,
   onViewportCenterChange,
@@ -316,7 +319,12 @@ export function PhoneMapMockup({
               >
                 <Icon name="chevron-left" size={16} />
               </button>
-              <span>{getTourTitleLabel(draft.tour, locale, t('studio.untitledTour'))}</span>
+              <span className="stq-phone-map-title-pill__label">
+                {getTourTitleLabel(draft.tour, locale, t('studio.untitledTour'))}
+              </span>
+              <div className="stq-phone-map-title-pill__action">
+                {titlePillAction}
+              </div>
             </div>
           )}
 

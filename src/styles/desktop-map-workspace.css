@@ -6,13 +6,14 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  align-items: center;
   padding: 8px 4px;
 }
 
 .stq-desktop-map-actions .stq-mobile-map-edit-actions,
 .stq-desktop-map-actions .stq-mobile-route-editor-tools {
   display: grid;
-  gap: 8px;
+  gap: 14px;
 }
 
 .stq-desktop-map-actions button {
@@ -282,4 +283,3 @@
   font-size: 12px;
   font-weight: 700;
 }
-

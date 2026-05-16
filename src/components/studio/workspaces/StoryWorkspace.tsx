@@ -8,6 +8,7 @@ type Props = BaseWorkspaceProps;
 interface StoryWorkspaceProps extends Props {
   mode?: 'intro' | 'outro';
   onSelectTourOverview?: () => void;
+  onLocaleChange?: (locale: Props['locale']) => void;
 }
 
 /**
@@ -22,6 +23,7 @@ export function StoryWorkspace({
   onChange,
   mode = 'intro',
   onSelectTourOverview,
+  onLocaleChange,
 }: StoryWorkspaceProps) {
   const { t } = useEditorLanguage();
   const detail =
@@ -44,6 +46,7 @@ export function StoryWorkspace({
           onChange={onChange}
           mode={mode}
           onSelectTourOverview={onSelectTourOverview}
+          onLocaleChange={onLocaleChange}
         />
       </DeviceMockup>
     </div>

@@ -12,6 +12,11 @@ import {
   downloadRrrFieldTestReport,
   getConditionChildren,
   getRrrWarnings,
+  readRrrNumber as readNumber,
+  readRrrNumberArray as readNumberArray,
+  readRrrString as readString,
+  readRrrStringArray as readStringArray,
+  readRrrTextAnswers as readTextAnswers,
   type RrrCondition,
   type RrrInteraction,
   type RrrModule,
@@ -985,39 +990,6 @@ function getStatusLabel(status: RrrMockStatus): string {
     case 'failed':
       return 'Fehlgeschlagen';
   }
-}
-
-function readNumber(value: unknown): number {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === 'string') {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
-}
-
-function readString(value: unknown): string {
-  return typeof value === 'string' ? value : '';
-}
-
-function readStringArray(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.map((entry) => (typeof entry === 'string' ? entry : ''))
-    : [];
-}
-
-function readTextAnswers(module: RrrModule): string[] {
-  const acceptedAnswers = readStringArray(module.config.acceptedAnswers);
-  const answer = readString(module.config.answer);
-  return [...acceptedAnswers, answer].filter((entry) => entry.trim().length > 0);
-}
-
-function readNumberArray(value: unknown): number[] {
-  return Array.isArray(value)
-    ? value.filter((entry): entry is number => Number.isInteger(entry) && entry >= 0)
-    : [];
 }
 
 function normalizeDegrees(value: number): number {

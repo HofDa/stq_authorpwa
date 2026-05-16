@@ -12,6 +12,7 @@ import { Icon } from './Icon';
 import { DeviceMockup } from './DeviceMockup';
 import { EditPanel, type EditPanelField } from './EditPanel';
 import { ImageAssetPanel } from './ImageAssetPanel';
+import { PhoneHeaderActions } from './PhoneHeaderActions';
 import {
   RightEditDrawer,
   type RightEditDrawerState,
@@ -29,9 +30,10 @@ interface Props {
   otherDrafts?: TourDraft[];
   onSelectDraft?: (draftId: string) => void;
   onOpenCurrentTour?: () => void;
+  onLocaleChange?: (locale: Locale) => void;
   editable?: boolean;
   mobileSelectionFlow?: boolean;
-  /** Optional control rendered as a floating chip outside the phone frame. */
+  /** Optional control rendered in the phone app header. */
   floatingEditToggle?: ReactNode;
 }
 
@@ -47,6 +49,7 @@ export function TourCardCanvas({
   otherDrafts,
   onSelectDraft,
   onOpenCurrentTour,
+  onLocaleChange,
   editable = true,
   mobileSelectionFlow = false,
   floatingEditToggle,
@@ -239,15 +242,11 @@ export function TourCardCanvas({
             <span className="stq-tour-card-phone-header-title">
               SouthTyrolQuests
             </span>
-            <span className="stq-tour-card-phone-header-actions">
-              <span className="stq-tour-card-phone-header-locale">
-                {locale.toUpperCase()}
-                <Icon name="chevron-right" size={10} />
-              </span>
-              <span className="stq-tour-card-phone-header-gear" aria-hidden>
-                <Icon name="settings" size={16} />
-              </span>
-            </span>
+            <PhoneHeaderActions
+              locale={locale}
+              onLocaleChange={onLocaleChange}
+              editAction={floatingEditToggle}
+            />
           </div>
 
           <Editable
@@ -469,12 +468,6 @@ export function TourCardCanvas({
           </button>
         </div>
       </DeviceMockup>
-
-      {floatingEditToggle && (
-        <div className="stq-mobile-studio__floating-edit-chip">
-          {floatingEditToggle}
-        </div>
-      )}
 
       {panel && mobileSelectionFlow && (
         <RightEditDrawer

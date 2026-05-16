@@ -2,10 +2,26 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const designTokensCss = fs.readFileSync(
+  path.resolve(__dirname, 'src/styles/tokens.css'),
+  'utf8',
+);
+
+function readDesignToken(name: string): string {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = designTokensCss.match(
+    new RegExp(`${escapedName}\\s*:\\s*([^;]+);`),
+  );
+  if (!match) {
+    throw new Error(`Missing design token: ${name}`);
+  }
+  return match[1].trim();
+}
 
 export default defineConfig({
   test: {
@@ -33,8 +49,8 @@ export default defineConfig({
         name: 'SouthTyrolQuests Author',
         short_name: 'STQ Author',
         description: 'Author tours for SouthTyrolQuests in the field.',
-        theme_color: '#904A48',
-        background_color: '#FFF8F7',
+        theme_color: readDesignToken('--stq-color-primary'),
+        background_color: readDesignToken('--stq-color-bg'),
         display: 'standalone',
         start_url: '/',
         icons: [

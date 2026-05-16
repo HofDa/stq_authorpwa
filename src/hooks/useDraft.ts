@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getDraft, saveDraft } from '@/storage';
 import type { TourDraft } from '@/schema';
 
@@ -23,6 +23,11 @@ type LoadResult =
 export function useDraft(draftId: string | undefined) {
   const [reloadKey, setReloadKey] = useState(0);
   const [updateError, setUpdateError] = useState<Error | null>(null);
+  const updateQueueRef = useRef<Promise<void>>(Promise.resolve());
+
+  useEffect(() => {
+    updateQueueRef.current = Promise.resolve();
+  }, [draftId]);
 
   useEffect(() => {
     if (!draftId) return;
@@ -71,21 +76,30 @@ export function useDraft(draftId: string | undefined) {
   }
 
   const update = useCallback(
-    async (patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft)) => {
-      if (!draftId) return;
-      try {
-        const current = await getDraft(draftId);
-        if (!current) return;
-        const next =
-          typeof patch === 'function' ? patch(current) : { ...current, ...patch };
-        await saveDraft(next);
-        if (updateError) setUpdateError(null);
-      } catch (err) {
-        console.error('[useDraft] update failed', { tourId: draftId, err });
-        setUpdateError(err instanceof Error ? err : new Error(String(err)));
-      }
+    (patch: Partial<TourDraft> | ((prev: TourDraft) => TourDraft)) => {
+      if (!draftId) return Promise.resolve();
+
+      const runUpdate = async () => {
+        if (!draftId) return;
+
+        try {
+          const current = await getDraft(draftId);
+          if (!current) return;
+          const next =
+            typeof patch === 'function' ? patch(current) : { ...current, ...patch };
+          await saveDraft(next);
+          setUpdateError(null);
+        } catch (err) {
+          console.error('[useDraft] update failed', { tourId: draftId, err });
+          setUpdateError(err instanceof Error ? err : new Error(String(err)));
+        }
+      };
+
+      const queued = updateQueueRef.current.then(runUpdate, runUpdate);
+      updateQueueRef.current = queued.catch(() => undefined);
+      return queued;
     },
-    [draftId, updateError],
+    [draftId],
   );
 
   const reload = useCallback(() => {

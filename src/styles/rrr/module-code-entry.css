@@ -17,13 +17,13 @@
       rgba(var(--stq-color-primary-rgb), 0.08),
       rgba(var(--stq-color-success-rgb), 0.04)
     ),
-    var(--stq-color-surface, #ffffff);
+    var(--stq-color-surface);
   padding: 14px;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .stq-rrr-code-entry--error {
-  border-color: var(--stq-error, #b5533f);
+  border-color: var(--stq-color-danger);
   box-shadow: 0 0 0 3px rgba(var(--stq-color-danger-rgb), 0.08);
 }
 
@@ -86,7 +86,7 @@
   width: 100%;
   border: 1px solid var(--stq-color-border);
   border-radius: 8px;
-  background: var(--stq-color-surface, #ffffff);
+  background: var(--stq-color-surface);
   color: var(--stq-text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 17px;
@@ -101,7 +101,7 @@
 }
 
 .stq-rrr-code-entry--error .stq-rrr-code-entry__field input {
-  border-color: var(--stq-error, #b5533f);
+  border-color: var(--stq-color-danger);
   animation: stq-riddle-text-answer-shake 280ms ease;
 }
 
@@ -117,7 +117,7 @@
   border-radius: 8px;
   background: var(--stq-primary);
   padding: 12px 16px;
-  color: var(--stq-inverted, #fbf6ec);
+  color: var(--stq-color-text-inverted);
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0;

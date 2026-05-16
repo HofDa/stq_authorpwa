@@ -2,6 +2,17 @@
   /* Type */
   --stq-font-ui: "Open Sans", system-ui, sans-serif;
   --stq-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --stq-font-size-h3: 20.8px;
+  --stq-font-size-h4: 19.2px;
+  --stq-font-size-h5: 17.6px;
+  --stq-font-size-h6: 16px;
+  --stq-font-size-body: 16px;
+  --stq-font-size-body-small: 12px;
+  --stq-font-size-label-large: 14px;
+  --stq-font-size-label-small: 12px;
+  --stq-font-weight-regular: 400;
+  --stq-font-weight-semibold: 600;
+  --stq-font-weight-bold: 700;
 
   /* ───────── Brand & state colors (one per semantic role) ───────── */
   --stq-color-primary: #a0463d;
@@ -42,6 +53,7 @@
   --stq-color-text-muted: #6b7280;
   --stq-color-text-muted-rgb: 107 114 128;
   --stq-color-text-inverted: #ffffff;
+  --stq-color-text-inverted-rgb: 255 255 255;
   --stq-color-icon-muted: #9ca3af;
 
   /* ───────── Borders ───────── */

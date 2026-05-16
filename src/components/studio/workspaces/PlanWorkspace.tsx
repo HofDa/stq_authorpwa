@@ -9,6 +9,7 @@ type Props = Partial<Pick<BaseWorkspaceProps, 'onChange'>> &
     onDeleteTour?: () => void | Promise<void>;
     drafts?: TourDraft[];
     onSelectDraft?: (draftId: string) => void;
+    onLocaleChange?: (locale: BaseWorkspaceProps['locale']) => void;
   };
 
 export function PlanWorkspace({
@@ -20,6 +21,7 @@ export function PlanWorkspace({
   onDeleteTour,
   drafts,
   onSelectDraft,
+  onLocaleChange,
 }: Props) {
   return (
     <div
@@ -46,6 +48,7 @@ export function PlanWorkspace({
         onDeleteTour={onDeleteTour}
         otherDrafts={drafts?.filter((d) => d.draftId !== draft.draftId)}
         onSelectDraft={onSelectDraft}
+        onLocaleChange={onLocaleChange}
       />
     </div>
   );

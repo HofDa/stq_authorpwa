@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { Icon } from '../Icon';
 
@@ -14,6 +14,11 @@ interface EditableTextEntryListProps {
   rowClassName?: string;
 }
 
+interface EditableTextEntryRow {
+  id: string;
+  text: string;
+}
+
 export function EditableTextEntryList({
   sourceEntries,
   onCommit,
@@ -22,50 +27,74 @@ export function EditableTextEntryList({
   inputMode = 'textarea',
   fixedEntryCount,
   maxEntries,
-  rows = 3,
+  rows: textareaRows = 3,
   rowClassName,
 }: EditableTextEntryListProps) {
   const { t } = useEditorLanguage();
-  const [entries, setEntries] = useState(() =>
-    normalizeEntries(sourceEntries, fixedEntryCount),
+  const [entryRows, setEntryRows] = useState(() =>
+    createInitialRows(normalizeEntries(sourceEntries, fixedEntryCount)),
   );
+  const nextRowIdRef = useRef(entryRows.length);
+  const rowsRef = useRef(entryRows);
 
   useEffect(() => {
-    setEntries(normalizeEntries(sourceEntries, fixedEntryCount));
+    const nextRows = createRows(
+      normalizeEntries(sourceEntries, fixedEntryCount),
+      nextRowIdRef,
+      rowsRef.current,
+    );
+    rowsRef.current = nextRows;
+    setEntryRows(nextRows);
   }, [fixedEntryCount, sourceEntries]);
 
-  function commit(nextEntries: string[]) {
-    setEntries(normalizeEntries(nextEntries, fixedEntryCount));
-    onCommit(nextEntries.map((text) => text.trim()).filter(Boolean));
+  function setOptimisticRows(nextRows: EditableTextEntryRow[]) {
+    rowsRef.current = nextRows;
+    setEntryRows(nextRows);
+  }
+
+  function commit(nextRows: EditableTextEntryRow[]) {
+    const normalizedRows = createRows(
+      normalizeEntries(
+        nextRows.map((row) => row.text),
+        fixedEntryCount,
+      ),
+      nextRowIdRef,
+      nextRows,
+    );
+    setOptimisticRows(normalizedRows);
+    onCommit(normalizedRows.map((row) => row.text.trim()).filter(Boolean));
   }
 
   function setEntry(index: number, value: string) {
-    const next = entries.slice();
-    next[index] = value;
+    const next = rowsRef.current.slice();
+    next[index] = { ...next[index], text: value };
     commit(next);
   }
 
   function addEntry() {
-    if (maxEntries !== undefined && entries.length >= maxEntries) {
+    const current = rowsRef.current;
+    if (maxEntries !== undefined && current.length >= maxEntries) {
       return;
     }
-    setEntries([...entries, '']);
+    setOptimisticRows([...current, createRow('', nextRowIdRef)]);
   }
 
   function deleteEntry(index: number) {
+    const current = rowsRef.current;
     if (fixedEntryCount !== undefined) {
-      const next = entries.slice();
-      next[index] = '';
+      const next = current.slice();
+      next[index] = { ...next[index], text: '' };
       commit(next);
       return;
     }
-    commit(entries.filter((_, i) => i !== index));
+    commit(current.filter((_, i) => i !== index));
   }
 
   function moveEntry(index: number, direction: -1 | 1) {
     const target = index + direction;
-    if (target < 0 || target >= entries.length) return;
-    const next = entries.slice();
+    const current = rowsRef.current;
+    if (target < 0 || target >= current.length) return;
+    const next = current.slice();
     [next[index], next[target]] = [next[target], next[index]];
     commit(next);
   }
@@ -74,25 +103,25 @@ export function EditableTextEntryList({
     <>
       <div className="stq-textbody-panel-heading">{heading}</div>
       <div className="stq-textbody-list">
-        {entries.map((entry, index) => (
+        {entryRows.map((row, index) => (
           <div
             className={`stq-textbody-row${rowClassName ? ` ${rowClassName}` : ''}`}
-            key={`${index}-${entries.length}`}
+            key={row.id}
           >
             <div className="stq-textbody-index">{index + 1}</div>
             {inputMode === 'input' ? (
               <input
                 className="stq-lines-input"
-                value={entry}
+                value={row.text}
                 placeholder={resolvePlaceholder(placeholder, index)}
                 onChange={(event) => setEntry(index, event.target.value)}
               />
             ) : (
               <textarea
                 className="stq-textbody-textarea"
-                value={entry}
+                value={row.text}
                 placeholder={resolvePlaceholder(placeholder, index)}
-                rows={rows}
+                rows={textareaRows}
                 onChange={(event) => setEntry(index, event.target.value)}
               />
             )}
@@ -108,7 +137,7 @@ export function EditableTextEntryList({
               <button
                 type="button"
                 aria-label={t('studio.moveDown')}
-                disabled={index === entries.length - 1}
+                disabled={index === entryRows.length - 1}
                 onClick={() => moveEntry(index, 1)}
               >
                 ↓
@@ -116,7 +145,7 @@ export function EditableTextEntryList({
               <button
                 type="button"
                 aria-label={t('studio.deleteEntry')}
-                disabled={entries.length === 1 && !entry.trim()}
+                disabled={entryRows.length === 1 && !row.text.trim()}
                 onClick={() => deleteEntry(index)}
               >
                 <Icon name="trash" size={13} />
@@ -129,7 +158,7 @@ export function EditableTextEntryList({
         <button
           type="button"
           className="stq-textbody-add"
-          disabled={maxEntries !== undefined && entries.length >= maxEntries}
+          disabled={maxEntries !== undefined && entryRows.length >= maxEntries}
           onClick={addEntry}
         >
           <Icon name="plus" size={13} />
@@ -155,4 +184,38 @@ function normalizeEntries(entries: string[], fixedEntryCount?: number): string[]
     );
   }
   return entries.length > 0 ? entries : [''];
+}
+
+function createInitialRows(entries: string[]): EditableTextEntryRow[] {
+  return entries.map((text, index) => ({
+    id: `text-entry-${index}`,
+    text,
+  }));
+}
+
+function createRows(
+  entries: string[],
+  nextRowIdRef: MutableRefObject<number>,
+  previousRows: EditableTextEntryRow[] = [],
+): EditableTextEntryRow[] {
+  return entries.map((text, index) => ({
+    id: previousRows[index]?.id ?? createRowId(nextRowIdRef),
+    text,
+  }));
+}
+
+function createRow(
+  text: string,
+  nextRowIdRef: MutableRefObject<number>,
+): EditableTextEntryRow {
+  return {
+    id: createRowId(nextRowIdRef),
+    text,
+  };
+}
+
+function createRowId(nextRowIdRef: MutableRefObject<number>): string {
+  const id = `text-entry-${nextRowIdRef.current}`;
+  nextRowIdRef.current += 1;
+  return id;
 }

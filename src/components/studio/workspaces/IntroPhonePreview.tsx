@@ -7,6 +7,7 @@ import { getTourTitleLabel } from '@/utils/localizedContent';
 import { EditPanel, type EditPanelField } from '../EditPanel';
 import { Icon } from '../Icon';
 import { ImageAssetPanel } from '../ImageAssetPanel';
+import { PhoneHeaderActions } from '../PhoneHeaderActions';
 import {
   RightEditDrawer,
   type RightEditDrawerState,
@@ -22,9 +23,10 @@ interface Props {
   onBack?: () => void;
   onStartTour?: () => void;
   onSelectTourOverview?: () => void;
+  onLocaleChange?: (locale: Locale) => void;
   editable?: boolean;
   mobileSelectionFlow?: boolean;
-  /** Optional control rendered as a floating chip outside the phone frame. */
+  /** Optional control rendered in the phone app header. */
   floatingEditToggle?: ReactNode;
 }
 
@@ -38,6 +40,7 @@ export function IntroPhonePreview({
   onBack,
   onStartTour,
   onSelectTourOverview,
+  onLocaleChange,
   editable = true,
   mobileSelectionFlow = false,
   floatingEditToggle,
@@ -262,21 +265,12 @@ export function IntroPhonePreview({
             </span>
           </>
         )}
-        <span className="stq-tour-card-phone-header-actions">
-          <span className="stq-tour-card-phone-header-locale">
-            {locale.toUpperCase()}
-            <Icon name="chevron-right" size={10} />
-          </span>
-          <span className="stq-tour-card-phone-header-gear" aria-hidden>
-            <Icon name="settings" size={16} />
-          </span>
-        </span>
+        <PhoneHeaderActions
+          locale={locale}
+          onLocaleChange={onLocaleChange}
+          editAction={floatingEditToggle}
+        />
       </header>
-      {floatingEditToggle && (
-        <div className="stq-mobile-studio__floating-edit-chip">
-          {floatingEditToggle}
-        </div>
-      )}
 
       <main className="stq-intro-phone__body">
         {mode === 'intro' && (

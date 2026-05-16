@@ -5,6 +5,7 @@ export * from './fieldTestReport';
 export * from './feedbackPatterns';
 export * from './interactionTemplates';
 export * from './migrateInteraction';
+export * from './moduleConfig';
 export * from './moduleIds';
 export * from './modulePresets';
 export * from './readiness';

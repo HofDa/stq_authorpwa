@@ -1,11 +1,7 @@
 /**
- * Design tokens aligned to the SouthTyrolQuests Author Tool mockup.
- *
- * Native source of truth still lives in the Flutter repo:
- *   - lib/theme/colors.dart
- *   - lib/theme/text_styles.dart
- *
- * Keep in sync manually when the native theme changes.
+ * Tailwind bridge for the canonical design tokens in src/styles/tokens.css.
+ * Keep actual token values in CSS so runtime styles, inline React styles and
+ * Tailwind utilities all resolve through the same custom properties.
  */
 export const tokens = {
   colors: {
@@ -14,7 +10,7 @@ export const tokens = {
     border: 'rgb(var(--stq-color-border-rgb) / <alpha-value>)',
     surface: 'rgb(var(--stq-color-surface-rgb) / <alpha-value>)',
     text: 'rgb(var(--stq-color-text-rgb) / <alpha-value>)',
-    inverted: 'rgb(var(--stq-color-surface-rgb) / <alpha-value>)',
+    inverted: 'rgb(var(--stq-color-text-inverted-rgb) / <alpha-value>)',
     error: 'rgb(var(--stq-color-danger-rgb) / <alpha-value>)',
     success: 'rgb(var(--stq-color-success-rgb) / <alpha-value>)',
     disabled: 'rgb(var(--stq-color-text-muted-rgb) / <alpha-value>)',
@@ -25,14 +21,46 @@ export const tokens = {
     body: 'var(--stq-font-ui)',
   },
   textStyles: {
-    h3: { fontFamily: 'ui', fontSize: 20.8, fontWeight: 700 },
-    h4: { fontFamily: 'ui', fontSize: 19.2, fontWeight: 700 },
-    h5: { fontFamily: 'ui', fontSize: 17.6, fontWeight: 700 },
-    h6: { fontFamily: 'ui', fontSize: 16, fontWeight: 700 },
-    body: { fontFamily: 'body', fontSize: 16, fontWeight: 400 },
-    bodySmall: { fontFamily: 'ui', fontSize: 12, fontWeight: 400 },
-    labelLarge: { fontFamily: 'ui', fontSize: 14, fontWeight: 600 },
-    labelSmall: { fontFamily: 'ui', fontSize: 12, fontWeight: 600 },
+    h3: {
+      fontFamily: 'ui',
+      fontSize: 'var(--stq-font-size-h3)',
+      fontWeight: 'var(--stq-font-weight-bold)',
+    },
+    h4: {
+      fontFamily: 'ui',
+      fontSize: 'var(--stq-font-size-h4)',
+      fontWeight: 'var(--stq-font-weight-bold)',
+    },
+    h5: {
+      fontFamily: 'ui',
+      fontSize: 'var(--stq-font-size-h5)',
+      fontWeight: 'var(--stq-font-weight-bold)',
+    },
+    h6: {
+      fontFamily: 'ui',
+      fontSize: 'var(--stq-font-size-h6)',
+      fontWeight: 'var(--stq-font-weight-bold)',
+    },
+    body: {
+      fontFamily: 'body',
+      fontSize: 'var(--stq-font-size-body)',
+      fontWeight: 'var(--stq-font-weight-regular)',
+    },
+    bodySmall: {
+      fontFamily: 'ui',
+      fontSize: 'var(--stq-font-size-body-small)',
+      fontWeight: 'var(--stq-font-weight-regular)',
+    },
+    labelLarge: {
+      fontFamily: 'ui',
+      fontSize: 'var(--stq-font-size-label-large)',
+      fontWeight: 'var(--stq-font-weight-semibold)',
+    },
+    labelSmall: {
+      fontFamily: 'ui',
+      fontSize: 'var(--stq-font-size-label-small)',
+      fontWeight: 'var(--stq-font-weight-semibold)',
+    },
   },
   radius: {
     xs: 'var(--stq-radius-xs)',

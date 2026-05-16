@@ -1,13 +1,25 @@
-import type { RrrInteraction, RrrModule } from '@/rrr/types';
+import {
+  getConditionChildren,
+  readRrrNumber as readNumber,
+  readRrrNumberArray as readNumberArray,
+  readRrrString as readString,
+  readRrrStringArray as readStringArray,
+  readRrrTextAnswers,
+} from '@/rrr';
+import type { RrrCondition, RrrInteraction, RrrModule } from '@/rrr/types';
 import { BalanceRunPlayer } from './BalanceRunPlayer';
 import { CodeEntryPlayer } from './CodeEntryPlayer';
 import { CompassPlayer } from './CompassPlayer';
+import { ConfirmationPlayer } from './ConfirmationPlayer';
 import { DirectionHotColdPlayer } from './DirectionHotColdPlayer';
+import { HoldStillPlayer } from './HoldStillPlayer';
 import { MorseCodePlayer } from './MorseCodePlayer';
+import { MultiChoicePlayer } from './MultiChoicePlayer';
 import { ProximityRadarPlayer } from './ProximityRadarPlayer';
 import { QrScanPlayer } from './QrScanPlayer';
 import { SafeDialPlayer } from './SafeDialPlayer';
 import { TextAnswerPlayer } from './TextAnswerPlayer';
+import { TimerWaitPlayer } from './TimerWaitPlayer';
 
 export interface InteractionHostLabels {
   submit: string;
@@ -52,6 +64,20 @@ export function InteractionHost({
       return (
         <TextAnswerPlayer
           acceptedAnswers={readAcceptedAnswers(activeModule, acceptedAnswers)}
+          submitLabel={labels.submit}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    case 'multi_choice':
+      return (
+        <MultiChoicePlayer
+          question={readString(activeModule.config.question)}
+          options={readStringArray(activeModule.config.options)}
+          correctOptionIndexes={readNumberArray(
+            activeModule.config.correctOptionIndexes,
+          )}
+          allowMultiple={Boolean(activeModule.config.allowMultiple)}
           submitLabel={labels.submit}
           onCorrect={onCorrect}
           disabled={disabled}
@@ -129,6 +155,30 @@ export function InteractionHost({
         />
       );
     }
+    case 'hold_still':
+      return (
+        <HoldStillPlayer
+          durationMs={Math.max(
+            500,
+            readNumber(activeModule.config.durationMs) || 3000,
+          )}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    case 'gps_enter':
+      return (
+        <ProximityRadarPlayer
+          targetLat={readNumber(activeModule.config.lat)}
+          targetLng={readNumber(activeModule.config.lng)}
+          successRadiusMeters={Math.max(
+            1,
+            readNumber(activeModule.config.radiusMeters) || 20,
+          )}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
     case 'qr_scan': {
       const expectedValue = readString(activeModule.config.expectedValue);
       return (
@@ -188,6 +238,43 @@ export function InteractionHost({
           disabled={disabled}
         />
       );
+    case 'timer_wait':
+      return (
+        <TimerWaitPlayer
+          durationMs={Math.max(
+            1000,
+            readNumber(activeModule.config.durationMs) || 3000,
+          )}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    case 'photo_check_manual':
+      return (
+        <ConfirmationPlayer
+          eyebrow="Foto-Aufgabe"
+          prompt={readString(activeModule.config.prompt)}
+          fallbackPrompt="Foto-Aufgabe bestätigen"
+          confirmLabel={
+            readString(activeModule.config.confirmLabel).trim() || 'Bestätigt'
+          }
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    case 'object_found':
+      return (
+        <ConfirmationPlayer
+          eyebrow="Objekt gefunden"
+          prompt={readString(activeModule.config.prompt)}
+          fallbackPrompt="Fund bestätigen"
+          confirmLabel={
+            readString(activeModule.config.confirmLabel).trim() || 'Gefunden'
+          }
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
     default:
       return (
         <TextAnswerPlayer
@@ -204,25 +291,30 @@ function pickActiveModule(
   interaction: RrrInteraction | undefined,
 ): RrrModule | undefined {
   if (!interaction) return undefined;
-  return interaction.modules[0];
+  const conditionModuleId = interaction.condition
+    ? firstConditionModuleId(interaction.condition)
+    : undefined;
+  return (
+    interaction.modules.find((module) => module.id === conditionModuleId) ??
+    interaction.modules[0]
+  );
+}
+
+function firstConditionModuleId(condition: RrrCondition): string | undefined {
+  if (condition.type === 'module') {
+    return condition.moduleId;
+  }
+
+  for (const child of getConditionChildren(condition)) {
+    const moduleId = firstConditionModuleId(child);
+    if (moduleId) return moduleId;
+  }
+  return undefined;
 }
 
 function readAcceptedAnswers(
   module: RrrModule,
   fallback: string[],
 ): string[] {
-  const raw = module.config.acceptedAnswers;
-  if (Array.isArray(raw)) {
-    return raw.filter((entry): entry is string => typeof entry === 'string');
-  }
-  return fallback;
-}
-
-function readNumber(value: unknown): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  return 0;
-}
-
-function readString(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  return readRrrTextAnswers(module, fallback);
 }

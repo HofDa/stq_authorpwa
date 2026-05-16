@@ -67,17 +67,11 @@ export function RouteWorkspaceToolbar({
 interface RouteWorkspaceEditPillContentProps {
   toolbar: ReactNode;
   trailing?: ReactNode;
-  distanceLabel: string;
-  pointCount: number;
-  pointsLabel: string;
 }
 
 export function RouteWorkspaceEditPillContent({
   toolbar,
   trailing,
-  distanceLabel,
-  pointCount,
-  pointsLabel,
 }: RouteWorkspaceEditPillContentProps) {
   return (
     <div className="stq-phone-map-edit-pill__stack">
@@ -86,12 +80,6 @@ export function RouteWorkspaceEditPillContent({
           {toolbar}
         </div>
         {trailing}
-      </div>
-      <div className="stq-phone-map-edit-pill__stats">
-        <strong>{distanceLabel}</strong>
-        <small>
-          · {pointCount} {pointsLabel}
-        </small>
       </div>
     </div>
   );

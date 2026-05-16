@@ -488,6 +488,20 @@ The same radius is used for start eligibility and target success to keep the sch
 Rejected alternatives:
 Adding raw sensor reads to the visual, adding a hidden global balance session store, adding separate start and target radii before field testing proves the need, or folding the behavior into `gps_enter` / `hold_still`.
 
+## 2026-05-16 — Keep design-token values in tokens.css
+
+Decision:
+Treat `src/styles/tokens.css` as the canonical source of design-token values for the authoring app. TypeScript bridges (`src/theme/tokens.ts`), Tailwind config, inline styles, MapLibre paint token resolution and the PWA manifest should reference those custom properties or read values from that file instead of introducing parallel theme literals. `src/theme/tokens.test.ts` guards shared token references and rejects hardcoded hex fallbacks in `var(--stq-..., #hex)` usages.
+
+Reason:
+The app already had token aliases and CSS-variable-backed Tailwind values, but a few runtime styles and the manifest still carried independent fallback colors. Those alternate values make visual drift hard to spot. A single CSS token source keeps CSS, TS, MapLibre and PWA metadata aligned while avoiding a broad design-system rewrite.
+
+Tradeoffs:
+Component-local CSS custom properties are still allowed for scoped behavior such as dynamic angles or local panel defaults. The test explicitly allows those local prefixes, so it is a guardrail for shared design values rather than a ban on all custom properties.
+
+Rejected alternatives:
+Moving all token values into TypeScript, generating CSS in the build, keeping Flutter/native theme files as the authoring app source of truth, or doing a broad visual redesign while normalizing tokens.
+
 ## Existing architectural decisions to preserve
 
 ### Authoring PWA exports to Flutter player

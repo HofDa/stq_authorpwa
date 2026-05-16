@@ -60,6 +60,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 
 .stq-tour-card-phone-header-locale {
@@ -80,7 +81,84 @@
   place-items: center;
   width: 22px;
   height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--stq-color-text);
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.stq-tour-card-phone-header-gear:hover,
+.stq-tour-card-phone-header-gear[aria-expanded='true'] {
+  background: var(--stq-alpha-primary);
+  color: var(--stq-color-primary);
+}
+
+.stq-tour-card-phone-header-gear:focus-visible {
+  outline: 2px solid var(--stq-color-primary);
+  outline-offset: 2px;
+}
+
+.stq-phone-header-settings {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.stq-phone-header-settings__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 90;
+  display: grid;
+  min-width: 132px;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: var(--stq-radius-md);
+  background: var(--stq-color-surface);
+  box-shadow: 0 12px 26px var(--stq-alpha-brown);
+}
+
+.stq-phone-header-settings__menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  border: 0;
+  border-radius: var(--stq-radius-sm);
+  background: transparent;
+  color: var(--stq-color-text);
+  padding: 0 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.stq-phone-header-settings__menu button strong {
+  color: var(--stq-color-text-muted);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.stq-phone-header-settings__menu button:hover,
+.stq-phone-header-settings__menu button.is-active {
+  background: var(--stq-alpha-primary);
+  color: var(--stq-color-primary);
+}
+
+.stq-phone-header-settings__menu button.is-active strong {
+  color: var(--stq-color-primary);
 }
 
 .stq-tour-card-phone-welcome {

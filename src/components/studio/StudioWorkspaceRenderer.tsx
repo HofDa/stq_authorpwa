@@ -42,6 +42,7 @@ interface StudioWorkspaceRendererProps {
   onDeleteTour?: () => void | Promise<void>;
   onSelectDraft?: (draftId: string) => void;
   drafts?: TourDraft[];
+  onLocaleChange?: (locale: Locale) => void;
   onSelectTourOverview: () => void;
   routeEditMode?: boolean;
   stationsEditMode?: boolean;
@@ -110,6 +111,7 @@ function renderWorkspaceBody(props: StudioWorkspaceRendererProps) {
           onDeleteTour={props.onDeleteTour}
           drafts={props.drafts}
           onSelectDraft={props.onSelectDraft}
+          onLocaleChange={props.onLocaleChange}
         />
       );
     case 'story':
@@ -119,6 +121,7 @@ function renderWorkspaceBody(props: StudioWorkspaceRendererProps) {
           locale={props.locale}
           onChange={props.onChange}
           onSelectTourOverview={props.onSelectTourOverview}
+          onLocaleChange={props.onLocaleChange}
         />
       );
     case 'outro':
@@ -129,6 +132,7 @@ function renderWorkspaceBody(props: StudioWorkspaceRendererProps) {
           onChange={props.onChange}
           mode="outro"
           onSelectTourOverview={props.onSelectTourOverview}
+          onLocaleChange={props.onLocaleChange}
         />
       );
     case 'route':

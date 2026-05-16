@@ -3,7 +3,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  border-radius: var(--stq-r-md, 12px);
+  border-radius: var(--stq-radius-md);
   padding: 10px 14px;
   font-size: 14px;
   line-height: 1.35;
@@ -16,7 +16,7 @@
   height: 28px;
   place-items: center;
   border-radius: 999px;
-  background: var(--stq-color-surface, #ffffff);
+  background: var(--stq-color-surface);
 }
 
 .stq-module-feedback__body {
@@ -64,7 +64,7 @@
 .stq-module-feedback--running,
 .stq-module-feedback--info {
   border: 1px solid var(--stq-color-border);
-  background: var(--stq-color-surface, #ffffff);
+  background: var(--stq-color-surface);
   color: var(--stq-text-mute);
 }
 

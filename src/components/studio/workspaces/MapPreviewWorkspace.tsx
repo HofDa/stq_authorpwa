@@ -340,15 +340,9 @@ export function MapPreviewWorkspace({
     </div>
   ) : null;
   const sheetVisible = sheetState !== 'closed' && Boolean(selectedStation);
-  const stationBeingEdited = sheetState === 'expanded';
   const stationCardEditPill =
     layout === 'mobile' && sheetVisible ? (
-      <div
-        className={`stq-phone-map-edit-pill__cluster${
-          pillContent ? ' is-active' : ''
-        }`}
-      >
-        {pillContent}
+      <div className="stq-phone-map-edit-pill__cluster stq-phone-map-edit-pill__cluster--title">
         <button
           type="button"
           className={`stq-phone-map-edit-pill__toggle stq-map-station-sheet-edit-toggle stq-mobile-studio__major-edit-toggle${
@@ -365,13 +359,14 @@ export function MapPreviewWorkspace({
       </div>
     ) : undefined;
   let composedTopRightPill = stationCardEditPill;
-  if (!composedTopRightPill) {
+  if (!sheetVisible && !composedTopRightPill) {
     if (onToggleMapEditMode) {
-      composedTopRightPill = stationBeingEdited ? undefined : (
+      composedTopRightPill = (
         <MapEditPill
           content={mapEditMode ? pillContent : null}
           active={Boolean(mapEditMode)}
           onToggle={onToggleMapEditMode}
+          variant="title"
         />
       );
     } else {
@@ -392,11 +387,11 @@ export function MapPreviewWorkspace({
         onSelectStation={onSelectStation}
         detail={t('studio.map')}
         onTitleBack={onTitleBack}
-        topRightPill={layout === 'desktop' ? undefined : composedTopRightPill}
+        titlePillAction={layout === 'desktop' ? undefined : composedTopRightPill}
         desktopActions={
           layout === 'desktop' && composedTopRightPill
-            ? composedTopRightPill
-            : undefined
+          ? composedTopRightPill
+          : undefined
         }
         onViewportCenterChange={setViewportCenter}
         draggableStationIds={

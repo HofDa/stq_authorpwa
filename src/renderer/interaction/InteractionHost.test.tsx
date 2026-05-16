@@ -86,6 +86,70 @@ afterEach(() => {
 });
 
 describe('InteractionHost', () => {
+  it('renders the module selected by a single-module condition', () => {
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'text_answer_1',
+          type: 'text_answer',
+          label: 'Textantwort',
+          config: { answer: 'legacy' },
+        },
+        {
+          id: 'code_word_1',
+          type: 'code_word',
+          label: 'Codewort eingeben',
+          config: { code: 'Adler', caseSensitive: false },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'code_word_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.textContent).toContain('Codewort eingeben');
+    expect(container.textContent).not.toContain('Antwort eingeben');
+  });
+
+  it('uses configured text_answer values from modular interactions', () => {
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'text_answer_1',
+          type: 'text_answer',
+          label: 'Textantwort',
+          config: { answer: 'Adler' },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'text_answer_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={['wrong-legacy-answer']}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    changeTextValue('adler');
+    clickButton('Prüfen');
+
+    expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
+
   it('uses configured code_word values instead of legacy accepted answers', () => {
     const onCorrect = vi.fn();
     const interaction: RrrInteraction = {
@@ -296,6 +360,207 @@ describe('InteractionHost', () => {
     expect(container.textContent).toContain('Balance-Lauf starten');
     expect(onCorrect).not.toHaveBeenCalled();
   });
+
+  it('renders multi_choice modules with configured options', () => {
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'multi_choice_1',
+          type: 'multi_choice',
+          label: 'Auswahlfrage',
+          config: {
+            question: 'Welche Farbe?',
+            options: ['Rot', 'Blau'],
+            correctOptionIndexes: [1],
+            allowMultiple: false,
+          },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'multi_choice_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.textContent).toContain('Welche Farbe?');
+    clickLabelInput('Blau');
+    clickButton('Prüfen');
+
+    expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders gps_enter modules with the radar visual', () => {
+    liveGeolocationState.latitude = 46.4983;
+    liveGeolocationState.longitude = 11.3548;
+    liveGeolocationState.status = 'available';
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'gps_enter_1',
+          type: 'gps_enter',
+          label: 'Ort erreichen',
+          config: {
+            lat: 46.4983,
+            lng: 11.3548,
+            radiusMeters: 25,
+          },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'gps_enter_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.querySelector('.stq-rrr-radar')).not.toBeNull();
+    expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders hold_still modules and completes after the configured duration', () => {
+    vi.useFakeTimers();
+    liveBalanceState.status = 'available';
+    liveBalanceState.magnitude = 0;
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'hold_still_1',
+          type: 'hold_still',
+          label: 'Stillhalten',
+          config: { durationMs: 500 },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'hold_still_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.textContent).toContain('Ruhig halten');
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders timer_wait modules and completes after the configured duration', () => {
+    vi.useFakeTimers();
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'timer_wait_1',
+          type: 'timer_wait',
+          label: 'Warten',
+          config: { durationMs: 1000 },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'timer_wait_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.textContent).toContain('Wartezeit läuft');
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders manual confirmation modules', () => {
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'photo_check_manual_1',
+          type: 'photo_check_manual',
+          label: 'Foto-Aufgabe bestätigen',
+          config: { prompt: 'Zeig dein Foto.', confirmLabel: 'Erledigt' },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'photo_check_manual_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.textContent).toContain('Zeig dein Foto.');
+    clickButton('Erledigt');
+
+    expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders object_found modules', () => {
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'object_found_1',
+          type: 'object_found',
+          label: 'Objekt gefunden',
+          config: { prompt: 'Finde das Schild.', confirmLabel: 'Gefunden' },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'object_found_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.textContent).toContain('Finde das Schild.');
+    clickButton('Gefunden');
+
+    expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
 });
 
 function render(element: ReactElement) {
@@ -330,5 +595,19 @@ function clickButton(label: string) {
 
   act(() => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
+
+function clickLabelInput(label: string) {
+  const labelElement = Array.from(container.querySelectorAll('label')).find(
+    (candidate) => candidate.textContent?.includes(label),
+  );
+  const input = labelElement?.querySelector('input');
+  if (!input) {
+    throw new Error(`Input label not found: ${label}`);
+  }
+
+  act(() => {
+    input.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   });
 }

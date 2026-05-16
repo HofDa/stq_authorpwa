@@ -145,6 +145,7 @@ export function MobileStudioShell({
                   : (draftId) => openIntro(draftId)
               }
               onOpenCurrentTour={() => openIntro(draft.draftId)}
+              onLocaleChange={actions.changeLanguage}
               editable={overviewEditMode}
               mobileSelectionFlow={overviewEditMode}
               floatingEditToggle={
@@ -204,6 +205,7 @@ export function MobileStudioShell({
                 setOutroEditMode(false);
                 setView('overview');
               }}
+              onLocaleChange={actions.changeLanguage}
               floatingEditToggle={
                 <HeaderEditToggle
                   active={view === 'outro' ? outroEditMode : introEditMode}
@@ -280,14 +282,12 @@ function HeaderEditToggle({
   return (
     <button
       type="button"
-      className={`stq-mobile-studio__header-edit-toggle stq-mobile-studio__major-edit-toggle${
-        active ? ' is-active' : ''
-      }`}
+      className={`stq-mobile-studio__header-edit-toggle${active ? ' is-active' : ''}`}
       onClick={onClick}
       aria-label={active ? 'Bearbeiten beenden' : 'Bearbeiten'}
       aria-pressed={active}
     >
-      <Icon name="edit" size={18} />
+      <Icon name="edit" size={15} />
     </button>
   );
 }

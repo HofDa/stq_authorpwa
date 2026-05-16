@@ -11,12 +11,12 @@
       rgba(var(--stq-color-primary-rgb), 0.08),
       rgba(var(--stq-color-success-rgb), 0.04)
     ),
-    var(--stq-color-surface, #ffffff);
+    var(--stq-color-surface);
   padding: 14px;
 }
 
 .stq-rrr-morse-code--error {
-  border-color: var(--stq-error, #b5533f);
+  border-color: var(--stq-color-danger);
   box-shadow: 0 0 0 3px rgba(var(--stq-color-danger-rgb), 0.08);
 }
 
@@ -68,7 +68,7 @@
   border: 0;
   border-radius: 8px;
   background: var(--stq-primary);
-  color: var(--stq-inverted, #fbf6ec);
+  color: var(--stq-color-text-inverted);
   cursor: pointer;
   font-size: 14px;
   font-weight: 800;
@@ -90,7 +90,7 @@
   gap: 6px;
   border: 1px solid var(--stq-color-border);
   border-radius: 8px;
-  background: var(--stq-color-surface, #ffffff);
+  background: var(--stq-color-surface);
   padding: 8px;
 }
 
@@ -123,7 +123,7 @@
   gap: 8px;
   border: 1px solid var(--stq-color-border);
   border-radius: 8px;
-  background: var(--stq-color-surface, #ffffff);
+  background: var(--stq-color-surface);
   color: var(--stq-text);
   cursor: pointer;
   font-size: 13px;

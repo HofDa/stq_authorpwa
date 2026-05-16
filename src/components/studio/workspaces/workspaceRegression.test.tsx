@@ -25,12 +25,21 @@ vi.mock('@/i18n/editorLanguage', () => {
     'studio.copyTour': 'Tour kopieren',
     'studio.coverImageEdit': 'Titelbild bearbeiten',
     'studio.edit': 'Bearbeiten',
+    'studio.descriptionEdit': 'Beschreibung bearbeiten',
     'studio.hints': 'Hinweise',
     'studio.iconLabel': 'Icon-Label',
+    'studio.languages': 'Sprachen',
+    'studio.chooseLanguage': 'Sprache wählen',
     'studio.map': 'Karte',
     'studio.noStations': 'Noch keine Stationen',
     'studio.noHint': 'Kein Hinweis',
     'studio.points': 'Punkte',
+    'studio.paragraphPlaceholder': 'Absatz',
+    'studio.paragraphsOnePerEntry': 'Absätze',
+    'studio.addEntry': 'Eintrag hinzufügen',
+    'studio.moveUp': 'Nach oben',
+    'studio.moveDown': 'Nach unten',
+    'studio.deleteEntry': 'Eintrag löschen',
     'studio.riddleSettings': 'Riddle settings',
     'studio.save': 'Speichern',
     'studio.showHint': 'Hinweis anzeigen',
@@ -196,6 +205,44 @@ describe('workspace regression flows', () => {
     expect(onStartTour).toHaveBeenCalledTimes(1);
   });
 
+  it('deletes intro text paragraphs without restoring duplicate rows', () => {
+    function IntroTextHarness() {
+      const [draft, setDraft] = useState(() => {
+        const initial = buildWorkspaceDraft();
+        initial.tour.de.introSection = [
+          { type: 'paragraph', text: 'First paragraph' },
+          { type: 'paragraph', text: 'Second paragraph' },
+        ];
+        return initial;
+      });
+
+      return (
+        <IntroPhonePreview
+          draft={draft}
+          locale="de"
+          onChange={(patch) =>
+            setDraft((current) =>
+              typeof patch === 'function'
+                ? patch(current)
+                : { ...current, ...patch },
+            )
+          }
+          editable
+        />
+      );
+    }
+
+    render(<IntroTextHarness />);
+
+    clickControl('Beschreibung bearbeiten');
+    expect(container.textContent).toContain('Second paragraph');
+
+    clickControlAt('Eintrag löschen', 1);
+
+    expect(container.textContent).toContain('First paragraph');
+    expect(container.textContent).not.toContain('Second paragraph');
+  });
+
   it('uses the shared major edit button styling for the map edit toggle', () => {
     render(
       <MapEditPill content={null} active={false} onToggle={vi.fn()} />,
@@ -204,6 +251,55 @@ describe('workspace regression flows', () => {
     expect(control('Bearbeiten')?.classList.contains(
       'stq-mobile-studio__major-edit-toggle',
     )).toBe(true);
+  });
+
+  it('moves phone language selection into the header settings action', () => {
+    const onLocaleChange = vi.fn();
+
+    render(
+      <TourCardCanvas
+        draft={buildWorkspaceDraft()}
+        locale="de"
+        onChange={vi.fn()}
+        onLocaleChange={onLocaleChange}
+        floatingEditToggle={
+          <button type="button" aria-label="Bearbeiten">
+            edit
+          </button>
+        }
+      />,
+    );
+
+    expect(container.querySelector('.stq-tour-card-phone-header-locale')).toBeNull();
+    expect(control('Bearbeiten')).not.toBeNull();
+
+    clickControl('Sprachen');
+    clickButtonContaining('English');
+
+    expect(onLocaleChange).toHaveBeenCalledWith('en');
+  });
+
+  it('anchors mobile map edit controls inside the tour title pill', () => {
+    render(
+      <MapPreviewWorkspaceHarness
+        draft={buildWorkspaceDraft()}
+        locale="de"
+        onAddStation={vi.fn()}
+        onChange={vi.fn()}
+        layout="mobile"
+        mapEditMode
+        onToggleMapEditMode={vi.fn()}
+        showAddStationFab
+      />,
+    );
+
+    expect(
+      container.querySelector(
+        '.stq-phone-map-title-pill__action .stq-phone-map-edit-pill__toggle',
+      ),
+    ).toBe(control('Bearbeiten beenden'));
+    expect(container.querySelector('.stq-phone-map-edit-pill')).toBeNull();
+    expect(control('Add station')).not.toBeNull();
   });
 
   it('keeps tour copy and delete actions on the editable cover overlay', () => {
@@ -516,7 +612,7 @@ describe('workspace regression flows', () => {
     expect(onDeleteStation).toHaveBeenCalledWith('station-a');
   });
 
-  it('closes station sheet and right drawer when delete mode starts', () => {
+  it('hides map delete mode while the station sheet is open', () => {
     const draft = buildWorkspaceDraft();
 
     render(
@@ -542,10 +638,18 @@ describe('workspace regression flows', () => {
     expect(stationSheet()).not.toBeNull();
     expect(labeledField('Stationsname')).not.toBeNull();
 
-    clickControl('Station löschen');
+    expect(control('Station löschen')).toBeNull();
+
+    clickControl('Schließen');
+
+    expect(labeledField('Stationsname')).toBeNull();
+    expect(stationSheet()).not.toBeNull();
+    expect(control('Station löschen')).toBeNull();
+
+    clickControl('Back to stations');
 
     expect(stationSheet()).toBeNull();
-    expect(labeledField('Stationsname')).toBeNull();
+    expect(control('Station löschen')).not.toBeNull();
   });
 
   it('opens and closes the mobile station edit drawer from selection UI', () => {
@@ -704,6 +808,16 @@ function clickControl(label: string) {
   });
 }
 
+function clickControlAt(label: string, index: number) {
+  const target = controls(label)[index];
+  if (!target) {
+    throw new Error(`Control not found: ${label} at ${index}`);
+  }
+  act(() => {
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
+
 async function clickTextButtonAsync(text: string) {
   const target = Array.from(container.querySelectorAll('button')).find(
     (button) => button.textContent?.trim() === text,
@@ -722,6 +836,18 @@ function clickTextButton(text: string) {
   const target = textButton(text);
   if (!target) {
     throw new Error(`Button text not found: ${text}`);
+  }
+  act(() => {
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
+
+function clickButtonContaining(text: string) {
+  const target = Array.from(container.querySelectorAll('button')).find(
+    (button) => button.textContent?.includes(text),
+  );
+  if (!target) {
+    throw new Error(`Button containing text not found: ${text}`);
   }
   act(() => {
     target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
