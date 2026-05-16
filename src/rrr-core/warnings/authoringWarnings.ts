@@ -6,6 +6,7 @@ export type RrrAuthoringWarningCode =
   | 'missing_module_reference'
   | 'missing_fallback_reference'
   | 'compass_tolerance_narrow'
+  | 'safe_dial_tolerance_narrow'
   | 'direction_tolerance_narrow'
   | 'gps_radius_small'
   | 'proximity_radius_small'
@@ -137,6 +138,19 @@ function getModuleWarnings(
           {
             code: 'compass_tolerance_narrow',
             message: `Compass module "${module.label}" has a very narrow tolerance.`,
+            path: `modules.${index}.config.tolerance`,
+          },
+        ];
+      }
+      return [];
+    }
+    case 'safe_dial': {
+      const tolerance = readNumber(module.config.tolerance);
+      if (tolerance > 0 && tolerance < MIN_COMPASS_TOLERANCE_DEGREES) {
+        return [
+          {
+            code: 'safe_dial_tolerance_narrow',
+            message: `Safe dial module "${module.label}" has a very narrow code tolerance.`,
             path: `modules.${index}.config.tolerance`,
           },
         ];

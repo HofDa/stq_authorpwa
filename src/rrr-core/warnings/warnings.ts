@@ -14,6 +14,8 @@ export type RrrWarningCode =
   | 'multi_choice_correct_empty'
   | 'compass_target_invalid'
   | 'compass_tolerance_narrow'
+  | 'safe_dial_target_invalid'
+  | 'safe_dial_tolerance_narrow'
   | 'direction_target_invalid'
   | 'direction_tolerance_narrow'
   | 'gps_missing_coordinates'
@@ -134,6 +136,28 @@ function getModuleWarnings(module: RrrModule): RrrWarning[] {
         out.push({
           code: 'compass_tolerance_narrow',
           message: `Baustein "${module.label}" hat eine sehr enge Toleranz (< ${MIN_COMPASS_TOLERANCE_DEGREES}°).`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      return out;
+    }
+    case 'safe_dial': {
+      const out: RrrWarning[] = [];
+      const targetDegrees = module.config.targetDegrees;
+      if (!isValidDegrees(targetDegrees)) {
+        out.push({
+          code: 'safe_dial_target_invalid',
+          message: `Baustein "${module.label}" braucht eine gültige Codeposition.`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      const tolerance = readNumber(module.config.tolerance);
+      if (tolerance > 0 && tolerance < MIN_COMPASS_TOLERANCE_DEGREES) {
+        out.push({
+          code: 'safe_dial_tolerance_narrow',
+          message: `Baustein "${module.label}" hat eine sehr enge Code-Toleranz (< ${MIN_COMPASS_TOLERANCE_DEGREES}°).`,
           severity: 'warning',
           moduleId: module.id,
         });

@@ -4,6 +4,7 @@ const MODULE_ID_BASES: Record<RrrModuleType, string> = {
   text_answer: 'module',
   multi_choice: 'multi_choice',
   compass_align: 'face_direction',
+  safe_dial: 'safe_dial',
   direction_hotcold: 'direction_hotcold',
   hold_still: 'hold_still',
   gps_enter: 'gps_enter',

@@ -397,6 +397,8 @@ function getModuleInstruction(module: RrrModule): string {
       return 'Gehe zum Zielort, bis der Nähe-Hinweis den Zielradius meldet.';
     case 'compass_align':
       return 'Drehe dich mit dem Handy nach Osten.';
+    case 'safe_dial':
+      return 'Drehe das Handy wie ein Tresor-Drehrad bis zur Codeposition.';
     case 'direction_hotcold':
       return 'Drehe dich mit dem Handy, bis das warm/kalt-Feedback korrekt wird.';
     case 'hold_still':

@@ -50,6 +50,27 @@ describe('evaluateModule', () => {
     ).toBe('running');
   });
 
+  it('evaluates safe_dial modules', () => {
+    const module = moduleWithConfig('safe_dial', {
+      targetDegrees: 30,
+      tolerance: 8,
+      holdMs: 900,
+    });
+
+    expect(
+      evaluateModule(module, {
+        ...baseInput,
+        mockState: { headingDegrees: 35 },
+      }).status,
+    ).toBe('success');
+    expect(
+      evaluateModule(module, {
+        ...baseInput,
+        mockState: { headingDegrees: 70 },
+      }).status,
+    ).toBe('running');
+  });
+
   it('evaluates direction_hotcold modules with proximity feedback', () => {
     const module = moduleWithConfig('direction_hotcold', {
       targetDegrees: 0,

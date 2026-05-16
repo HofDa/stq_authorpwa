@@ -23,6 +23,8 @@ export function evaluateModule(
       return evaluateMultiChoice(module, input);
     case 'compass_align':
       return evaluateCompassAlign(module, input);
+    case 'safe_dial':
+      return evaluateSafeDial(module, input);
     case 'direction_hotcold':
       return evaluateDirectionHotCold(module, input);
     case 'hold_still':
@@ -181,6 +183,29 @@ function evaluateCompassAlign(
     aligned
       ? `Innerhalb von ${tolerance} Grad`
       : `${Math.round(delta)} Grad vom Ziel entfernt`,
+  );
+}
+
+function evaluateSafeDial(
+  module: RrrModule,
+  input: RrrRuntimeEvaluationInput,
+): RrrModuleResult {
+  const headingDegrees = input.mockState.headingDegrees;
+  if (!isFiniteNumber(headingDegrees)) {
+    return moduleResult(module, 'running', 'Warte auf Drehrad');
+  }
+
+  const targetDegrees = normalizeDegrees(readNumber(module.config.targetDegrees));
+  const tolerance = Math.max(1, readNumber(module.config.tolerance) || 12);
+  const delta = headingDelta(headingDegrees, targetDegrees);
+  const unlocked = delta <= tolerance;
+
+  return moduleResult(
+    module,
+    unlocked ? 'success' : 'running',
+    unlocked
+      ? 'Tresor entriegelt'
+      : `${Math.round(delta)} Grad vom Code entfernt`,
   );
 }
 

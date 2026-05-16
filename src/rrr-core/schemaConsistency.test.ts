@@ -19,6 +19,7 @@ const CORE_EVALUATED_MODULE_TYPES = [
   'text_answer',
   'multi_choice',
   'compass_align',
+  'safe_dial',
   'direction_hotcold',
   'hold_still',
   'gps_enter',

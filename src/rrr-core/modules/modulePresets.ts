@@ -61,6 +61,16 @@ export const RRR_MODULE_PRESETS: Record<RrrModuleType, RrrModulePreset> = {
     recommendedFallbackTypes: ['code_word'],
     createConfig: () => ({ targetDegrees: 0, tolerance: 15 }),
   },
+  safe_dial: {
+    type: 'safe_dial',
+    label: 'Tresor-Drehrad',
+    category: 'Ausrichtung & Sensoren',
+    difficulty: 'advanced',
+    reliability: 'device-dependent',
+    needsFallback: true,
+    recommendedFallbackTypes: ['code_word'],
+    createConfig: () => ({ targetDegrees: 0, tolerance: 12, holdMs: 900 }),
+  },
   direction_hotcold: {
     type: 'direction_hotcold',
     label: 'Richtung warm/kalt',

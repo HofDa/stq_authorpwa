@@ -824,6 +824,14 @@ function RrrModuleEditor({
             />
           )}
 
+          {module.type === 'safe_dial' && (
+            <SafeDialEditor
+              config={config}
+              expertMode={expertMode}
+              onPatchConfig={patchConfig}
+            />
+          )}
+
           {module.type === 'hold_still' && (
             <HoldStillDurationEditor
               config={config}
@@ -1298,6 +1306,59 @@ function HoldStillDurationEditor({
           label={t('rrr.editor.hold.expertLabel')}
           value={durationMs}
           onChange={setDurationMs}
+        />
+      )}
+    </div>
+  );
+}
+
+function SafeDialEditor({
+  config,
+  expertMode,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  expertMode: boolean;
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const { t } = useEditorLanguage();
+  const holdMs = normalizeDurationMs(readNumber(config.holdMs) || 900);
+  const holdSliderValue = clampNumber(holdMs, 0, 3000);
+
+  function setHoldMs(value: number) {
+    onPatchConfig({ holdMs: normalizeDurationMs(value) });
+  }
+
+  return (
+    <div className="stq-rrr-safe-dial-editor">
+      <CompassDirectionPicker
+        config={config}
+        expertMode={expertMode}
+        toleranceLabel={t('rrr.editor.module.safeDialToleranceLabel')}
+        toleranceHint={t('rrr.editor.module.safeDialToleranceHint')}
+        onPatchConfig={onPatchConfig}
+      />
+      <label className="stq-rrr-field">
+        <span>
+          {t('rrr.editor.module.safeDialHoldLabel')}: {formatDurationSeconds(holdMs)}
+        </span>
+        <input
+          type="range"
+          min="0"
+          max="3000"
+          step="100"
+          value={holdSliderValue}
+          onChange={(event) => setHoldMs(Number(event.target.value))}
+        />
+        <small className="stq-rrr-field__hint">
+          {t('rrr.editor.module.safeDialHoldHint')}
+        </small>
+      </label>
+      {expertMode && (
+        <NumberField
+          label={t('rrr.editor.module.safeDialHoldExpertLabel')}
+          value={holdMs}
+          onChange={setHoldMs}
         />
       )}
     </div>
@@ -2176,6 +2237,12 @@ function getModuleCardMeta(module: RrrModule, t: EditorT): {
         description: t('rrr.editor.card.compassDescription'),
         icon: 'compass',
       };
+    case 'safe_dial':
+      return {
+        title: t('rrr.editor.card.safeDialTitle'),
+        description: t('rrr.editor.card.safeDialDescription'),
+        icon: 'compass',
+      };
     case 'direction_hotcold':
       return {
         title: t('rrr.editor.card.directionHotcoldTitle'),
@@ -2321,6 +2388,21 @@ function getModuleSettingsSummary(
         {
           label: t('rrr.editor.summary.tolerance'),
           value: `±${formatNumber(readNumber(config.tolerance), 0)}°`,
+        },
+      ];
+    case 'safe_dial':
+      return [
+        {
+          label: t('rrr.editor.summary.direction'),
+          value: `${formatNumber(readNumber(config.targetDegrees), 0)}°`,
+        },
+        {
+          label: t('rrr.editor.summary.tolerance'),
+          value: `±${formatNumber(readNumber(config.tolerance), 0)}°`,
+        },
+        {
+          label: t('rrr.editor.summary.hold'),
+          value: formatDurationSeconds(readNumber(config.holdMs) || 900),
         },
       ];
     case 'direction_hotcold':

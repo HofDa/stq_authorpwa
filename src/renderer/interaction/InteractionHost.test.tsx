@@ -64,6 +64,7 @@ afterEach(() => {
     root.unmount();
   });
   container.remove();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -159,6 +160,43 @@ describe('InteractionHost', () => {
     expect(container.textContent).toContain('Richte das Gerät aus');
     expect(container.querySelector('.stq-rrr-hotcold--warm')).not.toBeNull();
     expect(onCorrect).not.toHaveBeenCalled();
+  });
+
+  it('renders safe_dial modules and completes after the hold time', () => {
+    vi.useFakeTimers();
+    liveHeadingState.heading = 30;
+    liveHeadingState.status = 'available';
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'safe_dial_1',
+          type: 'safe_dial',
+          label: 'Tresor-Drehrad',
+          config: { targetDegrees: 30, tolerance: 8, holdMs: 100 },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'safe_dial_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.querySelector('.stq-rrr-safe-dial--unlocked')).not.toBeNull();
+    expect(container.textContent).toContain('Code halten');
+
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+
+    expect(onCorrect).toHaveBeenCalledTimes(1);
   });
 
   it('renders proximity_hint modules with the radar visual', () => {

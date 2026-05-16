@@ -38,6 +38,7 @@ import { CompassControl } from './CompassControl';
 import { DirectionHotColdControl } from './DirectionHotColdControl';
 import { MorseCodeControl } from './MorseCodeControl';
 import { ProximityRadarControl } from './ProximityRadarControl';
+import { SafeDialControl } from './SafeDialControl';
 import { TextAnswerControl } from './TextAnswerControl';
 
 const QrScanner = lazy(() =>
@@ -519,6 +520,22 @@ function GuidedControl({
         />
       );
     }
+    case 'safe_dial': {
+      const targetDegrees = normalizeDegrees(
+        readNumber(module.config.targetDegrees),
+      );
+      const tolerance = Math.max(2, readNumber(module.config.tolerance) || 12);
+      const holdMs = Math.max(0, readNumber(module.config.holdMs) || 900);
+      return (
+        <SafeDialControl
+          heading={inputs.headingDegrees}
+          targetDegrees={targetDegrees}
+          tolerance={tolerance}
+          holdMs={holdMs}
+          onHeadingChange={(heading) => onPatchInputs({ headingDegrees: heading })}
+        />
+      );
+    }
     case 'gps_enter': {
       const lat = readNumber(module.config.lat);
       const lng = readNumber(module.config.lng);
@@ -842,6 +859,8 @@ function getPlayerInstruction(module: RrrModule): string {
       return 'Der Spieler richtet das Gerät auf die Zielrichtung aus.';
     case 'direction_hotcold':
       return 'Der Spieler dreht sich zur Zielrichtung und erhält warm/kalt-Feedback.';
+    case 'safe_dial':
+      return 'Der Spieler dreht das Gerät wie ein Tresor-Drehrad bis zum Code.';
     case 'hold_still':
       return 'Der Spieler hält das Gerät ruhig.';
     case 'gps_enter':
@@ -881,6 +900,8 @@ function getModuleTypeLabel(type: RrrModuleType): string {
       return 'Richtung';
     case 'direction_hotcold':
       return 'Richtung warm/kalt';
+    case 'safe_dial':
+      return 'Tresor-Drehrad';
     case 'hold_still':
       return 'Stillhalten';
     case 'gps_enter':

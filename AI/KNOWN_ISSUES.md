@@ -212,6 +212,18 @@ Files: `src/components/studio/mobile/MobileStudioShell.tsx`, `src/components/stu
 Cause: overview/intro/outro used a small translucent floating chip while the map edit pill anchored next to zoom controls and the station/riddle card edit toggle lived inside the sheet toolbar, so the primary edit affordance looked and behaved differently across mobile surfaces.
 Fix: overview, intro, outro, map and station/riddle card edit toggles now share the larger token-styled `.stq-mobile-studio__major-edit-toggle` and the same top-right floating anchor. `MapEditPill` keeps ownership of expanded map actions, and the station-card toggle remains independent while preserving adjacent map actions when present. Covered by `workspaceRegression.test.tsx`.
 
+### 2026-05-16 — Safe dial depends on browser/device sensor and feedback behavior
+
+Files: `src/renderer/interaction/SafeDialPlayer.tsx`, `src/components/rrr-runtime/SafeDialVisual.tsx`, `src/components/rrr-runtime/ModuleFeedback.tsx`, `src/components/rrr-runtime/useLiveDeviceHeading.ts`.
+Cause: the module uses browser device-orientation heading, Web Audio and vibration APIs. Desktop tests can verify wiring and state transitions, but not real compass stability, iOS permission behavior, audio unlock policies or vibration availability.
+Fix: keep sensor access in `useLiveDeviceHeading`, keep haptic/audio in `ModuleFeedback`, and require Android/iOS field checks before treating safe dial as fully production-field proven. Covered by core evaluator, editor, player, schema, typecheck, lint and build verification; still needs real-device QA.
+
+### 2026-05-16 — PWA virtual register import needs direct `workbox-window` dependency
+
+Files: `package.json`, `package-lock.json`, `src/app/registerSW.ts`, `vite.config.ts`.
+Cause: `virtual:pwa-register` emitted a build-time import from `workbox-window`, but the package was only present transitively through `vite-plugin-pwa` / Workbox in the local install. Clean deploy installs could fail Rollup resolution with `failed to resolve import "workbox-window"`.
+Fix: declare `workbox-window` as a direct runtime dependency and regenerate the lock metadata so deploy/build environments install it as production code. Verified with `npm run build`.
+
 ### 2026-05-15 — Edit mode hid most editable frames until hover or selection
 
 Files: `src/styles/editable-overlay.css`, `src/components/studio/TourCardCanvas.tsx`, `src/components/studio/workspaces/IntroPhonePreview.tsx`, `src/renderer/RiddleScreen.tsx`.

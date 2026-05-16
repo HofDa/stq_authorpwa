@@ -2,6 +2,20 @@
 
 Use this file to prevent repeated architectural debates and agent drift.
 
+## 2026-05-16 — Refactor QR and MapLibre without adding new lazy split points
+
+Decision:
+The QR scanner and MapLibre map provider were refactored inside their existing lazy boundaries. `QrScanner.tsx` remains the single public scanner component, while camera/session lifecycle moved to `useQrScannerSession.ts` and pure status/failure helpers moved to `qrScannerModel.ts`. `MapLibreAuthorMap.tsx` remains the `AuthorMap` provider composer; only provider-owned refs and the map error overlay were extracted.
+
+Reason:
+The production chunk warnings are driven mostly by third-party payload (`@zxing/browser` and `maplibre-gl`), not by local component line count. Splitting scanner or MapLibre internals into more async chunks would add PWA stale-chunk risk and could destabilize scanner ownership or active map gestures. The useful maintainability gain is smaller files and clearer ownership inside the same lazy chunks.
+
+Verification expectation:
+Scanner refactors need tests for explicit camera start, status transitions, decoded-value trimming, permission/unavailable states and cleanup. MapLibre composer refactors need focused map helper/manual-pan/map-click/workspace regression tests plus typecheck/build.
+
+Rejected alternatives:
+Moving `@zxing/browser` or `maplibre-gl` into eager app code; changing `AuthorMapProps`; moving provider hooks into workspaces; splitting active map gesture, route editing or scanner ownership across additional lazy boundaries without a dedicated PWA stale-chunk review.
+
 ## 2026-05-16 — Keep visual riddle modules split into visual, author control and player wrapper
 
 Decision:
@@ -445,6 +459,20 @@ There are more hashed chunks in the PWA precache, increasing stale-chunk surface
 
 Rejected alternatives:
 Splitting inside MapLibre lifecycle hooks, route-edit gesture handling, RRR runtime evaluators, schema/storage code, export serializer internals, or changing the service-worker/runtime caching strategy in the same PR.
+
+## 2026-05-16 — Add safe dial as a first-class RRR module
+
+Decision:
+Register `safe_dial` as a normal RRR module type with schema/core support, editor preset, locale-backed author controls, mock-preview control, player wrapper and a token-styled `SafeDialVisual`. The config stays small and explicit: `targetDegrees`, `tolerance` and `holdMs`.
+
+Reason:
+The requested behavior is the same sensor family as compass alignment, but the user experience is different: players rotate the device like a safe dial, get haptic/audio feedback through the existing `ModuleFeedback` path, and solve only after holding the code position briefly. Reusing `useLiveDeviceHeading` preserves the runtime/UI separation and avoids direct sensor access from visual components.
+
+Tradeoffs:
+The evaluator remains stateless and only checks the angular match. The player owns hold timing and sensory feedback because those depend on browser runtime behavior. Real device checks are still required for compass quality, audio unlock behavior and vibration support.
+
+Rejected alternatives:
+Adding a generic sensor abstraction, adding hidden global dial state, embedding sensor reads inside the visual component, or changing the existing `compass_align` contract.
 
 ## Existing architectural decisions to preserve
 

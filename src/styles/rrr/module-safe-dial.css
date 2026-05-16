@@ -1,0 +1,179 @@
+.stq-rrr-safe-dial,
+.stq-rrr-safe-dial-control,
+.stq-rrr-safe-dial-editor,
+.stq-riddle-safe-dial-player {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stq-rrr-safe-dial,
+.stq-riddle-safe-dial-player {
+  align-items: center;
+  width: 100%;
+}
+
+.stq-rrr-safe-dial {
+  max-width: 300px;
+  align-self: center;
+  border: 1px solid var(--stq-color-border);
+  border-radius: var(--stq-radius-sm);
+  background: var(--stq-color-surface);
+  padding: 14px;
+  box-shadow: inset 0 1px 8px rgba(var(--stq-color-text-rgb), 0.04);
+}
+
+.stq-rrr-safe-dial__face {
+  position: relative;
+  width: min(212px, 100%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 48%, var(--stq-color-surface) 0 33%, transparent 34%),
+    conic-gradient(
+      from -90deg,
+      rgba(var(--stq-color-route-rgb), 0.2),
+      rgba(var(--stq-color-primary-rgb), 0.38),
+      rgba(var(--stq-color-success-rgb), 0.48),
+      rgba(var(--stq-color-route-rgb), 0.2)
+    );
+  box-shadow:
+    inset 0 0 0 1px var(--stq-color-border),
+    inset 0 10px 26px rgba(var(--stq-color-text-rgb), 0.08);
+}
+
+.stq-rrr-safe-dial__wheel {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  transform: rotate(calc(var(--stq-rrr-safe-dial-heading) * -1));
+  transition: transform 180ms ease;
+}
+
+.stq-rrr-safe-dial__tick {
+  position: absolute;
+  top: 5px;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 12px;
+  border-radius: var(--stq-radius-pill);
+  background: rgba(var(--stq-color-text-rgb), 0.34);
+  transform: rotate(var(--stq-rrr-safe-dial-tick)) translateY(0);
+  transform-origin: 1px 88px;
+}
+
+.stq-rrr-safe-dial__tick--major {
+  height: 20px;
+  background: var(--stq-color-text);
+}
+
+.stq-rrr-safe-dial__target {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  transform: rotate(var(--stq-rrr-safe-dial-target));
+}
+
+.stq-rrr-safe-dial__target::before {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: calc(50% - 5px);
+  width: 10px;
+  height: 28px;
+  border-radius: var(--stq-radius-pill);
+  background: var(--stq-color-success);
+  box-shadow: 0 0 18px rgba(var(--stq-color-success-rgb), 0.36);
+}
+
+.stq-rrr-safe-dial__hub {
+  position: absolute;
+  inset: 50%;
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  border: 1px solid var(--stq-color-border);
+  border-radius: 50%;
+  background: var(--stq-color-surface);
+  box-shadow: inset 0 0 14px rgba(var(--stq-color-text-rgb), 0.08);
+  color: var(--stq-color-text);
+  transform: translate(-50%, -50%);
+  transition: border-color 180ms ease, color 180ms ease;
+}
+
+.stq-rrr-safe-dial--unlocked .stq-rrr-safe-dial__hub {
+  border-color: rgba(var(--stq-color-success-rgb), 0.55);
+  color: var(--stq-color-success);
+}
+
+.stq-rrr-safe-dial__state {
+  align-self: end;
+  color: var(--stq-color-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.stq-rrr-safe-dial__hub strong {
+  align-self: start;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.stq-rrr-safe-dial__pointer {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 14px solid var(--stq-color-text);
+  transform: translateX(-50%);
+}
+
+.stq-rrr-safe-dial__stats {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.stq-rrr-safe-dial__stats div {
+  border: 1px solid var(--stq-color-border);
+  border-radius: var(--stq-radius-sm);
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.stq-rrr-safe-dial__stats dt {
+  color: var(--stq-color-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stq-rrr-safe-dial__stats dd {
+  margin: 2px 0 0;
+  color: var(--stq-color-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stq-rrr-safe-dial-control__live,
+.stq-rrr-safe-dial-control__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stq-rrr-safe-dial-control__footer small {
+  color: var(--stq-color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}

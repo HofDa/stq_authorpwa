@@ -19,7 +19,7 @@ vi.mock('@zxing/browser', () => ({
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
 let container: HTMLDivElement;
-let root: Root;
+let root: Root | null;
 let originalMediaDevices: MediaDevices | undefined;
 type MockScannerControls = { stop: ReturnType<typeof vi.fn> };
 
@@ -36,9 +36,12 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  act(() => {
-    root.unmount();
-  });
+  if (root) {
+    act(() => {
+      root?.unmount();
+    });
+    root = null;
+  }
   container.remove();
   Object.defineProperty(navigator, 'mediaDevices', {
     configurable: true,
@@ -85,7 +88,7 @@ describe('QrScanner', () => {
     await clickButton('Kamera aktivieren');
 
     act(() => {
-      scanCallback?.({ getText: () => 'station-3-gate' }, undefined, controls);
+      scanCallback?.({ getText: () => ' station-3-gate ' }, undefined, controls);
     });
 
     expect(onScan).toHaveBeenCalledWith('station-3-gate');
@@ -118,11 +121,41 @@ describe('QrScanner', () => {
     expect(zxingMock.decodeFromConstraints).not.toHaveBeenCalled();
     expect(container.textContent).toContain('Kamera nicht verfügbar');
   });
+
+  it('reports status transitions to the owner', async () => {
+    const onStatusChange = vi.fn();
+    const controls = { stop: vi.fn() };
+    zxingMock.decodeFromConstraints.mockResolvedValue(controls);
+
+    render(<QrScanner onScan={() => {}} onStatusChange={onStatusChange} />);
+    await clickButton('Kamera aktivieren');
+
+    expect(onStatusChange.mock.calls.map(([status]) => status)).toEqual([
+      'idle',
+      'requesting',
+      'scanning',
+    ]);
+  });
+
+  it('stops scanner controls on unmount', async () => {
+    const controls = { stop: vi.fn() };
+    zxingMock.decodeFromConstraints.mockResolvedValue(controls);
+
+    render(<QrScanner onScan={() => {}} />);
+    await clickButton('Kamera aktivieren');
+
+    act(() => {
+      root?.unmount();
+    });
+    root = null;
+
+    expect(controls.stop).toHaveBeenCalledTimes(1);
+  });
 });
 
 function render(element: ReactElement) {
   act(() => {
-    root.render(element);
+    root?.render(element);
   });
 }
 

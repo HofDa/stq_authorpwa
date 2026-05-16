@@ -5,6 +5,7 @@ import { DirectionHotColdPlayer } from './DirectionHotColdPlayer';
 import { MorseCodePlayer } from './MorseCodePlayer';
 import { ProximityRadarPlayer } from './ProximityRadarPlayer';
 import { QrScanPlayer } from './QrScanPlayer';
+import { SafeDialPlayer } from './SafeDialPlayer';
 import { TextAnswerPlayer } from './TextAnswerPlayer';
 
 export interface InteractionHostLabels {
@@ -101,6 +102,26 @@ export function InteractionHost({
           unavailableLabel={labels.compassUnavailable}
           deniedLabel={labels.compassDenied}
           alignedLabel={labels.compassAligned}
+          alignLabel={labels.compassAlign}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    }
+    case 'safe_dial': {
+      const targetDegrees = readNumber(activeModule.config.targetDegrees);
+      const tolerance = Math.max(2, readNumber(activeModule.config.tolerance) || 12);
+      const holdMs = Math.max(0, readNumber(activeModule.config.holdMs) || 900);
+      return (
+        <SafeDialPlayer
+          targetDegrees={targetDegrees}
+          tolerance={tolerance}
+          holdMs={holdMs}
+          enableLabel={labels.compassEnable}
+          startingLabel={labels.compassStarting}
+          unavailableLabel={labels.compassUnavailable}
+          deniedLabel={labels.compassDenied}
+          unlockedLabel="Tresor entriegelt"
           alignLabel={labels.compassAlign}
           onCorrect={onCorrect}
           disabled={disabled}

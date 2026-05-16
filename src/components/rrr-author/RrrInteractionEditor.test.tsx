@@ -490,6 +490,32 @@ describe('RrrInteractionEditor', () => {
     });
   });
 
+  it('renders safe_dial authoring controls and guided dial simulation', () => {
+    const onChange = vi.fn();
+    renderEditor(
+      <RrrInteractionEditor
+        interaction={safeDialInteraction}
+        onChange={onChange}
+      />,
+    );
+
+    expect(container.textContent).toContain('Tresor-Drehrad');
+    expect(container.textContent).toContain(
+      'Der Spieler dreht das Gerät wie ein Tresor-Drehrad bis zum Code.',
+    );
+    expect(container.textContent).toContain('Drehrad simulieren');
+    expect(container.querySelector('.stq-rrr-safe-dial')).not.toBeNull();
+
+    clickButton('Codeposition simulieren');
+
+    expect(container.textContent).toContain('Tresor entriegelt');
+
+    clickButton('Bearbeiten');
+
+    expect(container.textContent).toContain('Code-Toleranz');
+    expect(container.textContent).toContain('Code halten');
+  });
+
   it('renders proximity_hint authoring controls and guided GPS simulation', () => {
     const onChange = vi.fn();
     renderEditor(
@@ -505,7 +531,10 @@ describe('RrrInteractionEditor', () => {
     );
     expect(container.textContent).toContain('Weit entfernt');
 
-    clickButton('Innerhalb des Radius');
+    expect(container.textContent).toContain('Zielradius');
+    expect(container.querySelector('.stq-rrr-radar')).not.toBeNull();
+
+    clickButton('In den Zielradius setzen');
 
     expect(container.textContent).toContain('Im Zielradius');
 
@@ -1034,6 +1063,22 @@ const directionHotcoldInteraction: RrrInteraction = {
   condition: {
     type: 'module',
     moduleId: 'direction_hotcold_1',
+  },
+};
+
+const safeDialInteraction: RrrInteraction = {
+  schemaVersion: 1,
+  modules: [
+    {
+      id: 'safe_dial_1',
+      type: 'safe_dial',
+      label: 'Tresor-Drehrad',
+      config: { targetDegrees: 120, tolerance: 12, holdMs: 900 },
+    },
+  ],
+  condition: {
+    type: 'module',
+    moduleId: 'safe_dial_1',
   },
 };
 
