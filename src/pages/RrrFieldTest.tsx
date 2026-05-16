@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  RRR_FIELD_TEST_ISSUE_TAG_OPTIONS,
   createRrrFieldTestReport,
   downloadRrrFieldTestReport,
   getRrrWarnings,
@@ -331,7 +332,7 @@ export function RrrFieldTest() {
             />
           </label>
           <div className="stq-rrr-field-test-tags" aria-label="Feldtest-Problem-Tags">
-            {FIELD_TEST_ISSUE_TAG_OPTIONS.map((option) => (
+            {RRR_FIELD_TEST_ISSUE_TAG_OPTIONS.map((option) => (
               <label key={option.value} className="stq-rrr-check">
                 <input
                   type="checkbox"
@@ -360,19 +361,6 @@ export function RrrFieldTest() {
     </section>
   );
 }
-
-const FIELD_TEST_ISSUE_TAG_OPTIONS: Array<{
-  value: RrrFieldTestIssueTag;
-  label: string;
-}> = [
-  { value: 'gps_ungenau', label: 'GPS ungenau' },
-  { value: 'kompass_instabil', label: 'Kompass instabil' },
-  { value: 'qr_schlecht_lesbar', label: 'QR schlecht lesbar' },
-  { value: 'aufgabe_unklar', label: 'Aufgabe unklar' },
-  { value: 'ort_schwer_zugaenglich', label: 'Ort schwer zugänglich' },
-  { value: 'ersatzloesung_noetig', label: 'Ersatzlösung nötig' },
-  { value: 'sonstiges', label: 'Sonstiges' },
-];
 
 function getConfiguredGpsRadius(interaction: RrrInteraction): number | undefined {
   const gpsModule = interaction.modules.find(

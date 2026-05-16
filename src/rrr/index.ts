@@ -1,6 +1,7 @@
 export * from './types';
 export * from './authoringWarnings';
 export * from './conditions';
+export * from './fieldTestMetadata';
 export * from './fieldTestReport';
 export * from './feedbackPatterns';
 export * from './interactionTemplates';

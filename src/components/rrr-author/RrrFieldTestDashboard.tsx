@@ -3,39 +3,18 @@ import type {
   RrrFieldTestStatus,
   TourDraft,
 } from '@/schema';
-import { formatRrrFieldTestIssueTag } from '@/rrr';
+import {
+  RRR_FIELD_TEST_STATUS_OPTIONS,
+  formatRrrFieldTestIssueTag,
+  getRrrFieldTestCompactStatusLabel,
+  getRrrFieldTestDashboardStatusLabel,
+  getRrrFieldTestEmptyStatusLabel,
+} from '@/rrr';
 
 interface Props {
   draft: TourDraft;
   onSelectStation?: (stationId: string) => void;
 }
-
-const FIELD_TEST_STATUSES: Array<{
-  value: RrrFieldTestStatus;
-  label: string;
-  emptyLabel: string;
-}> = [
-  {
-    value: 'not_tested',
-    label: 'Nicht getestet',
-    emptyLabel: 'Keine ungetesteten Stationen',
-  },
-  {
-    value: 'tested_ok',
-    label: 'Getestet OK',
-    emptyLabel: 'Noch keine Stationen ohne Hinweise',
-  },
-  {
-    value: 'tested_with_warnings',
-    label: 'Mit Warnungen',
-    emptyLabel: 'Keine Stationen mit Warnungen',
-  },
-  {
-    value: 'needs_fix',
-    label: 'Braucht Korrektur',
-    emptyLabel: 'Keine Stationen mit Korrekturbedarf',
-  },
-];
 
 export function RrrFieldTestDashboard({ draft, onSelectStation }: Props) {
   const modularStations = draft.stations.filter(
@@ -46,7 +25,7 @@ export function RrrFieldTestDashboard({ draft, onSelectStation }: Props) {
     return null;
   }
 
-  const counts = FIELD_TEST_STATUSES.map((status) => ({
+  const counts = RRR_FIELD_TEST_STATUS_OPTIONS.map((status) => ({
     ...status,
     count: modularStations.filter(
       (station) => getStationStatus(station) === status.value,
@@ -72,14 +51,14 @@ export function RrrFieldTestDashboard({ draft, onSelectStation }: Props) {
         </div>
         {counts.map((status) => (
           <div key={status.value}>
-            <dt>{getCompactStatusLabel(status.value)}</dt>
+            <dt>{getRrrFieldTestCompactStatusLabel(status.value)}</dt>
             <dd>{status.count}</dd>
           </div>
         ))}
       </dl>
 
       <div className="stq-rrr-field-test-dashboard__groups">
-        {FIELD_TEST_STATUSES.map((status) => {
+        {RRR_FIELD_TEST_STATUS_OPTIONS.map((status) => {
           const stations = modularStations.filter(
             (station) => getStationStatus(station) === status.value,
           );
@@ -90,7 +69,9 @@ export function RrrFieldTestDashboard({ draft, onSelectStation }: Props) {
               className={`stq-rrr-field-test-dashboard__group stq-rrr-field-test-dashboard__group--${status.value}`}
             >
               <div className="stq-rrr-field-test-dashboard__group-head">
-                <strong>{status.label}</strong>
+                <strong>
+                  {getRrrFieldTestDashboardStatusLabel(status.value)}
+                </strong>
                 <span>{stations.length}</span>
               </div>
 
@@ -118,7 +99,7 @@ export function RrrFieldTestDashboard({ draft, onSelectStation }: Props) {
                   ))}
                 </ul>
               ) : (
-                <p>{status.emptyLabel}</p>
+                <p>{getRrrFieldTestEmptyStatusLabel(status.value)}</p>
               )}
             </article>
           );
@@ -139,17 +120,4 @@ function getStationLabel(station: RiddleEntry): string {
     station.it.location.trim() ||
     `Station ${station.number}`
   );
-}
-
-function getCompactStatusLabel(status: RrrFieldTestStatus): string {
-  switch (status) {
-    case 'tested_ok':
-      return 'OK';
-    case 'tested_with_warnings':
-      return 'Warnungen';
-    case 'needs_fix':
-      return 'Fix';
-    case 'not_tested':
-      return 'Offen';
-  }
 }

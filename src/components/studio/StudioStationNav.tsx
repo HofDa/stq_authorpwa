@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import type { Locale, RrrFieldTestStatus, TourDraft } from '@/schema';
+import type { Locale, TourDraft } from '@/schema';
+import { getRrrFieldTestStatusBadgeLabel } from '@/rrr';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
 import { getStationLocationLabel } from '@/utils/localizedContent';
 import { Icon } from './Icon';
@@ -119,7 +120,10 @@ export function StudioStationNav({
                 <span
                   className={`stq-author-nav-item__rrr-status stq-author-nav-item__rrr-status--${fieldTestStatus}`}
                 >
-                  {getFieldTestStatusBadgeLabel(fieldTestStatus, issueTagCount)}
+                  {getRrrFieldTestStatusBadgeLabel(
+                    fieldTestStatus,
+                    issueTagCount,
+                  )}
                 </span>
               )}
               {onDeleteStation && (
@@ -172,21 +176,4 @@ export function StudioStationNav({
       </div>
     </div>
   );
-}
-
-function getFieldTestStatusBadgeLabel(
-  status: RrrFieldTestStatus,
-  issueTagCount: number,
-): string {
-  const suffix = issueTagCount > 0 ? ` · ${issueTagCount}` : '';
-  switch (status) {
-    case 'tested_ok':
-      return `OK${suffix}`;
-    case 'tested_with_warnings':
-      return `Hinweise${suffix}`;
-    case 'needs_fix':
-      return `Fix${suffix}`;
-    case 'not_tested':
-      return `Nicht getestet${suffix}`;
-  }
 }

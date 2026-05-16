@@ -6,6 +6,7 @@ import {
   type RrrWarning,
 } from '@/rrr-core';
 import type { RrrFieldTestIssueTag } from '@/schema';
+import { formatRrrFieldTestIssueTag } from './fieldTestMetadata';
 import type { RrrSensorAvailability } from '@/rrr-sensors';
 
 export interface RrrFieldTestReportStation {
@@ -138,7 +139,9 @@ export function formatRrrFieldTestReportMarkdown(
     '',
     '## Issue Tags',
     '',
-    report.issueTags.length > 0 ? `- ${report.issueTags.map(formatIssueTag).join(', ')}` : '- none',
+    report.issueTags.length > 0
+      ? `- ${report.issueTags.map(formatRrrFieldTestIssueTag).join(', ')}`
+      : '- none',
     '',
     '## Notes',
     '',
@@ -147,12 +150,6 @@ export function formatRrrFieldTestReportMarkdown(
   ];
 
   return lines.join('\n');
-}
-
-export function formatRrrFieldTestIssueTag(
-  tag: RrrFieldTestIssueTag,
-): string {
-  return formatIssueTag(tag);
 }
 
 export function downloadRrrFieldTestReport(
@@ -200,25 +197,6 @@ function normalizeSensors(
 function normalizeNotes(notes: string | undefined): string | undefined {
   const trimmed = notes?.trim();
   return trimmed ? trimmed : undefined;
-}
-
-function formatIssueTag(tag: RrrFieldTestIssueTag): string {
-  switch (tag) {
-    case 'gps_ungenau':
-      return 'GPS ungenau';
-    case 'kompass_instabil':
-      return 'Kompass instabil';
-    case 'qr_schlecht_lesbar':
-      return 'QR schlecht lesbar';
-    case 'aufgabe_unklar':
-      return 'Aufgabe unklar';
-    case 'ort_schwer_zugaenglich':
-      return 'Ort schwer zugänglich';
-    case 'ersatzloesung_noetig':
-      return 'Ersatzlösung nötig';
-    case 'sonstiges':
-      return 'Sonstiges';
-  }
 }
 
 function slugify(value: string): string {

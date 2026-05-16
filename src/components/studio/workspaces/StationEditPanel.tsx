@@ -1,25 +1,14 @@
 import type { ReactNode } from 'react';
 import {
-  createEmptyRrrInteraction,
-  withRiddleType,
   type Locale,
   type RiddleEntry,
-  type RrrFieldTestIssueTag,
-  type RrrFieldTestStatus,
 } from '@/schema';
 import type { ContentBlock } from '@/schema/contentBlock';
 import { useEditorLanguage } from '@/i18n/editorLanguage';
-import {
-  applyStationVisualSelection,
-  normalizeStationVisualChoice,
-  STATION_ICON_OPTIONS,
-} from '@/stations/visuals';
-import { StationIconPreview } from '@/components/stations/StationVisualPreview';
-import { ImageAssetPanel } from '../ImageAssetPanel';
-import { Icon } from '../Icon';
 import type { EditPanelField } from '../EditPanel';
 import { EditableTextEntryList } from './EditableTextEntryList';
-import { LazyRrrInteractionEditor } from './LazyRrrInteractionEditor';
+import { StationImageIconPanel } from './StationImageIconPanel';
+import { StationRiddleSettingsPanel } from './StationRiddleSettingsPanel';
 import { TextBodyPanel } from './TextBodyPanel';
 
 export type StationEditPanelKey =
@@ -47,6 +36,12 @@ interface GetStationEditPanelArgs {
   onPatchStation: (patch: Partial<RiddleEntry>) => void;
 }
 
+interface StationEditPanelConfig {
+  title: string;
+  fields: EditPanelField[];
+  body?: ReactNode;
+}
+
 export function getStationEditPanel({
   panel,
   station,
@@ -56,17 +51,10 @@ export function getStationEditPanel({
   imageUrl,
   onPatchLocale,
   onPatchStation,
-}: GetStationEditPanelArgs): {
-  title: string;
-  fields: EditPanelField[];
-  body?: ReactNode;
-} {
+}: GetStationEditPanelArgs): StationEditPanelConfig {
   const localized = station[locale];
 
-  const panels: Record<
-    StationEditPanelKey,
-    { title: string; fields: EditPanelField[]; body?: ReactNode }
-  > = {
+  const panels: Record<StationEditPanelKey, StationEditPanelConfig> = {
     station: {
       title: t('studio.editStation'),
       fields: [
@@ -130,13 +118,15 @@ export function getStationEditPanel({
     hero: {
       title: 'Stations-Bild & Icon',
       fields: [],
-      body: renderStationImageIconPanelBody({
-        draftId,
-        station,
-        imageUrl,
-        t,
-        onPatchStation,
-      }),
+      body: (
+        <StationImageIconPanel
+          draftId={draftId}
+          station={station}
+          imageUrl={imageUrl}
+          t={t}
+          onPatchStation={onPatchStation}
+        />
+      ),
     },
     title: {
       title: t('studio.stationTitle'),
@@ -151,136 +141,73 @@ export function getStationEditPanel({
     story: {
       title: t('studio.storyParagraphsTitle'),
       fields: [],
-      body: (
-        <TextBodyPanel
-          blocks={localized.firstSection.filter(
-            (block) => block.type !== 'heading',
-          )}
-          onChange={(nextParagraphs) => {
-            const headingBlocks = localized.firstSection.filter(
-              (block) => block.type === 'heading',
-            );
-            onPatchLocale({
-              firstSection: [...headingBlocks, ...nextParagraphs],
-            });
-          }}
-          placeholder={t('studio.paragraphPlaceholder')}
-        />
-      ),
+      body: renderTextSectionBody({
+        blocks: localized.firstSection,
+        onChange: (firstSection) => onPatchLocale({ firstSection }),
+        placeholder: t('studio.paragraphPlaceholder'),
+      }),
     },
     history: {
       title: t('studio.historySectionTitle'),
       fields: [
-        {
+        createHeadingField({
           id: 'station-history-heading',
           label: t('studio.heading'),
-          type: 'text',
-          value: getFirstHeadingText(localized.historySection),
+          blocks: localized.historySection,
           placeholder: t('studio.historicalContextPlaceholder'),
-          onChange: (value) =>
-            onPatchLocale({
-              historySection: setFirstHeadingText(
-                localized.historySection,
-                value,
-              ),
-            }),
-        },
+          onChange: (historySection) => onPatchLocale({ historySection }),
+        }),
       ],
-      body: (
-        <TextBodyPanel
-          blocks={localized.historySection.filter(
-            (block) => block.type !== 'heading',
-          )}
-          onChange={(nextParagraphs) => {
-            const headingBlocks = localized.historySection.filter(
-              (block) => block.type === 'heading',
-            );
-            onPatchLocale({
-              historySection: [...headingBlocks, ...nextParagraphs],
-            });
-          }}
-          placeholder={t('studio.paragraphPlaceholder')}
-        />
-      ),
+      body: renderTextSectionBody({
+        blocks: localized.historySection,
+        onChange: (historySection) => onPatchLocale({ historySection }),
+        placeholder: t('studio.paragraphPlaceholder'),
+      }),
     },
     riddle: {
       title: t('studio.riddle'),
       fields: [
-        {
+        createHeadingField({
           id: 'station-riddle-heading',
           label: t('studio.heading'),
-          type: 'text',
-          value: getFirstHeadingText(localized.riddleSection),
+          blocks: localized.riddleSection,
           placeholder: t('studio.riddlePlaceholder'),
-          onChange: (value) =>
-            onPatchLocale({
-              riddleSection: setFirstHeadingText(
-                localized.riddleSection,
-                value,
-              ),
-            }),
-        },
+          onChange: (riddleSection) => onPatchLocale({ riddleSection }),
+        }),
       ],
-      body: (
-        <TextBodyPanel
-          blocks={localized.riddleSection.filter(
-            (block) => block.type !== 'heading',
-          )}
-          onChange={(nextParagraphs) => {
-            const headingBlocks = localized.riddleSection.filter(
-              (block) => block.type === 'heading',
-            );
-            onPatchLocale({
-              riddleSection: [...headingBlocks, ...nextParagraphs],
-            });
-          }}
-          placeholder={t('studio.riddlePlaceholder')}
-          blockType="line"
-        />
-      ),
+      body: renderTextSectionBody({
+        blocks: localized.riddleSection,
+        onChange: (riddleSection) => onPatchLocale({ riddleSection }),
+        placeholder: t('studio.riddlePlaceholder'),
+        blockType: 'line',
+      }),
     },
     successSection: {
       title: SECTION_SUCCESS_TITLE,
       fields: [
-        {
+        createHeadingField({
           id: 'station-success-heading',
           label: t('studio.heading'),
-          type: 'text',
-          value: getFirstHeadingText(localized.successSection),
+          blocks: localized.successSection,
           placeholder: SECTION_SUCCESS_TITLE,
-          onChange: (value) =>
-            onPatchLocale({
-              successSection: setFirstHeadingText(
-                localized.successSection,
-                value,
-              ),
-            }),
-        },
+          onChange: (successSection) => onPatchLocale({ successSection }),
+        }),
       ],
-      body: (
-        <TextBodyPanel
-          blocks={localized.successSection.filter(
-            (block) => block.type !== 'heading',
-          )}
-          onChange={(nextParagraphs) => {
-            const headingBlocks = localized.successSection.filter(
-              (block) => block.type === 'heading',
-            );
-            onPatchLocale({
-              successSection: [...headingBlocks, ...nextParagraphs],
-            });
-          }}
-          placeholder={t('studio.paragraphPlaceholder')}
-        />
-      ),
+      body: renderTextSectionBody({
+        blocks: localized.successSection,
+        onChange: (successSection) => onPatchLocale({ successSection }),
+        placeholder: t('studio.paragraphPlaceholder'),
+      }),
     },
     riddleSettings: {
       title: t('studio.riddleSettings'),
       fields: [],
-      body: renderRiddleSettingsPanelBody({
-        station,
-        onPatchStation,
-      }),
+      body: (
+        <StationRiddleSettingsPanel
+          station={station}
+          onPatchStation={onPatchStation}
+        />
+      ),
     },
     answers: {
       title: t('studio.hints'),
@@ -358,6 +285,60 @@ function getStationIdentityFields({
   ];
 }
 
+function createHeadingField({
+  id,
+  label,
+  blocks,
+  placeholder,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  blocks: ContentBlock[];
+  placeholder: string;
+  onChange: (blocks: ContentBlock[]) => void;
+}): EditPanelField {
+  return {
+    id,
+    label,
+    type: 'text',
+    value: getFirstHeadingText(blocks),
+    placeholder,
+    onChange: (value) => onChange(setFirstHeadingText(blocks, value)),
+  };
+}
+
+function renderTextSectionBody({
+  blocks,
+  onChange,
+  placeholder,
+  blockType,
+}: {
+  blocks: ContentBlock[];
+  onChange: (blocks: ContentBlock[]) => void;
+  placeholder: string;
+  blockType?: 'paragraph' | 'line';
+}) {
+  return (
+    <TextBodyPanel
+      blocks={blocks.filter((block) => block.type !== 'heading')}
+      onChange={(nextBodyBlocks) =>
+        onChange(replaceSectionBodyBlocks(blocks, nextBodyBlocks))
+      }
+      placeholder={placeholder}
+      blockType={blockType}
+    />
+  );
+}
+
+function replaceSectionBodyBlocks(
+  blocks: ContentBlock[],
+  nextBodyBlocks: ContentBlock[],
+): ContentBlock[] {
+  const headingBlocks = blocks.filter((block) => block.type === 'heading');
+  return [...headingBlocks, ...nextBodyBlocks];
+}
+
 function parseCoordinate(value: string): number | null {
   const parsed = Number.parseFloat(value.trim().replace(',', '.'));
   return Number.isFinite(parsed) ? parsed : null;
@@ -365,199 +346,6 @@ function parseCoordinate(value: string): number | null {
 
 function formatCoordinate(value: number): string {
   return Number.isFinite(value) ? String(value) : '';
-}
-
-function renderRiddleSettingsPanelBody({
-  station,
-  onPatchStation,
-}: {
-  station: RiddleEntry;
-  onPatchStation: (patch: Partial<RiddleEntry>) => void;
-}) {
-  const isText = station.riddleType === 'text';
-  const isModular = station.riddleType === 'modular';
-  const fieldTestStatus = station.fieldTestStatus ?? 'not_tested';
-  const fieldTestIssueTags = station.fieldTestIssueTags ?? [];
-  const fieldTestNotes = station.fieldTestNotes ?? '';
-  const fieldTestTestedAt = station.fieldTestTestedAt ?? '';
-
-  function patchFieldTestStatus(status: RrrFieldTestStatus) {
-    onPatchStation({
-      fieldTestStatus: status,
-      fieldTestTestedAt:
-        status === 'not_tested'
-          ? undefined
-          : station.fieldTestTestedAt ?? new Date().toISOString(),
-    });
-  }
-
-  function toggleFieldTestIssueTag(
-    tag: RrrFieldTestIssueTag,
-    checked: boolean,
-  ) {
-    const nextTags = checked
-      ? [...new Set([...fieldTestIssueTags, tag])]
-      : fieldTestIssueTags.filter((entry) => entry !== tag);
-    onPatchStation({ fieldTestIssueTags: nextTags });
-  }
-
-  return (
-    <div className="stq-edit-panel-field">
-      <div className="stq-edit-panel-label">Riddle type</div>
-      <div className="stq-riddle-type-switch" role="group" aria-label="Riddle type">
-        <button
-          type="button"
-          className={`stq-riddle-type-switch__option${isText ? ' is-active' : ''}`}
-          aria-pressed={isText}
-          onClick={() => onPatchStation(withRiddleType(station, 'text'))}
-        >
-          Text
-        </button>
-        <button
-          type="button"
-          className={`stq-riddle-type-switch__option${isModular ? ' is-active' : ''}`}
-          aria-pressed={isModular}
-          onClick={() => onPatchStation(withRiddleType(station, 'modular'))}
-        >
-          Modulares Rätsel
-        </button>
-      </div>
-      {isModular && (
-        <>
-          <div className="stq-rrr-field-test-status">
-            <div>
-              <span>Feldtest-Status</span>
-              <strong>{getFieldTestStatusLabel(fieldTestStatus)}</strong>
-            </div>
-            <select
-              className="stq-rrr-editor__select"
-              value={fieldTestStatus}
-              onChange={(event) =>
-                patchFieldTestStatus(event.target.value as RrrFieldTestStatus)
-              }
-            >
-              {FIELD_TEST_STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <div className="stq-rrr-field-test-tags" aria-label="Feldtest-Problem-Tags">
-              {FIELD_TEST_ISSUE_TAG_OPTIONS.map((option) => (
-                <label key={option.value} className="stq-rrr-check">
-                  <input
-                    type="checkbox"
-                    checked={fieldTestIssueTags.includes(option.value)}
-                    onChange={(event) =>
-                      toggleFieldTestIssueTag(
-                        option.value,
-                        event.target.checked,
-                      )
-                    }
-                  />
-                  <span>{option.label}</span>
-                </label>
-              ))}
-            </div>
-            <label className="stq-rrr-field">
-              <span>Getestet am</span>
-              <input
-                type="datetime-local"
-                value={toDateTimeLocalValue(fieldTestTestedAt)}
-                onChange={(event) =>
-                  onPatchStation({
-                    fieldTestTestedAt: fromDateTimeLocalValue(
-                      event.target.value,
-                    ),
-                  })
-                }
-              />
-            </label>
-            <label className="stq-rrr-field">
-              <span>Feldtest-Notizen</span>
-              <textarea
-                value={fieldTestNotes}
-                onChange={(event) =>
-                  onPatchStation({ fieldTestNotes: event.target.value })
-                }
-                placeholder="Optional: Beobachtungen, Gerätehinweise oder offene Punkte"
-              />
-            </label>
-          </div>
-          <LazyRrrInteractionEditor
-            interaction={station.interaction ?? createEmptyRrrInteraction()}
-            stationId={station.id}
-            fieldTestIssueTags={fieldTestIssueTags}
-            stationTitle={
-              station.de.location ||
-              station.en.location ||
-              station.it.location ||
-              `Station ${station.number}`
-            }
-            onChange={(interaction) => onPatchStation({ interaction })}
-          />
-        </>
-      )}
-    </div>
-  );
-}
-
-const FIELD_TEST_STATUS_OPTIONS: Array<{
-  value: RrrFieldTestStatus;
-  label: string;
-}> = [
-  { value: 'not_tested', label: 'Nicht getestet' },
-  { value: 'tested_ok', label: 'Getestet: OK' },
-  { value: 'tested_with_warnings', label: 'Getestet: mit Hinweisen' },
-  { value: 'needs_fix', label: 'Braucht Fix' },
-];
-
-const FIELD_TEST_ISSUE_TAG_OPTIONS: Array<{
-  value: RrrFieldTestIssueTag;
-  label: string;
-}> = [
-  { value: 'gps_ungenau', label: 'GPS ungenau' },
-  { value: 'kompass_instabil', label: 'Kompass instabil' },
-  { value: 'qr_schlecht_lesbar', label: 'QR schlecht lesbar' },
-  { value: 'aufgabe_unklar', label: 'Aufgabe unklar' },
-  { value: 'ort_schwer_zugaenglich', label: 'Ort schwer zugänglich' },
-  { value: 'ersatzloesung_noetig', label: 'Ersatzlösung nötig' },
-  { value: 'sonstiges', label: 'Sonstiges' },
-];
-
-function getFieldTestStatusLabel(status: RrrFieldTestStatus): string {
-  return (
-    FIELD_TEST_STATUS_OPTIONS.find((option) => option.value === status)
-      ?.label ?? 'Nicht getestet'
-  );
-}
-
-function toDateTimeLocalValue(value: string): string {
-  if (!value) {
-    return '';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-  const year = date.getFullYear();
-  const month = padDatePart(date.getMonth() + 1);
-  const day = padDatePart(date.getDate());
-  const hours = padDatePart(date.getHours());
-  const minutes = padDatePart(date.getMinutes());
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-function fromDateTimeLocalValue(value: string): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-}
-
-function padDatePart(value: number): string {
-  return String(value).padStart(2, '0');
 }
 
 function getFirstHeadingText(blocks: ContentBlock[]): string {
@@ -585,98 +373,4 @@ function setFirstHeadingText(
 
   if (!trimmed) return blocks;
   return [{ type: 'heading', text }, ...blocks];
-}
-
-function renderStationImageIconPanelBody({
-  draftId,
-  station,
-  imageUrl,
-  t,
-  onPatchStation,
-}: {
-  draftId: string;
-  station: RiddleEntry;
-  imageUrl: string | undefined;
-  t: ReturnType<typeof useEditorLanguage>['t'];
-  onPatchStation: (patch: Partial<RiddleEntry>) => void;
-}) {
-  const choice = normalizeStationVisualChoice(station);
-  const selectedIconLabel =
-    STATION_ICON_OPTIONS.find((option) => option.key === choice.iconKey)?.label ??
-    choice.iconKey;
-
-  return (
-    <ImageAssetPanel
-      draftId={draftId}
-      label={t('studio.stationImage')}
-      imageUrl={imageUrl}
-      imagePath={station.imagePath}
-      imageBlobId={station.imageBlobId}
-      preset="station"
-      onBlobStored={(blobId) =>
-        onPatchStation({
-          imageBlobId: blobId,
-          imagePath: `images/${blobId}.webp`,
-        })
-      }
-      onPathChange={(path) =>
-        onPatchStation({
-          imagePath: path,
-          imageBlobId: undefined,
-        })
-      }
-    >
-      <div className="stq-edit-panel-label" style={{ marginTop: 18 }}>
-        {t('studio.stationIcon')}
-      </div>
-
-      <div className="stq-station-icon-current">
-        <div className="stq-station-icon-current__preview">
-          <StationIconPreview
-            station={station}
-            style={{ width: 30, height: 30 }}
-          />
-        </div>
-        <span>{t('studio.iconSelected')}: {selectedIconLabel}</span>
-      </div>
-
-      <div className="stq-station-icon-grid">
-        {STATION_ICON_OPTIONS.map((option) => {
-          const selected = option.key === choice.iconKey;
-          return (
-            <button
-              key={option.key}
-              type="button"
-              className={`stq-station-icon-tile${selected ? ' is-active' : ''}`}
-              aria-pressed={selected}
-              aria-label={option.label}
-              title={option.label}
-              onClick={() =>
-                onPatchStation(
-                  applyStationVisualSelection(station.id, {
-                    ...choice,
-                    iconKey: option.key,
-                  }),
-                )
-              }
-            >
-              <StationIconPreview
-                choice={{ iconKey: option.key, iconColorKey: choice.iconColorKey }}
-                style={{ width: 36, height: 36 }}
-              />
-            </button>
-          );
-        })}
-        <button
-          type="button"
-          className="stq-station-icon-tile stq-station-icon-tile--add"
-          aria-label={t('studio.addIcon')}
-          title={t('studio.addIcon')}
-          disabled
-        >
-          <Icon name="plus" size={18} />
-        </button>
-      </div>
-    </ImageAssetPanel>
-  );
 }
