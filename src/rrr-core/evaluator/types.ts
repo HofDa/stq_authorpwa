@@ -22,6 +22,7 @@ export interface RrrRuntimeMockState {
   gpsLat?: number;
   gpsLng?: number;
   isStill?: boolean;
+  balanceOk?: boolean;
 }
 
 export interface RrrRuntimeUserInput {

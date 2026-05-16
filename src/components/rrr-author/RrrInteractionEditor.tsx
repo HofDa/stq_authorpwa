@@ -854,6 +854,10 @@ function RrrModuleEditor({
             />
           )}
 
+          {module.type === 'balance_run' && (
+            <BalanceRunEditor config={config} onPatchConfig={patchConfig} />
+          )}
+
           {module.type === 'qr_scan' && (
             <QrScanEditor config={config} onPatchConfig={patchConfig} />
           )}
@@ -1646,6 +1650,85 @@ function GpsRadiusEditor({
   );
 }
 
+function BalanceRunEditor({
+  config,
+  onPatchConfig,
+}: {
+  config: RrrModule['config'];
+  onPatchConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const { t } = useEditorLanguage();
+  const timeLimitMs = Math.max(1000, readNumber(config.timeLimitMs) || 60000);
+  const maxTiltDegrees = Math.max(1, readNumber(config.maxTiltDegrees) || 12);
+  const successRadiusMeters = Math.max(
+    1,
+    readNumber(config.successRadiusMeters) || 20,
+  );
+
+  return (
+    <div className="stq-rrr-gps-editor">
+      <div className="stq-rrr-field-grid">
+        <NumberField
+          label={t('rrr.editor.balance.startLat')}
+          value={readNumber(config.startLat)}
+          onChange={(value) => onPatchConfig({ startLat: value })}
+        />
+        <NumberField
+          label={t('rrr.editor.balance.startLng')}
+          value={readNumber(config.startLng)}
+          onChange={(value) => onPatchConfig({ startLng: value })}
+        />
+        <NumberField
+          label={t('rrr.editor.balance.targetLat')}
+          value={readNumber(config.targetLat)}
+          onChange={(value) => onPatchConfig({ targetLat: value })}
+        />
+        <NumberField
+          label={t('rrr.editor.balance.targetLng')}
+          value={readNumber(config.targetLng)}
+          onChange={(value) => onPatchConfig({ targetLng: value })}
+        />
+      </div>
+      <label className="stq-rrr-field">
+        <span>
+          {t('rrr.editor.balance.radius')}: {formatNumber(successRadiusMeters, 0)} m
+        </span>
+        <input
+          type="range"
+          min="1"
+          max="100"
+          step="1"
+          value={Math.min(successRadiusMeters, 100)}
+          onChange={(event) =>
+            onPatchConfig({
+              successRadiusMeters: Math.max(1, Number(event.target.value)),
+            })
+          }
+        />
+        <small className="stq-rrr-field__hint">
+          {t('rrr.editor.balance.radiusHint')}
+        </small>
+      </label>
+      <div className="stq-rrr-field-grid">
+        <NumberField
+          label={t('rrr.editor.balance.timeLimitMs')}
+          value={timeLimitMs}
+          onChange={(value) =>
+            onPatchConfig({ timeLimitMs: Math.max(1000, Math.round(value)) })
+          }
+        />
+        <NumberField
+          label={t('rrr.editor.balance.maxTiltDegrees')}
+          value={maxTiltDegrees}
+          onChange={(value) =>
+            onPatchConfig({ maxTiltDegrees: Math.max(1, Math.round(value)) })
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
 function QrScanEditor({
   config,
   onPatchConfig,
@@ -2231,6 +2314,12 @@ function getModuleCardMeta(module: RrrModule, t: EditorT): {
         description: t('rrr.editor.card.proximityDescription'),
         icon: 'map-pin',
       };
+    case 'balance_run':
+      return {
+        title: t('rrr.editor.card.balanceTitle'),
+        description: t('rrr.editor.card.balanceDescription'),
+        icon: 'route',
+      };
     case 'compass_align':
       return {
         title: t('rrr.editor.card.compassTitle'),
@@ -2377,6 +2466,27 @@ function getModuleSettingsSummary(
         {
           label: t('rrr.editor.summary.successRadius'),
           value: `${formatNumber(readNumber(config.successRadiusMeters), 0)} m`,
+        },
+      ];
+    case 'balance_run':
+      return [
+        {
+          label: t('rrr.editor.summary.target'),
+          value:
+            hasFiniteNumber(config.targetLat) && hasFiniteNumber(config.targetLng)
+              ? `${formatNumber(readNumber(config.targetLat), 5)}, ${formatNumber(
+                  readNumber(config.targetLng),
+                  5,
+                )}`
+              : t('rrr.editor.summary.coordinatesMissing'),
+        },
+        {
+          label: t('rrr.editor.summary.duration'),
+          value: formatDurationSeconds(readNumber(config.timeLimitMs) || 60000),
+        },
+        {
+          label: t('rrr.editor.summary.tolerance'),
+          value: `±${formatNumber(readNumber(config.maxTiltDegrees) || 12, 0)}°`,
         },
       ];
     case 'compass_align':

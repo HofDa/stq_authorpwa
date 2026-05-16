@@ -224,6 +224,12 @@ Files: `package.json`, `package-lock.json`, `src/app/registerSW.ts`, `vite.confi
 Cause: `virtual:pwa-register` emitted a build-time import from `workbox-window`, but the package was only present transitively through `vite-plugin-pwa` / Workbox in the local install. Clean deploy installs could fail Rollup resolution with `failed to resolve import "workbox-window"`.
 Fix: declare `workbox-window` as a direct runtime dependency and regenerate the lock metadata so deploy/build environments install it as production code. Verified with `npm run build`.
 
+### 2026-05-16 — Balance run needs real-device GPS and tilt QA
+
+Files: `src/renderer/interaction/BalanceRunPlayer.tsx`, `src/components/rrr-author/BalanceRunControl.tsx`, `src/components/rrr-runtime/BalanceRunVisual.tsx`, `src/components/rrr-runtime/useLiveDeviceBalance.ts`, `src/components/rrr-runtime/useLiveGeolocation.ts`.
+Cause: `balance_run` depends on live GPS while walking and live device-orientation tilt. Desktop tests can prove config, evaluator, editor and host wiring, but cannot prove GPS drift tolerance, iOS orientation permission prompts, tilt calibration or whether the max tilt default feels fair while walking.
+Fix: keep live sensor ownership in hooks/player wrappers, keep the visual presentational, and field-test on Android/iOS before treating defaults as final. Covered by evaluator/editor/player/schema tests plus typecheck, lint and build.
+
 ### 2026-05-15 — Edit mode hid most editable frames until hover or selection
 
 Files: `src/styles/editable-overlay.css`, `src/components/studio/TourCardCanvas.tsx`, `src/components/studio/workspaces/IntroPhonePreview.tsx`, `src/renderer/RiddleScreen.tsx`.

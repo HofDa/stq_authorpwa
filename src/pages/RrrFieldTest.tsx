@@ -395,6 +395,8 @@ function getModuleInstruction(module: RrrModule): string {
       return 'Gehe an den Testpunkt, bis die GPS-Position im Radius liegt.';
     case 'proximity_hint':
       return 'Gehe zum Zielort, bis der Nähe-Hinweis den Zielradius meldet.';
+    case 'balance_run':
+      return 'Starte am Startpunkt, gehe rechtzeitig zum Ziel und halte das Handy in Balance.';
     case 'compass_align':
       return 'Drehe dich mit dem Handy nach Osten.';
     case 'safe_dial':

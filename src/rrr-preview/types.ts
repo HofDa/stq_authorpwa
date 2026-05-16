@@ -12,6 +12,7 @@ export interface RrrMockInputs {
   gpsLat: number;
   gpsLng: number;
   isStill: boolean;
+  balanceOk: boolean;
   textAnswer: string;
   qrScanValue: string;
   morseCodeValue: string;

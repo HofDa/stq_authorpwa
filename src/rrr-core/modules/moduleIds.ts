@@ -9,6 +9,7 @@ const MODULE_ID_BASES: Record<RrrModuleType, string> = {
   hold_still: 'hold_still',
   gps_enter: 'gps_enter',
   proximity_hint: 'proximity_hint',
+  balance_run: 'balance_run',
   qr_scan: 'qr_scan',
   morse_code: 'morse_code',
   code_word: 'code_word',

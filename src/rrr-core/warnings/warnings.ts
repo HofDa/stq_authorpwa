@@ -22,6 +22,9 @@ export type RrrWarningCode =
   | 'gps_radius_small'
   | 'proximity_missing_coordinates'
   | 'proximity_radius_small'
+  | 'balance_missing_coordinates'
+  | 'balance_radius_small'
+  | 'balance_time_limit_short'
   | 'hold_duration_long'
   | 'qr_scan_expected_value_empty'
   | 'morse_code_pattern_empty'
@@ -43,6 +46,7 @@ export interface RrrWarning {
 
 const MIN_COMPASS_TOLERANCE_DEGREES = 3;
 const MIN_GPS_RADIUS_METERS = 3;
+const MIN_BALANCE_TIME_LIMIT_MS = 5000;
 const MAX_HOLD_DURATION_MS = 10000;
 const MAX_TIMER_WAIT_DURATION_MS = 60000;
 
@@ -222,6 +226,41 @@ function getModuleWarnings(module: RrrModule): RrrWarning[] {
         out.push({
           code: 'proximity_radius_small',
           message: `Baustein "${module.label}" hat einen sehr kleinen Erfolgsradius (< ${MIN_GPS_RADIUS_METERS} m).`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      return out;
+    }
+    case 'balance_run': {
+      const out: RrrWarning[] = [];
+      if (
+        !isValidCoordinate(module.config.startLat) ||
+        !isValidCoordinate(module.config.startLng) ||
+        !isValidCoordinate(module.config.targetLat) ||
+        !isValidCoordinate(module.config.targetLng)
+      ) {
+        out.push({
+          code: 'balance_missing_coordinates',
+          message: `Baustein "${module.label}" braucht Start- und Zielkoordinaten.`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      const radiusMeters = readNumber(module.config.successRadiusMeters);
+      if (radiusMeters > 0 && radiusMeters < MIN_GPS_RADIUS_METERS) {
+        out.push({
+          code: 'balance_radius_small',
+          message: `Baustein "${module.label}" hat einen sehr kleinen Start-/Zielradius (< ${MIN_GPS_RADIUS_METERS} m).`,
+          severity: 'warning',
+          moduleId: module.id,
+        });
+      }
+      const timeLimitMs = readNumber(module.config.timeLimitMs);
+      if (timeLimitMs > 0 && timeLimitMs < MIN_BALANCE_TIME_LIMIT_MS) {
+        out.push({
+          code: 'balance_time_limit_short',
+          message: `Baustein "${module.label}" hat ein sehr kurzes Zeitlimit (< ${MIN_BALANCE_TIME_LIMIT_MS} ms).`,
           severity: 'warning',
           moduleId: module.id,
         });

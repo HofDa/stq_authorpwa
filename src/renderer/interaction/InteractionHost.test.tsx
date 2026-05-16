@@ -19,8 +19,20 @@ const liveGeolocationState = vi.hoisted(() => ({
   start: vi.fn(),
 }));
 
+const liveBalanceState = vi.hoisted(() => ({
+  tiltX: undefined as number | undefined,
+  tiltY: undefined as number | undefined,
+  magnitude: undefined as number | undefined,
+  status: 'idle' as 'idle' | 'starting' | 'available' | 'unavailable' | 'error',
+  start: vi.fn(),
+}));
+
 vi.mock('@/components/rrr-runtime/useLiveDeviceHeading', () => ({
   useLiveDeviceHeading: () => liveHeadingState,
+}));
+
+vi.mock('@/components/rrr-runtime/useLiveDeviceBalance', () => ({
+  useLiveDeviceBalance: () => liveBalanceState,
 }));
 
 vi.mock('@/components/rrr-runtime/useLiveGeolocation', () => ({
@@ -54,6 +66,11 @@ beforeEach(() => {
   liveGeolocationState.accuracy = undefined;
   liveGeolocationState.status = 'idle';
   liveGeolocationState.start.mockClear();
+  liveBalanceState.tiltX = undefined;
+  liveBalanceState.tiltY = undefined;
+  liveBalanceState.magnitude = undefined;
+  liveBalanceState.status = 'idle';
+  liveBalanceState.start.mockClear();
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -234,6 +251,50 @@ describe('InteractionHost', () => {
     expect(container.textContent).toContain('25 m');
     expect(container.querySelector('.stq-rrr-radar')).not.toBeNull();
     expect(onCorrect).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders balance_run modules with the balance visual', () => {
+    liveGeolocationState.latitude = 46.4983;
+    liveGeolocationState.longitude = 11.3548;
+    liveGeolocationState.status = 'available';
+    liveBalanceState.tiltX = 1;
+    liveBalanceState.tiltY = 2;
+    liveBalanceState.magnitude = 3;
+    liveBalanceState.status = 'available';
+    const onCorrect = vi.fn();
+    const interaction: RrrInteraction = {
+      schemaVersion: 1,
+      modules: [
+        {
+          id: 'balance_run_1',
+          type: 'balance_run',
+          label: 'Balance-Lauf',
+          config: {
+            startLat: 46.4983,
+            startLng: 11.3548,
+            targetLat: 46.499,
+            targetLng: 11.356,
+            successRadiusMeters: 20,
+            timeLimitMs: 60000,
+            maxTiltDegrees: 12,
+          },
+        },
+      ],
+      condition: { type: 'module', moduleId: 'balance_run_1' },
+    };
+
+    render(
+      <InteractionHost
+        interaction={interaction}
+        acceptedAnswers={[]}
+        labels={labels}
+        onCorrect={onCorrect}
+      />,
+    );
+
+    expect(container.querySelector('.stq-rrr-balance-run')).not.toBeNull();
+    expect(container.textContent).toContain('Balance-Lauf starten');
+    expect(onCorrect).not.toHaveBeenCalled();
   });
 });
 

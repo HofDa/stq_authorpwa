@@ -9,6 +9,7 @@ export const RRR_MODULE_TYPES = [
   'hold_still',
   'gps_enter',
   'proximity_hint',
+  'balance_run',
   'qr_scan',
   'morse_code',
   'code_word',

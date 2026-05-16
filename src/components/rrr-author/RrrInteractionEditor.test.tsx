@@ -556,6 +556,32 @@ describe('RrrInteractionEditor', () => {
     });
   });
 
+  it('renders balance_run authoring controls and guided balance simulation', () => {
+    const onChange = vi.fn();
+    renderEditor(
+      <RrrInteractionEditor
+        interaction={balanceRunInteraction}
+        onChange={onChange}
+      />,
+    );
+
+    expect(container.textContent).toContain('Balance-Lauf');
+    expect(container.textContent).toContain(
+      'Der Spieler geht vom Start zum Ziel, bevor die Zeit abläuft, und hält das Handy in Balance.',
+    );
+    expect(container.querySelector('.stq-rrr-balance-run')).not.toBeNull();
+    expect(container.textContent).toContain('Balance halten');
+
+    clickButton('In den Zielradius setzen');
+
+    expect(container.textContent).toContain('Ziel in Balance erreicht');
+
+    clickButton('Bearbeiten');
+
+    expect(container.textContent).toContain('Start-Breitengrad');
+    expect(container.textContent).toContain('Maximale Neigung in Grad');
+  });
+
   it('renders timer_wait authoring controls and guided wait copy', () => {
     const onChange = vi.fn();
     renderEditor(
@@ -1095,6 +1121,30 @@ const proximityHintInteraction: RrrInteraction = {
   condition: {
     type: 'module',
     moduleId: 'proximity_hint_1',
+  },
+};
+
+const balanceRunInteraction: RrrInteraction = {
+  schemaVersion: 1,
+  modules: [
+    {
+      id: 'balance_run_1',
+      type: 'balance_run',
+      label: 'Balance-Lauf',
+      config: {
+        startLat: 46.4983,
+        startLng: 11.3548,
+        targetLat: 46.499,
+        targetLng: 11.356,
+        successRadiusMeters: 20,
+        timeLimitMs: 60000,
+        maxTiltDegrees: 12,
+      },
+    },
+  ],
+  condition: {
+    type: 'module',
+    moduleId: 'balance_run_1',
   },
 };
 

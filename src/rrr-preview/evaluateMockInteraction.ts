@@ -13,6 +13,7 @@ export function evaluateMockInteraction(
       gpsLat: inputs.gpsLat,
       gpsLng: inputs.gpsLng,
       isStill: inputs.isStill,
+      balanceOk: inputs.balanceOk,
     },
     {
       textAnswer: inputs.textAnswer,

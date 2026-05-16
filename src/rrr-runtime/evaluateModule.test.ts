@@ -99,6 +99,56 @@ describe('evaluateModule', () => {
     expect(veryCold.directionHotCold?.proximity).toBe('very_cold');
   });
 
+  it('evaluates balance_run modules with target, balance and time checks', () => {
+    const module = moduleWithConfig('balance_run', {
+      targetLat: 46.4983,
+      targetLng: 11.3548,
+      successRadiusMeters: 20,
+      timeLimitMs: 10000,
+    });
+
+    expect(
+      evaluateModule(module, {
+        ...baseInput,
+        mockState: {
+          gpsLat: 46.4983,
+          gpsLng: 11.3548,
+          balanceOk: true,
+        },
+        session: {
+          ...runtimeSession,
+          activeStepStartedAtMs: 1000,
+        },
+        nowMs: 5000,
+      }).status,
+    ).toBe('success');
+    expect(
+      evaluateModule(module, {
+        ...baseInput,
+        mockState: {
+          gpsLat: 46.4983,
+          gpsLng: 11.3548,
+          balanceOk: false,
+        },
+      }).status,
+    ).toBe('failed');
+    expect(
+      evaluateModule(module, {
+        ...baseInput,
+        mockState: {
+          gpsLat: 46.4983,
+          gpsLng: 11.3548,
+          balanceOk: true,
+        },
+        session: {
+          ...runtimeSession,
+          activeStepStartedAtMs: 1000,
+        },
+        nowMs: 12000,
+      }).status,
+    ).toBe('failed');
+  });
+
   it('derives direction_hotcold proximity outside React', () => {
     expect(
       getDirectionHotColdFeedback({

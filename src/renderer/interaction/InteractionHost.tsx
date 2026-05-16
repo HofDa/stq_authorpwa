@@ -1,4 +1,5 @@
 import type { RrrInteraction, RrrModule } from '@/rrr/types';
+import { BalanceRunPlayer } from './BalanceRunPlayer';
 import { CodeEntryPlayer } from './CodeEntryPlayer';
 import { CompassPlayer } from './CompassPlayer';
 import { DirectionHotColdPlayer } from './DirectionHotColdPlayer';
@@ -159,6 +160,29 @@ export function InteractionHost({
           successRadiusMeters={Math.max(
             1,
             readNumber(activeModule.config.successRadiusMeters) || 20,
+          )}
+          onCorrect={onCorrect}
+          disabled={disabled}
+        />
+      );
+    case 'balance_run':
+      return (
+        <BalanceRunPlayer
+          startLat={readNumber(activeModule.config.startLat)}
+          startLng={readNumber(activeModule.config.startLng)}
+          targetLat={readNumber(activeModule.config.targetLat)}
+          targetLng={readNumber(activeModule.config.targetLng)}
+          successRadiusMeters={Math.max(
+            1,
+            readNumber(activeModule.config.successRadiusMeters) || 20,
+          )}
+          timeLimitMs={Math.max(
+            1000,
+            readNumber(activeModule.config.timeLimitMs) || 60000,
+          )}
+          maxTiltDegrees={Math.max(
+            1,
+            readNumber(activeModule.config.maxTiltDegrees) || 12,
           )}
           onCorrect={onCorrect}
           disabled={disabled}

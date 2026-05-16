@@ -8,6 +8,7 @@ const baseInputs: RrrMockInputs = {
   gpsLat: 0,
   gpsLng: 0,
   isStill: false,
+  balanceOk: true,
   textAnswer: '',
   qrScanValue: '',
   morseCodeValue: '',

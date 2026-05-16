@@ -33,6 +33,8 @@ export function evaluateModule(
       return evaluateGpsEnter(module, input);
     case 'proximity_hint':
       return evaluateProximityHint(module, input);
+    case 'balance_run':
+      return evaluateBalanceRun(module, input);
     case 'qr_scan':
       return evaluateQrScan(module, input);
     case 'morse_code':
@@ -295,6 +297,47 @@ function evaluateProximityHint(
     undefined,
     undefined,
     feedback,
+  );
+}
+
+function evaluateBalanceRun(
+  module: RrrModule,
+  input: RrrRuntimeEvaluationInput,
+): RrrModuleResult {
+  const { gpsLat, gpsLng } = input.mockState;
+  if (!isFiniteNumber(gpsLat) || !isFiniteNumber(gpsLng)) {
+    return moduleResult(module, 'running', 'Warte auf GPS-Position');
+  }
+
+  const timeLimitMs = Math.max(1000, readNumber(module.config.timeLimitMs) || 60000);
+  const startedAt = input.session?.activeStepStartedAtMs;
+  const nowMs = input.nowMs;
+  const elapsedMs =
+    isFiniteNumber(startedAt) && isFiniteNumber(nowMs) ? nowMs - startedAt : 0;
+  if (elapsedMs > timeLimitMs) {
+    return moduleResult(module, 'failed', 'Zeit abgelaufen');
+  }
+
+  const balanceOk = input.mockState.balanceOk ?? input.mockState.isStill;
+  if (balanceOk === false) {
+    return moduleResult(module, 'failed', 'Balance verloren');
+  }
+
+  const targetLat = readNumber(module.config.targetLat);
+  const targetLng = readNumber(module.config.targetLng);
+  const successRadiusMeters = Math.max(
+    1,
+    readNumber(module.config.successRadiusMeters) || 20,
+  );
+  const distance = distanceMeters(gpsLat, gpsLng, targetLat, targetLng);
+  const inside = distance <= successRadiusMeters;
+
+  return moduleResult(
+    module,
+    inside ? 'success' : 'running',
+    inside
+      ? 'Ziel in Balance erreicht'
+      : `${Math.round(distance)} m vom Ziel entfernt`,
   );
 }
 

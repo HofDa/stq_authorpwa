@@ -34,6 +34,7 @@ import {
 } from '@/rrr/runtime';
 import { RrrConditionStatusTree } from './RrrConditionStatusTree';
 import { CodeEntryControl } from './CodeEntryControl';
+import { BalanceRunControl } from './BalanceRunControl';
 import { CompassControl } from './CompassControl';
 import { DirectionHotColdControl } from './DirectionHotColdControl';
 import { MorseCodeControl } from './MorseCodeControl';
@@ -52,6 +53,7 @@ const INITIAL_INPUTS: RrrMockInputs = {
   gpsLat: 0,
   gpsLng: 0,
   isStill: false,
+  balanceOk: true,
   textAnswer: '',
   qrScanValue: '',
   morseCodeValue: '',
@@ -90,8 +92,15 @@ export function RrrMockPreview({
       gpsLat: inputs.gpsLat,
       gpsLng: inputs.gpsLng,
       isStill: inputs.isStill,
+      balanceOk: inputs.balanceOk,
     }),
-    [inputs.gpsLat, inputs.gpsLng, inputs.headingDegrees, inputs.isStill],
+    [
+      inputs.balanceOk,
+      inputs.gpsLat,
+      inputs.gpsLng,
+      inputs.headingDegrees,
+      inputs.isStill,
+    ],
   );
   const userInput = useMemo(
     () => ({
@@ -580,6 +589,34 @@ function GuidedControl({
         />
       );
     }
+    case 'balance_run': {
+      const startLat = readNumber(module.config.startLat);
+      const startLng = readNumber(module.config.startLng);
+      const targetLat = readNumber(module.config.targetLat);
+      const targetLng = readNumber(module.config.targetLng);
+      const successRadiusMeters = Math.max(
+        1,
+        readNumber(module.config.successRadiusMeters) || 20,
+      );
+      return (
+        <BalanceRunControl
+          currentLat={inputs.gpsLat}
+          currentLng={inputs.gpsLng}
+          startLat={startLat}
+          startLng={startLng}
+          targetLat={targetLat}
+          targetLng={targetLng}
+          successRadiusMeters={successRadiusMeters}
+          timeLimitMs={Math.max(1000, readNumber(module.config.timeLimitMs) || 60000)}
+          maxTiltDegrees={Math.max(1, readNumber(module.config.maxTiltDegrees) || 12)}
+          balanceOk={inputs.balanceOk}
+          onPositionChange={(position) =>
+            onPatchInputs({ gpsLat: position.lat, gpsLng: position.lng })
+          }
+          onBalanceChange={(balanceOk) => onPatchInputs({ balanceOk })}
+        />
+      );
+    }
     case 'hold_still':
       return (
         <label className="stq-rrr-check">
@@ -867,6 +904,8 @@ function getPlayerInstruction(module: RrrModule): string {
       return 'Der Spieler steht am richtigen Ort innerhalb des Radius.';
     case 'proximity_hint':
       return 'Der Spieler nähert sich dem Zielort und erhält Nähe-Hinweise.';
+    case 'balance_run':
+      return 'Der Spieler geht vom Start zum Ziel, bevor die Zeit abläuft, und hält das Handy in Balance.';
     case 'qr_scan':
       return 'Der Spieler scannt den vorgesehenen QR-Code.';
     case 'morse_code':
@@ -908,6 +947,8 @@ function getModuleTypeLabel(type: RrrModuleType): string {
       return 'Ort';
     case 'proximity_hint':
       return 'Nähe-Hinweis';
+    case 'balance_run':
+      return 'Balance-Lauf';
     case 'qr_scan':
       return 'QR-Code';
     case 'morse_code':

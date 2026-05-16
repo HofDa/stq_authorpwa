@@ -10,6 +10,8 @@ export type RrrAuthoringWarningCode =
   | 'direction_tolerance_narrow'
   | 'gps_radius_small'
   | 'proximity_radius_small'
+  | 'balance_radius_small'
+  | 'balance_time_limit_short'
   | 'hold_duration_long'
   | 'text_answer_empty'
   | 'multi_choice_question_empty'
@@ -32,6 +34,7 @@ export interface RrrAuthoringWarning {
 
 const MIN_COMPASS_TOLERANCE_DEGREES = 5;
 const MIN_GPS_RADIUS_METERS = 3;
+const MIN_BALANCE_TIME_LIMIT_MS = 5000;
 const MAX_HOLD_DURATION_MS = 30000;
 const MAX_TIMER_WAIT_DURATION_MS = 60000;
 
@@ -191,6 +194,29 @@ function getModuleWarnings(
             code: 'proximity_radius_small',
             message: `Proximity hint module "${module.label}" has a very small success radius.`,
             path: `modules.${index}.config.successRadiusMeters`,
+          },
+        ];
+      }
+      return [];
+    }
+    case 'balance_run': {
+      const radiusMeters = readNumber(module.config.successRadiusMeters);
+      if (radiusMeters > 0 && radiusMeters < MIN_GPS_RADIUS_METERS) {
+        return [
+          {
+            code: 'balance_radius_small',
+            message: `Balance run module "${module.label}" has a very small start/target radius.`,
+            path: `modules.${index}.config.successRadiusMeters`,
+          },
+        ];
+      }
+      const timeLimitMs = readNumber(module.config.timeLimitMs);
+      if (timeLimitMs > 0 && timeLimitMs < MIN_BALANCE_TIME_LIMIT_MS) {
+        return [
+          {
+            code: 'balance_time_limit_short',
+            message: `Balance run module "${module.label}" has a very short time limit.`,
+            path: `modules.${index}.config.timeLimitMs`,
           },
         ];
       }

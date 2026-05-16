@@ -474,6 +474,20 @@ The evaluator remains stateless and only checks the angular match. The player ow
 Rejected alternatives:
 Adding a generic sensor abstraction, adding hidden global dial state, embedding sensor reads inside the visual component, or changing the existing `compass_align` contract.
 
+## 2026-05-16 — Add balance run as a GPS plus tilt RRR module
+
+Decision:
+Register `balance_run` as a first-class RRR module with explicit config keys: `startLat`, `startLng`, `targetLat`, `targetLng`, `successRadiusMeters`, `timeLimitMs` and `maxTiltDegrees`. The reusable visual lives in `BalanceRunVisual`, author simulation/live controls live in `BalanceRunControl`, and player sensor/timer/history ownership lives in `BalanceRunPlayer`.
+
+Reason:
+The module combines two live sensor families: GPS progress from start to target and device-orientation tilt for balance. Keeping visuals presentational and putting browser sensor access in existing hooks preserves the runtime/UI separation. The evaluator remains stateless enough for preview/session checks; live player state owns historical failures such as "balance was lost" during the run.
+
+Tradeoffs:
+The same radius is used for start eligibility and target success to keep the schema small. The live player needs real-device QA because GPS drift, orientation permission and walking tilt behavior cannot be proven in happy-dom tests.
+
+Rejected alternatives:
+Adding raw sensor reads to the visual, adding a hidden global balance session store, adding separate start and target radii before field testing proves the need, or folding the behavior into `gps_enter` / `hold_still`.
+
 ## Existing architectural decisions to preserve
 
 ### Authoring PWA exports to Flutter player
