@@ -243,6 +243,54 @@ describe('workspace regression flows', () => {
     expect(container.textContent).not.toContain('Second paragraph');
   });
 
+  it('keeps intro key-data lines out of paragraph delete commits', () => {
+    function IntroTextHarness() {
+      const [draft, setDraft] = useState(() => {
+        const initial = buildWorkspaceDraft();
+        initial.tour.de.introSection = [
+          { type: 'paragraph', text: 'First paragraph' },
+          { type: 'line', text: 'Distance: 2 km' },
+          { type: 'line', text: 'Time: 40 min' },
+          { type: 'paragraph', text: 'Second paragraph' },
+          { type: 'paragraph', text: 'Third paragraph' },
+        ];
+        return initial;
+      });
+
+      return (
+        <IntroPhonePreview
+          draft={draft}
+          locale="de"
+          onChange={(patch) =>
+            setDraft((current) =>
+              typeof patch === 'function'
+                ? patch(current)
+                : { ...current, ...patch },
+            )
+          }
+          editable
+        />
+      );
+    }
+
+    render(<IntroTextHarness />);
+
+    clickControl('Beschreibung bearbeiten');
+
+    expect(textEntryValues()).toEqual([
+      'First paragraph',
+      'Second paragraph',
+      'Third paragraph',
+    ]);
+
+    clickControlAt('Eintrag löschen', 2);
+
+    expect(textEntryValues()).toEqual(['First paragraph', 'Second paragraph']);
+    expect(container.textContent).toContain('Distance: 2 km');
+    expect(container.textContent).toContain('Time: 40 min');
+    expect(container.textContent).not.toContain('Third paragraph');
+  });
+
   it('uses the shared major edit button styling for the map edit toggle', () => {
     render(
       <MapEditPill content={null} active={false} onToggle={vi.fn()} />,
@@ -882,6 +930,12 @@ function control(label: string): HTMLElement | null {
   return (
     controls(label)[0] ?? null
   );
+}
+
+function textEntryValues(): string[] {
+  return Array.from(
+    container.querySelectorAll<HTMLTextAreaElement>('.stq-textbody-textarea'),
+  ).map((field) => field.value);
 }
 
 function setFieldValue(label: string, value: string) {

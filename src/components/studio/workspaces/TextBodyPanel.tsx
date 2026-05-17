@@ -17,7 +17,10 @@ export function TextBodyPanel({
   blockType = 'paragraph',
 }: Props) {
   const { t } = useEditorLanguage();
-  const sourceEntries = useMemo(() => blocksToTextEntries(blocks), [blocks]);
+  const sourceEntries = useMemo(
+    () => blocksToTextEntries(blocks, blockType),
+    [blockType, blocks],
+  );
 
   return (
     <div className="stq-textbody-panel">
@@ -33,8 +36,16 @@ export function TextBodyPanel({
   );
 }
 
-function blocksToTextEntries(blocks: ContentBlock[]): string[] {
+function blocksToTextEntries(
+  blocks: ContentBlock[],
+  blockType: 'paragraph' | 'line',
+): string[] {
   return blocks
+    .filter((block) =>
+      blockType === 'paragraph'
+        ? block.type === 'paragraph' || block.type === 'paragraph_styled'
+        : block.type === blockType,
+    )
     .map((block) => ('text' in block ? block.text : ''))
     .filter(Boolean)
     .map((text) => text.trim());

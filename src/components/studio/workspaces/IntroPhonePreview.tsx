@@ -203,7 +203,7 @@ export function IntroPhonePreview({
         {panel?.body}
         {activePanel === 'copy' && (
           <TextBodyPanel
-            blocks={blocks}
+            blocks={paragraphBlocks}
             onChange={setCopyBlocks}
             placeholder={t('studio.introMissing')}
           />
