@@ -309,39 +309,39 @@ export function TourCardCanvas({
                     <Icon name="camera" size={20} />
                   </button>
                 )}
+                {editable && (onDuplicateTour || onDeleteTour) && (
+                  <div className="stq-tour-card-cover-actions">
+                    {onDuplicateTour && (
+                      <button
+                        type="button"
+                        className="stq-tour-card-cover-action"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDuplicateTour();
+                        }}
+                        aria-label={t('studio.copyTour')}
+                        title={t('studio.copyTour')}
+                      >
+                        <Icon name="copy" size={16} />
+                      </button>
+                    )}
+                    {onDeleteTour && (
+                      <button
+                        type="button"
+                        className="stq-tour-card-cover-action stq-tour-card-cover-action--danger"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDeleteTour();
+                        }}
+                        aria-label={t('studio.deleteTour')}
+                        title={t('studio.deleteTour')}
+                      >
+                        <Icon name="trash" size={16} />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-              {editable && (onDuplicateTour || onDeleteTour) && (
-                <div className="stq-tour-card-cover-actions">
-                  {onDuplicateTour && (
-                    <button
-                      type="button"
-                      className="stq-tour-card-cover-action"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onDuplicateTour();
-                      }}
-                      aria-label={t('studio.copyTour')}
-                      title={t('studio.copyTour')}
-                    >
-                      <Icon name="copy" size={16} />
-                    </button>
-                  )}
-                  {onDeleteTour && (
-                    <button
-                      type="button"
-                      className="stq-tour-card-cover-action stq-tour-card-cover-action--danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onDeleteTour();
-                      }}
-                      aria-label={t('studio.deleteTour')}
-                      title={t('studio.deleteTour')}
-                    >
-                      <Icon name="trash" size={16} />
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="stq-tour-card-body">

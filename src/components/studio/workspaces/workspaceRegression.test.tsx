@@ -371,6 +371,9 @@ describe('workspace regression flows', () => {
 
     expect(onDuplicateTour).toHaveBeenCalledTimes(1);
     expect(onDeleteTour).toHaveBeenCalledTimes(1);
+    expect(
+      container.querySelector('.stq-tour-card-cover > .stq-tour-card-cover-actions'),
+    ).not.toBeNull();
     expect(control('Titelbild bearbeiten')?.getAttribute('aria-pressed')).toBe(
       null,
     );
